@@ -1,0 +1,99 @@
+.builder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg);
+}
+
+.nameRow {
+  text-align: center;
+}
+
+.nameLabel {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-1);
+}
+
+.nameDisplay {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.buddyName {
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.regenBtn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: rgba(168, 85, 247, 0.1);
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.regenBtn:hover { background: rgba(168, 85, 247, 0.2); transform: rotate(180deg); }
+
+.colorRow {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.colorSwatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform var(--transition-spring), border-color var(--transition-base);
+}
+
+.colorSwatch:hover { transform: scale(1.15); }
+
+.colorSelected {
+  border-color: white;
+  box-shadow: 0 0 0 2px var(--color-primary);
+  transform: scale(1.15);
+}
+
+.canvas {
+  border-radius: 50%;
+  background: rgba(168, 85, 247, 0.05);
+  cursor: crosshair;
+}
+
+.shareBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: #25d366;
+  color: white;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-spring);
+  min-height: 40px;
+}
+
+.shareBtn:hover { background: #1da851; transform: scale(1.04); }

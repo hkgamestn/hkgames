@@ -1,0 +1,117 @@
+.lab { padding: var(--space-16) 0; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 var(--space-4); }
+.header { text-align: center; margin-bottom: var(--space-10); }
+.headerIcon { color: var(--color-primary); margin-bottom: var(--space-3); }
+.title { font-family: var(--font-title); font-weight: 900; font-size: clamp(1.5rem,4vw,2rem); margin-bottom: var(--space-2); }
+.subtitle { color: var(--text-secondary); font-size: 0.95rem; }
+
+.steps { display: flex; align-items: center; justify-content: center; gap: var(--space-6); margin-bottom: var(--space-10); }
+.step { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); opacity: 0.4; transition: opacity var(--transition-base); }
+.stepActive { opacity: 1; }
+.stepDot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--bg-card-border); display: flex; align-items: center; justify-content: center; font-family: var(--font-title); font-weight: 800; font-size: 0.85rem; color: var(--text-secondary); transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base); }
+.stepActive .stepDot { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+.stepLabel { font-size: 0.75rem; color: var(--text-muted); }
+
+/* TYPE CARDS */
+.typeGrid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-5); }
+
+.typeCard {
+  display: flex; flex-direction: column;
+  background: var(--bg-card); border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg); overflow: hidden; cursor: pointer;
+  transition: transform var(--transition-spring), border-color var(--transition-base), box-shadow var(--transition-base);
+}
+.typeCard:hover { transform: translateY(-8px) scale(1.03); border-color: var(--color-primary); box-shadow: var(--shadow-card); }
+
+.typeImgWrap { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; display: flex; align-items: flex-start; }
+.typeImg { object-fit: cover; transition: transform var(--transition-base); }
+.typeCard:hover .typeImg { transform: scale(1.06); }
+.typeImgOverlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,10,30,0.7) 0%, transparent 50%); }
+
+.typeInfo { padding: var(--space-3) var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: 2px; }
+.typeName { font-family: var(--font-title); font-weight: 800; font-size: 1rem; color: var(--text-primary); }
+.typeDesc { font-size: 0.75rem; color: var(--text-muted); }
+.typePrice { font-weight: 700; color: var(--color-cta); font-size: 0.9rem; margin-top: 4px; }
+
+/* COLOR PREVIEW GRID */
+.colorStep { display: flex; flex-direction: column; align-items: center; gap: var(--space-6); }
+.stepTitle { font-family: var(--font-title); font-weight: 800; font-size: 1.2rem; text-align: center; }
+
+.colorPreviewGrid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-3); width: 100%; max-width: 540px; }
+
+.colorPreviewCard {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
+  background: var(--bg-card); border: 2px solid var(--bg-card-border);
+  border-radius: var(--radius-md); overflow: hidden; cursor: pointer;
+  transition: transform var(--transition-spring), border-color var(--transition-base), box-shadow var(--transition-base);
+}
+.colorPreviewCard:hover { transform: translateY(-4px) scale(1.03); border-color: var(--color-primary); }
+.colorPreviewSelected { border-color: var(--color-primary) !important; box-shadow: 0 0 0 3px rgba(168,85,247,0.3); transform: scale(1.03); }
+
+.colorPreviewImgWrap { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; }
+.colorPreviewImg { object-fit: cover; transition: transform var(--transition-base); }
+.colorPreviewCard:hover .colorPreviewImg { transform: scale(1.05); }
+
+.colorPreviewName { font-family: var(--font-title); font-weight: 700; font-size: 0.82rem; color: var(--text-primary); padding-bottom: 2px; }
+.colorPreviewDot { width: 16px; height: 16px; border-radius: 50%; margin-bottom: var(--space-2); border: 2px solid rgba(255,255,255,0.3); }
+
+/* BICOLORE COMBOS */
+.comboGrid { display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap; }
+
+.comboCard {
+  display: flex; flex-direction: column;
+  background: var(--bg-card); border: 2px solid var(--bg-card-border);
+  border-radius: var(--radius-md); overflow: hidden; cursor: pointer;
+  width: 180px;
+  transition: transform var(--transition-spring), border-color var(--transition-base);
+}
+.comboCard:hover, .comboSelected { border-color: var(--color-primary); transform: scale(1.04); }
+
+.comboImgWrap { position: relative; width: 100%; height: 130px; overflow: hidden; }
+.comboImg { object-fit: cover; }
+.comboImgOverlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,10,30,0.6) 0%, transparent 50%); }
+
+.comboInfo { padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-1); align-items: center; }
+.comboDots { display: flex; align-items: center; gap: 5px; }
+.comboDots span:not(.comboPlus):not(.comboArrow) { width: 16px; height: 16px; border-radius: 50%; display: block; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.2); }
+.comboPlus, .comboArrow { color: var(--text-muted); font-size: 0.75rem; flex-shrink: 0; }
+.comboName { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-align: center; }
+
+/* RESULT */
+.result { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
+
+.resultImgWrap {
+  position: relative; width: 220px; height: 220px;
+  border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--bg-card); border: 1px solid var(--bg-card-border);
+  animation: potBounce 600ms cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes potBounce { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.resultImg { object-fit: cover; }
+
+.buddyName { display: flex; align-items: center; gap: var(--space-2); font-family: var(--font-title); font-weight: 800; font-size: 1rem; color: var(--text-secondary); }
+.regenBtn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); background: rgba(168,85,247,0.1); color: var(--color-primary); cursor: pointer; transition: background var(--transition-fast), transform var(--transition-fast); }
+.regenBtn:hover { background: rgba(168,85,247,0.2); transform: rotate(180deg); }
+
+.resultLabel { font-family: var(--font-title); font-weight: 800; font-size: 1.1rem; }
+.resultPrice { color: var(--color-cta); font-weight: 700; font-size: 1.2rem; }
+
+.addBtn { display: flex; align-items: center; gap: var(--space-2); background: var(--color-cta); color: #0f0a1e; font-family: var(--font-title); font-weight: 800; font-size: 1rem; padding: var(--space-4) var(--space-8); border-radius: var(--radius-xl); box-shadow: var(--shadow-button); cursor: pointer; transition: background var(--transition-fast), transform var(--transition-spring); min-height: 48px; border: none; }
+.addBtn:hover { background: var(--color-cta-hover); transform: scale(1.04); }
+
+.backBtn { color: var(--text-muted); font-size: 0.85rem; cursor: pointer; text-decoration: underline; min-height: 44px; display: flex; align-items: center; transition: color var(--transition-fast); }
+.backBtn:hover { color: var(--text-primary); }
+
+.addedMsg { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); animation: fadeIn 300ms ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+.addedIcon { color: var(--color-success); }
+.addedMsg p { font-family: var(--font-title); font-weight: 800; font-size: 1.2rem; color: var(--color-success); }
+
+@media (max-width: 600px) {
+  .typeGrid { grid-template-columns: repeat(3,1fr); gap: var(--space-3); }
+  .colorPreviewGrid { grid-template-columns: repeat(3,1fr); gap: var(--space-2); }
+  .comboCard { width: 140px; }
+  .comboImgWrap { height: 100px; }
+  .resultImgWrap { width: 180px; height: 180px; }
+}

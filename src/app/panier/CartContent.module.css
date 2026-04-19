@@ -1,0 +1,66 @@
+.container { max-width: 1200px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+.title { font-family: var(--font-title); font-weight: 900; font-size: 2rem; margin-bottom: var(--space-8); }
+.layout { display: grid; grid-template-columns: 1fr; gap: var(--space-6); }
+@media (min-width: 768px) { .layout { grid-template-columns: 1fr 420px; gap: var(--space-8); } }
+.itemsList { display: flex; flex-direction: column; gap: var(--space-4); }
+.bundleBadge { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); background: var(--bg-card); border: 1px solid var(--bg-card-border); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5); font-size: 0.88rem; color: #10b981; font-weight: 600; }
+.bundleSavings { font-size: 0.82rem; color: #10b981; font-weight: 600; white-space: nowrap; }
+.upsellBanner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); background: var(--bg-card); border: 1px solid var(--bg-card-border); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5); font-size: 0.88rem; color: var(--color-cta); font-weight: 600; }
+.upsellLink { font-family: var(--font-title); font-weight: 700; font-size: 0.82rem; color: var(--color-cta); text-decoration: underline; white-space: nowrap; }
+.item { display: grid; grid-template-columns: 72px 1fr auto; gap: var(--space-4); align-items: center; background: var(--bg-card); border: 1px solid var(--bg-card-border); border-radius: var(--radius-lg); padding: var(--space-4); transition: border-color var(--transition-fast); }
+.item:hover { border-color: rgba(168,85,247,0.35); }
+.itemImage { width: 72px; height: 72px; border-radius: var(--radius-sm); overflow: hidden; position: relative; background: var(--bg-surface); flex-shrink: 0; }
+.itemInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.itemName { font-family: var(--font-title); font-weight: 700; font-size: 0.9rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.itemSub { font-size: 0.78rem; color: var(--color-primary); font-style: italic; }
+.itemColor { display: flex; align-items: center; gap: 4px; font-size: 0.78rem; color: var(--text-muted); }
+.colorDot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.itemPrice { font-family: var(--font-title); font-weight: 800; font-size: 0.88rem; color: var(--color-cta); margin-top: 2px; }
+.itemTotal { font-family: var(--font-title); font-weight: 800; color: var(--color-cta); font-size: 0.9rem; }
+.itemActions { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); }
+.qtyControl, .qtyControls { display: flex; align-items: center; gap: var(--space-2); background: var(--bg-surface); border: 1px solid var(--bg-card-border); border-radius: var(--radius-xl); padding: 2px var(--space-2); }
+.qtyControl button, .qtyBtn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; color: var(--text-primary); background: none; border: none; cursor: pointer; border-radius: 50%; transition: background var(--transition-fast); }
+.qtyControl button:hover, .qtyBtn:hover { background: rgba(168,85,247,0.15); }
+.qtyControl span, .qty { min-width: 22px; text-align: center; font-weight: 700; font-size: 0.88rem; }
+.removeBtn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); background: none; border: none; cursor: pointer; border-radius: var(--radius-sm); transition: color var(--transition-fast), background var(--transition-fast); }
+.removeBtn:hover { color: var(--color-danger); background: rgba(239,68,68,0.1); }
+.summary { width: 100%; }
+.summaryCard { background: var(--bg-card); border: 1.5px solid var(--bg-card-border); border-radius: var(--radius-lg); padding: var(--space-7) var(--space-7); display: flex; flex-direction: column; gap: var(--space-4); box-shadow: 0 8px 32px rgba(168,85,247,0.10), 0 2px 8px rgba(0,0,0,0.18); backdrop-filter: blur(12px); }
+@media (min-width: 768px) { .summaryCard { position: sticky; top: 88px; } }
+.summaryTitle { font-family: var(--font-title); font-weight: 800; font-size: 1.05rem; color: var(--text-primary); padding-bottom: var(--space-3); border-bottom: 1px solid var(--bg-card-border); }
+.summaryRows { display: flex; flex-direction: column; gap: var(--space-3); }
+.summaryRow { display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; color: var(--text-secondary); }
+.summaryDiscount, .discount { color: var(--color-success); }
+.totalRow { display: flex; justify-content: space-between; align-items: center; padding-top: var(--space-4); border-top: 1px solid var(--bg-card-border); font-family: var(--font-title); font-weight: 800; font-size: 1rem; color: var(--text-primary); }
+.totalAmount { font-size: 1.4rem; color: var(--color-cta); }
+.codBadge, .codNotice { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4); font-size: 0.82rem; color: var(--color-success); font-weight: 600; text-align: center; line-height: 1.5; }
+.checkoutBtn { display: flex; align-items: center; justify-content: center; gap: var(--space-2); background: var(--color-cta); color: #0f0a1e; font-family: var(--font-title); font-weight: 800; font-size: 1rem; padding: var(--space-4); border-radius: var(--radius-xl); box-shadow: var(--shadow-button); text-decoration: none; transition: background var(--transition-fast), transform var(--transition-spring); min-height: 52px; margin-top: var(--space-2); }
+.checkoutBtn:hover { background: var(--color-cta-hover); transform: scale(1.02); }
+.clearBtn { background: none; border: none; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; text-align: center; text-decoration: underline; padding: var(--space-2); transition: color var(--transition-fast); }
+.clearBtn:hover { color: var(--color-danger); }
+.continueLink { text-align: center; font-size: 0.85rem; color: var(--text-muted); text-decoration: underline; transition: color var(--transition-fast); cursor: pointer; }
+.continueLink:hover { color: var(--color-primary); }
+.empty, .emptyState { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4); padding: var(--space-16) var(--space-4); text-align: center; }
+.emptyIcon { color: var(--text-muted); margin-bottom: var(--space-4); }
+.emptyText { color: var(--text-secondary); font-size: 1rem; }
+.empty h2 { font-family: var(--font-title); font-weight: 900; font-size: 1.6rem; }
+.empty p { color: var(--text-secondary); font-size: 0.95rem; }
+.shopBtn { display: inline-flex; align-items: center; gap: var(--space-2); background: var(--color-cta); color: #0f0a1e; font-family: var(--font-title); font-weight: 800; padding: var(--space-3) var(--space-8); border-radius: var(--radius-xl); box-shadow: var(--shadow-button); min-height: 48px; text-decoration: none; transition: background var(--transition-fast); }
+.shopBtn:hover { background: var(--color-cta-hover); }
+.thankMsg { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4); font-size: 0.85rem; color: #10b981; font-weight: 600; text-align: center; }
+
+@media (max-width: 767px) {
+  .container { padding: var(--space-4) var(--space-4); }
+  .title { font-size: 1.5rem; margin-bottom: var(--space-5); }
+  .item { grid-template-columns: 60px 1fr auto; gap: var(--space-3); padding: var(--space-4) var(--space-4); }
+  .itemImage { width: 60px; height: 60px; }
+  .summaryCard { padding: var(--space-6) var(--space-5); position: static; }
+  .summaryTitle { font-size: 0.95rem; }
+  .summaryRow { font-size: 0.84rem; }
+  .totalRow { font-size: 0.9rem; }
+  .totalAmount { font-size: 1.2rem; }
+  .codBadge, .codNotice { padding: var(--space-3) var(--space-4); font-size: 0.78rem; }
+  .checkoutBtn { font-size: 0.95rem; min-height: 50px; }
+  .bundleBadge { padding: var(--space-3) var(--space-4); font-size: 0.82rem; }
+  .upsellBanner { padding: var(--space-3) var(--space-4); font-size: 0.82rem; }
+}

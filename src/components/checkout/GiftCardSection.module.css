@@ -1,0 +1,33 @@
+.wrapper { margin:1.5rem 0; border-radius:20px; overflow:hidden; background:rgba(26,16,48,0.6); border:1.5px solid rgba(168,85,247,0.18); backdrop-filter:blur(12px); transition:border-color 0.25s ease; }
+.wrapper:has(.active) { border-color:rgba(168,85,247,0.45); box-shadow:0 0 24px rgba(168,85,247,0.12); }
+.toggle { width:100%; display:flex; align-items:center; gap:12px; padding:16px 20px; background:none; border:none; cursor:pointer; text-align:left; transition:background 0.2s ease; }
+.toggle:hover { background:rgba(168,85,247,0.06); }
+.toggleIcon { flex-shrink:0; width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,rgba(168,85,247,0.25),rgba(236,72,153,0.2)); border:1px solid rgba(168,85,247,0.3); display:flex; align-items:center; justify-content:center; color:var(--color-primary,#a855f7); transition:transform 0.2s ease,background 0.2s ease; }
+.active .toggleIcon { background:linear-gradient(135deg,rgba(168,85,247,0.4),rgba(236,72,153,0.35)); transform:scale(1.05); }
+.toggleText { flex:1; display:flex; flex-direction:column; gap:2px; }
+.toggleTitle { font-family:var(--font-title,'Nunito',sans-serif); font-weight:700; font-size:0.95rem; color:var(--text-primary,#f8f9ff); }
+.toggleSub { font-size:0.78rem; color:var(--text-muted,#7c6fa8); }
+.toggleBadge { flex-shrink:0; padding:5px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; background:rgba(168,85,247,0.12); color:var(--color-primary,#a855f7); border:1px solid rgba(168,85,247,0.3); transition:all 0.25s ease; white-space:nowrap; }
+.badgeActive { background:linear-gradient(135deg,#a855f7,#ec4899); color:#fff; border-color:transparent; box-shadow:0 2px 12px rgba(168,85,247,0.35); }
+.form { padding:0 20px 20px; display:flex; flex-direction:column; gap:16px; animation:slideDown 0.25s ease; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+.previewBanner { display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:10px; background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.2); color:var(--color-accent,#06b6d4); font-size:0.8rem; font-weight:500; line-height:1.4; }
+.field { display:flex; flex-direction:column; gap:6px; }
+.label { font-size:0.83rem; font-weight:600; color:var(--text-secondary,#c4b5fd); }
+.optional { font-weight:400; color:var(--text-muted,#7c6fa8); font-size:0.77rem; }
+.required { color:var(--color-secondary,#ec4899); }
+.input,.textarea { width:100%; background:rgba(15,10,30,0.6); border:1.5px solid rgba(168,85,247,0.2); border-radius:12px; color:var(--text-primary,#f8f9ff); font-family:var(--font-body,'Inter',sans-serif); font-size:0.9rem; padding:12px 14px; transition:border-color 0.2s,box-shadow 0.2s; resize:none; outline:none; box-sizing:border-box; }
+.input::placeholder,.textarea::placeholder { color:var(--text-muted,#7c6fa8); }
+.input:focus,.textarea:focus { border-color:rgba(168,85,247,0.55); box-shadow:0 0 0 3px rgba(168,85,247,0.1); }
+.textarea { min-height:100px; line-height:1.6; }
+.counter { align-self:flex-end; font-size:0.72rem; color:var(--text-muted,#7c6fa8); }
+.counterWarn { color:#f59e0b; }
+.cardPreview { display:flex; flex-direction:column; gap:8px; }
+.cardPreviewLabel { font-size:0.78rem; font-weight:600; color:var(--text-muted,#7c6fa8); text-transform:uppercase; letter-spacing:0.05em; }
+.cardPreviewBox { border-radius:16px; background:linear-gradient(135deg,#1a0f38,#0f1a38); border:1px solid rgba(168,85,247,0.35); padding:18px 20px; display:flex; flex-direction:column; gap:8px; position:relative; overflow:hidden; }
+.cardPreviewDeco { font-size:0.75rem; color:var(--color-primary,#a855f7); font-weight:700; letter-spacing:0.1em; text-align:center; padding-bottom:8px; border-bottom:1px dashed rgba(168,85,247,0.25); }
+.cardPreviewTo { font-size:0.85rem; font-weight:700; color:var(--color-secondary,#ec4899); }
+.cardPreviewMsg { font-size:0.88rem; color:var(--text-primary,#f8f9ff); line-height:1.6; font-style:italic; white-space:pre-wrap; word-break:break-word; }
+.cardPreviewPlaceholder { color:var(--text-muted,#7c6fa8); }
+.cardPreviewSig { font-size:0.78rem; color:var(--text-muted,#7c6fa8); text-align:right; padding-top:4px; border-top:1px dashed rgba(168,85,247,0.18); }
+@media(max-width:480px){.toggle{padding:14px 16px;gap:10px}.form{padding:0 16px 16px}}

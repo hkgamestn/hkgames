@@ -1,0 +1,31 @@
+.tooltip {
+  position: fixed;
+  z-index: 9999;
+  width: 300px;
+  background: #1a1030;
+  border: 1.5px solid rgba(168,85,247,0.35);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(168,85,247,0.1);
+  pointer-events: none;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(168,85,247,0.15); }
+.orderNum { font-weight:800; font-size:0.85rem; color:#a855f7; }
+.city { font-size:0.75rem; color:#7c6fa8; }
+.section { margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(168,85,247,0.1); }
+.sectionTitle { font-size:0.7rem; font-weight:700; color:#7c6fa8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+.row { display:flex; gap:8px; margin-bottom:3px; }
+.key { font-size:0.75rem; color:#7c6fa8; min-width:60px; flex-shrink:0; }
+.val { font-size:0.75rem; color:#f8f9ff; font-weight:500; word-break:break-word; }
+.item { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+.itemDot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.itemName { font-size:0.75rem; color:#f8f9ff; flex:1; }
+.itemPrice { font-size:0.75rem; color:#a855f7; font-weight:700; }
+.totals { display:flex; flex-direction:column; gap:3px; margin-bottom:8px; }
+.totalRow { display:flex; justify-content:space-between; font-size:0.75rem; color:#c4b5fd; }
+.discount { color:#10b981; }
+.totalFinal { font-weight:800; color:#fbbf24; font-size:0.85rem; padding-top:4px; border-top:1px solid rgba(168,85,247,0.15); margin-top:2px; }
+.gift { display:flex; gap:6px; padding:8px; background:rgba(168,85,247,0.08); border-radius:8px; border:1px solid rgba(168,85,247,0.2); font-size:0.73rem; color:#c4b5fd; font-style:italic; }
+.giftIcon { flex-shrink:0; }

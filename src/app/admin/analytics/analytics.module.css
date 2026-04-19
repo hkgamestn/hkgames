@@ -1,0 +1,40 @@
+.page {
+  overflow-x: hidden; display: flex; flex-direction: column; gap: var(--space-8); width: 100%; }
+.title { font-family: var(--font-title); font-weight: 900; font-size: 1.6rem; }
+
+.statsGrid { display: grid; grid-template-columns: repeat(2,1fr); gap: var(--space-4); }
+@media (min-width: 1024px) { .statsGrid { grid-template-columns: repeat(4,1fr); } }
+
+.statCard {
+  background: var(--bg-card); border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg); padding: var(--space-5);
+  min-width: 0; overflow: hidden;
+}
+.statValue { font-family: var(--font-title); font-weight: 900; font-size: 1.4rem; color: var(--color-cta); }
+.statLabel { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+.chartsRow { display: grid; grid-template-columns: 1fr; gap: var(--space-6); }
+@media (min-width: 900px) { .chartsRow { grid-template-columns: 1fr 1fr; } }
+
+.chart {
+  background: var(--bg-card); border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg); padding: var(--space-6);
+  display: flex; flex-direction: column; gap: var(--space-5);
+  min-width: 0; overflow: hidden;
+}
+
+.chartTitle { font-family: var(--font-title); font-weight: 800; font-size: 0.95rem; }
+
+.barChart { display: flex; align-items: flex-end; gap: var(--space-2); height: 160px; }
+.barGroup { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; min-width: 0; }
+.barTrack { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+.bar { width: 100%; background: linear-gradient(180deg, var(--color-primary), var(--color-secondary)); border-radius: 4px 4px 0 0; min-height: 4px; }
+.barLabel { font-size: 0.62rem; color: var(--text-muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.barValue { font-size: 0.6rem; color: var(--text-secondary); text-align: center; white-space: nowrap; }
+
+.citiesList { display: flex; flex-direction: column; gap: var(--space-3); }
+.cityRow { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.cityName { font-size: 0.85rem; font-weight: 600; width: 80px; flex-shrink: 0; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cityBar { flex: 1; height: 8px; background: var(--bg-surface); border-radius: 99px; overflow: hidden; }
+.cityFill { height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-accent)); border-radius: 99px; }
+.cityCount { font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); min-width: 24px; text-align: right; flex-shrink: 0; }

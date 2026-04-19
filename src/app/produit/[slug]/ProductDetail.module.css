@@ -1,0 +1,302 @@
+.page {
+  min-height: 100vh;
+  position: relative;
+}
+
+.pageColorOverlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 20%, var(--selected-product-color, var(--color-primary))22, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+  transition: background var(--transition-base);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4) var(--space-16);
+  position: relative;
+  z-index: 1;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-10);
+  margin-bottom: var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* Gallery */
+.gallery { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.mainImage {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+}
+
+.mainImg {
+  object-fit: cover;
+  transition: transform var(--transition-base);
+}
+
+.mainImage:hover .mainImg { transform: scale(1.04); }
+
+.imagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(15, 10, 30, 0.7);
+  border: 1px solid var(--bg-card-border);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.navBtn:hover { background: rgba(168, 85, 247, 0.3); }
+.navBtnLeft  { left: 12px; }
+.navBtnRight { right: 12px; }
+
+.thumbnails {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+}
+
+.thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  background: var(--bg-card);
+  flex-shrink: 0;
+  transition: border-color var(--transition-fast);
+}
+
+.thumbActive { border-color: var(--color-primary); }
+.thumbImg    { object-fit: cover; width: 100%; height: 100%; }
+
+/* Info */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.lineTag {
+  display: inline-flex;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-3);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: capitalize;
+  font-family: var(--font-title);
+  width: fit-content;
+}
+
+.title {
+  font-family: var(--font-title);
+  font-weight: 900;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  line-height: 1.15;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.price {
+  font-family: var(--font-title);
+  font-weight: 900;
+  font-size: 2rem;
+  color: var(--color-cta);
+}
+
+.description {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.qtyRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.qtyLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.qtyControl {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.qtyControl button {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-family: var(--font-title);
+  font-weight: 800;
+}
+
+.qtyControl button:hover { background: rgba(168, 85, 247, 0.1); }
+
+.qtyControl span {
+  min-width: 44px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  background: var(--color-cta);
+  color: #0f0a1e;
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-button);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-spring), box-shadow var(--transition-fast);
+  min-height: 52px;
+  border: none;
+  width: 100%;
+}
+
+.addBtn:not(:disabled):hover {
+  background: var(--color-cta-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(251, 191, 36, 0.5);
+}
+
+.addBtn:disabled {
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.certBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.certBadges span {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+}
+
+/* Reviews */
+.reviews, .related {
+  margin-top: var(--space-16);
+}
+
+.sectionTitle {
+  font-family: var(--font-title);
+  font-weight: 900;
+  font-size: clamp(1.3rem, 3vw, 1.7rem);
+  margin-bottom: var(--space-8);
+}
+
+.reviewsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.reviewCard {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.reviewHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.reviewAuthor {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.reviewText {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.reviewPhoto {
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 768px)  { .relatedGrid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) { .relatedGrid { grid-template-columns: repeat(4, 1fr); } }

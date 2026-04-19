@@ -1,0 +1,30 @@
+.stars {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.star {
+  color: var(--text-muted);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+  min-width: var(--size, 16px);
+  min-height: var(--size, 16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star:disabled {
+  cursor: default;
+}
+
+.star:not(:disabled):hover {
+  transform: scale(1.2);
+}
+
+.filled {
+  color: var(--color-cta);
+}
+
+.star svg {
+  fill: currentColor;
+}

@@ -1,0 +1,113 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.label {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.combos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.comboBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-base), transform var(--transition-spring), box-shadow var(--transition-base);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  min-height: 48px;
+}
+
+.comboBtn:hover, .comboBtnSelected {
+  border-color: var(--color-primary);
+  transform: scale(1.02);
+  box-shadow: var(--shadow-card);
+}
+
+.comboDot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: block;
+}
+
+.comboPlus, .comboArrow {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.comboResult {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.canvasWrap {
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.canvas {
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--bg-card-border);
+}
+
+.mixingMsg {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.revealText {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  animation: fadeIn 400ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.revealTitle {
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.resetBtn {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}

@@ -1,0 +1,15 @@
+.wrapper{margin:1.5rem 0;border-radius:20px;background:rgba(26,16,48,0.7);border:1.5px solid rgba(168,85,247,0.35);overflow:hidden;backdrop-filter:blur(12px);box-shadow:0 0 32px rgba(168,85,247,0.1);animation:fadeUp 0.4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.header{display:flex;align-items:center;gap:12px;padding:16px 20px;background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(236,72,153,0.08));border-bottom:1px solid rgba(168,85,247,0.18)}
+.headerIcon{flex-shrink:0;width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(168,85,247,0.3),rgba(236,72,153,0.25));border:1px solid rgba(168,85,247,0.35);display:flex;align-items:center;justify-content:center;color:var(--color-primary,#a855f7)}
+.headerText{flex:1;display:flex;flex-direction:column;gap:2px}
+.headerTitle{font-family:var(--font-title,'Nunito',sans-serif);font-weight:800;font-size:0.95rem;color:var(--text-primary,#f8f9ff)}
+.headerSub{font-size:0.75rem;color:var(--text-muted,#7c6fa8)}
+.headerCheck{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:rgba(16,185,129,0.15);border:1.5px solid rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;color:#10b981}
+.cardPreview{margin:16px 20px;background:linear-gradient(135deg,rgba(168,85,247,0.06),rgba(236,72,153,0.04));border:1px dashed rgba(168,85,247,0.3);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.cardDeco{font-size:0.72rem;color:var(--color-primary,#a855f7);font-weight:700;letter-spacing:0.1em;text-align:center;padding-bottom:8px;border-bottom:1px dashed rgba(168,85,247,0.25)}
+.cardTo{font-size:0.85rem;color:var(--text-secondary,#c4b5fd)}
+.cardTo strong{color:var(--color-secondary,#ec4899)}
+.cardMessage{font-size:0.9rem;color:var(--text-primary,#f8f9ff);font-style:italic;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.cardSig{font-size:0.75rem;color:var(--text-muted,#7c6fa8);text-align:right;padding-top:6px;border-top:1px dashed rgba(168,85,247,0.18)}
+.note{padding:0 20px 16px;font-size:0.78rem;color:var(--text-muted,#7c6fa8);line-height:1.5;margin:0}

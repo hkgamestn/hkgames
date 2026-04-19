@@ -1,0 +1,130 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.swatches {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.swatchWrap {
+  position: relative;
+}
+
+.swatch {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform var(--transition-spring), border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.swatch:hover {
+  transform: scale(1.12);
+}
+
+.selected {
+  border-color: white;
+  box-shadow: 0 0 0 3px var(--color-primary);
+  transform: scale(1.12);
+}
+
+.empty {
+  opacity: 0.35;
+  cursor: pointer;
+}
+
+.emptyLine {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140%;
+  height: 2px;
+  background: rgba(239, 68, 68, 0.7);
+  transform: translate(-50%, -50%) rotate(45deg);
+  pointer-events: none;
+}
+
+.selectedInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.selectedName {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.waitlistForm {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.waitlistMsg {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.waitlistInputRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.waitlistInput {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.9rem;
+  min-height: 40px;
+}
+
+.waitlistInput:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.waitlistBtn {
+  background: var(--color-primary);
+  color: white;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 40px;
+  transition: background var(--transition-fast);
+}
+
+.waitlistBtn:hover { background: var(--color-primary-hover); }
+
+.waitlistSuccess {
+  font-size: 0.85rem;
+  color: var(--color-success);
+  font-weight: 600;
+}

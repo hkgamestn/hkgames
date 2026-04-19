@@ -1,0 +1,59 @@
+.section { padding: var(--space-16) 0; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 0 var(--space-4); }
+
+.header { text-align: center; margin-bottom: var(--space-10); }
+
+.tag {
+  display: inline-flex;
+  background: rgba(251,191,36,0.12);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: var(--radius-xl);
+  padding: var(--space-1) var(--space-4);
+  font-size: 0.8rem; font-weight: 700;
+  color: var(--color-cta);
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-4);
+}
+
+.title { font-family: var(--font-title); font-weight: 900; font-size: clamp(1.6rem,4vw,2.2rem); margin-bottom: var(--space-3); }
+.highlight { background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.subtitle { color: var(--text-secondary); font-size: 0.95rem; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-4); margin-bottom: var(--space-10); }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-3);
+  transition: transform var(--transition-spring), box-shadow var(--transition-base);
+}
+.card:hover { transform: translateY(-4px); box-shadow: var(--shadow-card); }
+
+.stars { display: flex; gap: 3px; }
+.text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; flex: 1; }
+.author { display: flex; align-items: center; gap: var(--space-2); margin-top: auto; }
+.name { font-weight: 700; font-size: 0.88rem; color: var(--text-primary); }
+.city { font-size: 0.82rem; color: var(--text-muted); }
+
+.cta { display: flex; justify-content: center; }
+
+.writeBtn {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: white;
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 1rem;
+  padding: var(--space-4) var(--space-10);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  border: none;
+  min-height: 52px;
+  box-shadow: 0 4px 20px rgba(168,85,247,0.35);
+  transition: transform var(--transition-spring), box-shadow var(--transition-base);
+}
+.writeBtn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 8px 30px rgba(168,85,247,0.45); }

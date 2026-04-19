@@ -1,0 +1,32 @@
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.container{background:var(--bg-surface,#1a1030);border:1.5px solid rgba(168,85,247,0.3);border-radius:24px;width:100%;max-width:560px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:modalIn 0.25s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.adminHeader{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(168,85,247,0.15);font-size:0.85rem;font-weight:600;color:var(--text-secondary,#c4b5fd)}
+.closeBtn{background:none;border:none;cursor:pointer;color:var(--text-muted,#7c6fa8);padding:4px;border-radius:6px;display:flex;align-items:center;transition:color 0.2s,background 0.2s}
+.closeBtn:hover{color:var(--text-primary,#f8f9ff);background:rgba(168,85,247,0.1)}
+.printPreview{padding:24px;background:#f8f5ff;display:flex;align-items:center;justify-content:center}
+.card{width:100%;max-width:440px;background:#fff;border-radius:16px;padding:28px;box-shadow:0 4px 24px rgba(168,85,247,0.12);border:1.5px solid rgba(168,85,247,0.15);position:relative;overflow:hidden;font-family:'Georgia','Times New Roman',serif}
+.cornerTL,.cornerTR,.cornerBL,.cornerBR{position:absolute;width:20px;height:20px}
+.cornerTL{top:8px;left:8px;border-top:2px solid #a855f7;border-left:2px solid #a855f7;border-radius:4px 0 0 0}
+.cornerTR{top:8px;right:8px;border-top:2px solid #ec4899;border-right:2px solid #ec4899;border-radius:0 4px 0 0}
+.cornerBL{bottom:8px;left:8px;border-bottom:2px solid #ec4899;border-left:2px solid #ec4899;border-radius:0 0 0 4px}
+.cornerBR{bottom:8px;right:8px;border-bottom:2px solid #a855f7;border-right:2px solid #a855f7;border-radius:0 0 4px 0}
+.cardHeader{text-align:center;margin-bottom:12px}
+.cardLogo{font-size:1.15rem;font-weight:700;color:#7c3aed;letter-spacing:0.05em;margin-bottom:2px}
+.cardTagline{font-size:0.72rem;color:#9ca3af;letter-spacing:0.08em;text-transform:uppercase;font-family:sans-serif}
+.divider{text-align:center;color:#d8b4fe;font-size:0.7rem;margin:10px 0;overflow:hidden}
+.cardTo{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.cardToLabel{font-size:0.78rem;color:#9ca3af;font-family:sans-serif;font-weight:500}
+.cardToName{font-size:1.1rem;font-weight:700;color:#be185d}
+.cardMessage{font-size:0.95rem;color:#1f2937;line-height:1.7;font-style:italic;white-space:pre-wrap;word-break:break-word;margin:4px 0 8px}
+.cardFooter{text-align:center;margin-top:4px}
+.cardFooterLine{font-size:0.82rem;color:#7c3aed;font-weight:600;margin-bottom:4px}
+.cardFooterSocial{font-size:0.7rem;color:#9ca3af;letter-spacing:0.06em;font-family:sans-serif}
+.actions{padding:16px 20px;border-top:1px solid rgba(168,85,247,0.12);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.orderInfo{display:flex;flex-direction:column;gap:4px}
+.orderInfoItem{font-size:0.78rem;color:var(--text-muted,#7c6fa8)}
+.actionBtns{display:flex;gap:10px;align-items:center}
+.btnSecondary{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);color:var(--text-secondary,#c4b5fd);padding:9px 18px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btnSecondary:hover{background:rgba(168,85,247,0.15)}
+.btnPrint{display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#a855f7,#ec4899);border:none;color:#fff;padding:9px 20px;border-radius:10px;font-size:0.82rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(168,85,247,0.35);transition:all 0.2s}
+.btnPrint:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(168,85,247,0.45)}

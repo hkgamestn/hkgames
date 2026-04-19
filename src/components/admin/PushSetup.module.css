@@ -1,0 +1,97 @@
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.iconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: rgba(168, 85, 247, 0.12);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.check { color: var(--color-success); margin-left: auto; flex-shrink: 0; }
+
+.msg {
+  font-size: 0.85rem;
+  color: var(--color-success);
+  font-weight: 500;
+}
+
+.actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-primary);
+  color: white;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  border: none;
+  min-height: 44px;
+  transition: background var(--transition-fast);
+}
+
+.btn:not(:disabled):hover { background: var(--color-primary-hover); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.testBtn {
+  background: transparent;
+  border: 1px solid var(--bg-card-border);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  min-height: 40px;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.testBtn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.offBtn {
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  font-size: 0.85rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  min-height: 40px;
+  transition: background var(--transition-fast);
+}
+
+.offBtn:hover { background: rgba(239, 68, 68, 0.1); }
