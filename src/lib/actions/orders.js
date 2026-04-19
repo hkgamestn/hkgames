@@ -1,4 +1,5 @@
 'use server'
+import { sendCAPIEvent } from '@/lib/actions/fbcapi'
 
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
@@ -159,6 +160,27 @@ export async function confirmOrder(formData, pendingOrderId) {
   }
 
   await sendPushNotification(orderId, 'confirmed')
+
+  // CAPI Purchase
+  try {
+    await sendCAPIEvent({
+      eventName:  'Purchase',
+      eventId:    'purchase-' + orderId,
+      userData: {
+        phone: phone,
+        name:  `${firstName} ${lastName}`,
+        city:  city,
+      },
+      customData: {
+        currency:    'TND',
+        value:       total,
+        order_id:    orderId,
+        num_items:   items.reduce((s, i) => s + i.qty, 0),
+        contents:    items.map((i) => ({ id: i.product_id, quantity: i.qty, item_price: i.price_dt })),
+      },
+      sourceUrl: 'https://hap-p-kids.store/commander',
+    })
+  } catch (e) { console.error('[CAPI Purchase]', e) }
 
   return { success: true, orderId }
 }

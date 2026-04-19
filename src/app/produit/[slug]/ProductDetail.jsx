@@ -1,4 +1,5 @@
 'use client'
+import { trackCAPI } from '@/lib/capi-client'
 
 import { useState } from 'react'
 import Image from 'next/image'
