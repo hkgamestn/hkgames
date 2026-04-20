@@ -49,7 +49,7 @@ export default function HeroSection() {
       <div className={styles.content}>
         <div className={styles.badge}>
           <Star size={14} />
-          <span>1 248 Slimes vendus ce mois</span>
+          <span>+800 Slimes vendus ce mois</span>
         </div>
 
         <h1 className={styles.title}>
