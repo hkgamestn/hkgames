@@ -1,6 +1,7 @@
 import { Nunito, Inter } from 'next/font/google'
 import Script from 'next/script'
 import BundleToast from '@/components/cart/BundleToast'
+import SocialToast from '@/components/homepage/SocialToast'
 import './globals.css'
 import WhatsAppFloat from '@/components/layout/WhatsAppFloat'
 
@@ -73,6 +74,7 @@ export default function RootLayout({ children }) {
           />
       {children}
       <BundleToast />
+        <SocialToast />
         </div>
 
 

@@ -3,6 +3,10 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import styles from './MagicMixCanvas.module.css'
 
+function isLowEndDevice() {
+  if (typeof navigator === 'undefined') return false
+  return (navigator.hardwareConcurrency || 4) <= 4 || (navigator.deviceMemory || 4) <= 2
+}
 const COMBOS = [
   { color1: 'Rose',  hex1: '#ec4899', color2: 'Bleu',  hex2: '#3b82f6', result: 'Violet',  hexResult: '#a855f7' },
   { color1: 'Rose',  hex1: '#ec4899', color2: 'Jaune', hex2: '#eab308', result: 'Orangé',  hexResult: '#f97316' },
@@ -103,7 +107,9 @@ export default function MagicMixCanvas({ onComboSelect, selectedCombo }) {
       }
 
       if (t < DURATION) {
-        animRef.current = requestAnimationFrame(frame)
+        animRef.current = isLowEndDevice()
+          ? setTimeout(() => { animRef.current = requestAnimationFrame(frame) }, 33)
+          : requestAnimationFrame(frame)
       } else {
         setPhase('reveal')
         setRevealed(combo)

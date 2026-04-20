@@ -9,6 +9,14 @@ import { formatDT } from '@/lib/utils/formatDT'
 import { generateBuddyName } from '@/lib/utils/buddyNames'
 import styles from './SlimeLab.module.css'
 
+// Détection appareil bas de gamme (< 4 CPU cores ou mémoire < 4GB)
+function isLowEndDevice() {
+  if (typeof navigator === 'undefined') return false
+  const cores = navigator.hardwareConcurrency || 4
+  const mem   = navigator.deviceMemory || 4
+  return cores <= 4 || mem <= 2
+}
+
 const BASE = 'https://rsmebjtwmvwyeocvsowg.supabase.co/storage/v1/object/public/product-images'
 
 // Prix chargés depuis Supabase via useEffect
@@ -184,10 +192,15 @@ function BuddyEyesFlash({ size = 'sm' }) {
           ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fill()
         }
       })
-      animRef.current = requestAnimationFrame(draw)
+      // Throttle à 30fps sur appareils faibles, 60fps sinon
+      if (isLowEndDevice()) {
+        animRef.current = setTimeout(() => { animRef.current = requestAnimationFrame(draw) }, 33)
+      } else {
+        animRef.current = requestAnimationFrame(draw)
+      }
     }
     animRef.current = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(animRef.current)
+    return () => { cancelAnimationFrame(animRef.current); clearTimeout(animRef.current) }
   }, [])
 
   if (!visible) return null
@@ -274,10 +287,12 @@ function BuddyEyes({ size = 'sm' }) {
           ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fill()
         }
       })
-      animRef.current = requestAnimationFrame(draw)
+      animRef.current = isLowEndDevice()
+        ? setTimeout(() => { animRef.current = requestAnimationFrame(draw) }, 33)
+        : requestAnimationFrame(draw)
     }
     animRef.current = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(animRef.current)
+    return () => { cancelAnimationFrame(animRef.current); clearTimeout(animRef.current) }
   }, [eyeRadius, pupilR, highlightR, maxPupilMove])
 
   return (
@@ -371,7 +386,7 @@ export default function SlimeLab() {
             {PRODUCT_TYPES.map((t) => (
               <button key={t.id} className={styles.typeCard} onClick={() => handleTypeSelect(t.id)} type="button">
                 <div className={styles.typeImgWrap}>
-                  <Image src={t.image} alt={t.label} fill sizes="160px" className={styles.typeImg} />
+                  <Image src={t.image} alt={t.label} fill sizes="160px" className={styles.typeImg} quality={75} loading="lazy" />
                   <div className={styles.typeImgOverlay} />
                 </div>
                 <div className={styles.typeInfo}>
@@ -428,7 +443,7 @@ export default function SlimeLab() {
                   type="button"
                 >
                   <div className={styles.comboImgWrap}>
-                    <Image src={combo.image} alt={combo.name} fill sizes="140px" className={styles.comboImg} />
+                    <Image src={combo.image} alt={combo.name} fill sizes="140px" className={styles.comboImg} quality={75} loading="lazy" />
                     <div className={styles.comboImgOverlay} />
                   </div>
                   <div className={styles.comboInfo}>
@@ -460,7 +475,7 @@ export default function SlimeLab() {
               <>
                 <div className={styles.resultImgWrap}>
                   {getCurrentImage() && (
-                    <Image src={getCurrentImage()} alt="ton slime" fill sizes="220px" className={styles.resultImg} />
+                    <Image src={getCurrentImage()} alt="ton slime" fill sizes="220px" className={styles.resultImg} quality={80} />
                   )}
                   {type === 'buddies' && <BuddyEyesFlash size="lg" />}
                 </div>
