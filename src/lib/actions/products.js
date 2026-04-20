@@ -7,7 +7,7 @@ export async function getProducts(line) {
   const supabase = await createClient()
   let query = supabase
     .from('products')
-    .select('id, slug, name, description, line, price_dt, images, colors, bicolor_combos, is_active, position')
+    .select('id, slug, name, description, line, price_dt, promo_price_dt, promo_label, promo_ends_at, images, colors, bicolor_combos, is_active, position')
     .eq('is_active', true)
     .order('position', { ascending: true })
 
@@ -22,7 +22,7 @@ export async function getProductBySlug(slug) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('products')
-    .select('id, slug, name, description, line, price_dt, images, colors, bicolor_combos, is_active, position')
+    .select('id, slug, name, description, line, price_dt, promo_price_dt, promo_label, promo_ends_at, images, colors, bicolor_combos, is_active, position')
     .eq('slug', slug)
     .eq('is_active', true)
     .single()

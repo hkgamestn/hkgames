@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { upsertProduct } from '@/lib/actions/products'
 import { formatDT } from '@/lib/utils/formatDT'
-import { Plus, Edit3, Archive, ArchiveRestore, X, Save, Package } from 'lucide-react'
+import { Plus, Edit3, Archive, ArchiveRestore, X, Save, Package, Tag, Percent } from 'lucide-react'
 import styles from './produits.module.css'
 
 const LINE_LABELS = {
@@ -219,6 +219,59 @@ export default function ProduitsPage() {
                   value={editData.description || ''}
                   onChange={(e) => set('description', e.target.value)}
                 />
+              </div>
+
+              {/* ── Section Promo ── */}
+              <div className={styles.promoSection}>
+                <div className={styles.promoHeader}>
+                  <Tag size={14} />
+                  <span>Promotion / Réduction</span>
+                </div>
+
+                <div className={styles.promoGrid}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Prix promo (DT) <span className={styles.optional}>— vide = pas de promo</span></label>
+                    <input
+                      type="number"
+                      className={styles.input}
+                      placeholder="Ex: 9.500"
+                      step="0.001"
+                      value={editData.promo_price_dt ?? ''}
+                      onChange={(e) => set('promo_price_dt', e.target.value ? parseFloat(e.target.value) : null)}
+                    />
+                  </div>
+
+                  <div className={styles.field}>
+                    <label className={styles.label}>Label promo</label>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder="Ex: -20%, Offre spéciale..."
+                      maxLength={50}
+                      value={editData.promo_label || ''}
+                      onChange={(e) => set('promo_label', e.target.value || null)}
+                    />
+                  </div>
+
+                  <div className={styles.field}>
+                    <label className={styles.label}>Fin de promo</label>
+                    <input
+                      type="datetime-local"
+                      className={styles.input}
+                      value={editData.promo_ends_at ? editData.promo_ends_at.slice(0,16) : ''}
+                      onChange={(e) => set('promo_ends_at', e.target.value ? new Date(e.target.value).toISOString() : null)}
+                    />
+                  </div>
+                </div>
+
+                {editData.promo_price_dt && editData.price_dt && (
+                  <div className={styles.promoPreview}>
+                    <Percent size={13} />
+                    Réduction de {Math.round((1 - editData.promo_price_dt / editData.price_dt) * 100)}%
+                    — {formatDT(editData.price_dt)} → <strong>{formatDT(editData.promo_price_dt)}</strong>
+                    {editData.promo_label && <span className={styles.promoPreviewLabel}>{editData.promo_label}</span>}
+                  </div>
+                )}
               </div>
 
               {/* Couleurs preview */}
