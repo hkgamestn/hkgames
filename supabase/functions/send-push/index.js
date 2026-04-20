@@ -1,92 +1,149 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import webpush from 'https://esm.sh/web-push@3.6.7'
+// HK Games — Edge Function: send-push v3
+import webpush from 'npm:web-push'
+import { createClient } from 'npm:@supabase/supabase-js'
 
-const SUPABASE_URL      = Deno.env.get('SUPABASE_URL')
-const SERVICE_ROLE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-const VAPID_PUBLIC_KEY  = Deno.env.get('VAPID_PUBLIC_KEY')
-const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL'),
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+)
 
-webpush.setVapidDetails('mailto:contact@hkgames.tn', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+const DOMAIN = 'https://hap-p-kids.store'
+
+function buildPayload(type, orderId, orderData) {
+  const phone = orderData?.customer_phone || ''
+  const name  = orderData?.customer_name  || 'Nouveau client'
+  const city  = orderData?.customer_city  || ''
+  const total = orderData?.total_dt       || 0
+
+  const base = {
+    icon:  DOMAIN + '/icons/hk-logo-192.png',
+    badge: DOMAIN + '/icons/badge-72.png',
+    requireInteraction: true,
+    vibrate: [300, 100, 300, 100, 300],
+    silent: false,
+    timestamp: Date.now(),
+  }
+
+  if (type === 'pending') {
+    return {
+      ...base,
+      title: '🛒 Nouvelle commande !',
+      body:  `${name}${city ? ' · ' + city : ''} · ${Number(total).toFixed(3)} DT`,
+      tag:   'hk-pending-' + orderId,
+      data:  { orderId, url: DOMAIN + '/admin/commandes', phone },
+      actions: [
+        { action: 'view',     title: '👁 Voir' },
+        { action: 'whatsapp', title: '💬 WhatsApp' },
+      ],
+    }
+  }
+
+  if (type === 'confirmed') {
+    return {
+      ...base,
+      title: '✅ Commande confirmée',
+      body:  `${name}${city ? ' · ' + city : ''} · ${Number(total).toFixed(3)} DT`,
+      tag:   'hk-confirmed-' + orderId,
+      data:  { orderId, url: DOMAIN + '/admin/commandes', phone },
+      actions: [
+        { action: 'view', title: '👁 Voir' },
+      ],
+    }
+  }
+
+  if (type === 'oto_accepted') {
+    return {
+      ...base,
+      title: '🎉 OTO accepté !',
+      body:  `${name} a ajouté un Buddy à sa commande`,
+      tag:   'hk-oto-' + orderId,
+      data:  { orderId, url: DOMAIN + '/admin/commandes' },
+    }
+  }
+
+  return {
+    ...base,
+    title: '📦 HK Games',
+    body:  'Commande #' + String(orderId).slice(0,8).toUpperCase() + ' mise à jour',
+    tag:   'hk-update-' + orderId,
+    data:  { orderId, url: DOMAIN + '/admin/commandes' },
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Headers': 'authorization, content-type',
       },
     })
   }
 
   try {
-    const body = await req.json()
-    const { order_id, customer_name, total_dt, item_count } = body
+    const { orderId, type } = await req.json()
 
-    if (!order_id) {
-      return new Response(JSON.stringify({ error: 'order_id required' }), { status: 400 })
+    const vapidPublic  = Deno.env.get('VAPID_PUBLIC_KEY')
+    const vapidPrivate = Deno.env.get('VAPID_PRIVATE_KEY')
+    if (!vapidPublic || !vapidPrivate) {
+      console.error('[send-push] VAPID keys manquantes')
+      return new Response('VAPID keys manquantes', { status: 500 })
     }
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    webpush.setVapidDetails('mailto:admin@hap-p-kids.store', vapidPublic, vapidPrivate)
 
-    // Compter les commandes non vues → badge count
-    const { count: unseenCount } = await supabase
+    const { data: orderData } = await supabaseAdmin
       .from('orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_seen', false)
+      .select('customer_phone, customer_name, customer_city, total_dt')
+      .eq('id', orderId)
+      .single()
 
-    const badgeCount = unseenCount ?? 1
+    const payload = buildPayload(type, orderId, orderData)
+    console.log('[send-push] Payload:', JSON.stringify(payload))
 
-    // Récupérer toutes les souscriptions push
-    const { data: subscriptions, error: subError } = await supabase
+    const { data: subs } = await supabaseAdmin
       .from('push_subscriptions')
-      .select('*')
+      .select('id, subscription')
+      .eq('is_active', true)
 
-    if (subError) {
-      console.error('push_subscriptions error:', subError.message)
-      return new Response(JSON.stringify({ error: 'DB error' }), { status: 500 })
+    if (!subs || subs.length === 0) {
+      console.log('[send-push] Aucune subscription active')
+      return new Response(JSON.stringify({ sent: 0 }), { status: 200 })
     }
 
-    if (!subscriptions || subscriptions.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, message: 'No subscriptions' }), { status: 200 })
-    }
-
-    const payload = JSON.stringify({
-      title:        '🛍️ Nouvelle commande !',
-      body:         `${customer_name ?? 'Client'} — ${item_count ?? '?'} article(s) — ${total_dt ?? '?'} DT`,
-      icon:         '/icons/hk-logo-192.png',
-      badge:        '/icons/badge-72.png',
-      url:          '/admin/commandes',
-      unseen_count: badgeCount,
-    })
+    console.log('[send-push] Envoi à', subs.length, 'subscription(s)')
 
     const results = await Promise.allSettled(
-      subscriptions.map(async (sub) => {
-        const pushSub = {
-          endpoint: sub.endpoint,
-          keys: { p256dh: sub.p256dh, auth: sub.auth },
-        }
+      subs.map(async ({ id, subscription }) => {
         try {
-          await webpush.sendNotification(pushSub, payload)
-          return { id: sub.id, status: 'sent' }
-        } catch (pushErr) {
-          if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
-            await supabase.from('push_subscriptions').delete().eq('id', sub.id)
-            return { id: sub.id, status: 'deleted_expired' }
+          await webpush.sendNotification(subscription, JSON.stringify(payload))
+          await supabaseAdmin
+            .from('push_subscriptions')
+            .update({ last_used_at: new Date().toISOString() })
+            .eq('id', id)
+        } catch (err) {
+          console.error('[send-push] Erreur sub', id, ':', err.statusCode, err.message)
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            await supabaseAdmin
+              .from('push_subscriptions')
+              .update({ is_active: false })
+              .eq('id', id)
           }
-          return { id: sub.id, status: 'failed', error: pushErr.message }
+          throw err
         }
       })
     )
 
-    const sent = results.filter((r) => r.status === 'fulfilled' && r.value?.status === 'sent').length
+    const sent   = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.filter((r) => r.status === 'rejected').length
+    console.log('[send-push] Résultat: sent=' + sent + ' failed=' + failed)
 
     return new Response(
-      JSON.stringify({ sent, total: subscriptions.length, unseen_count: badgeCount }),
+      JSON.stringify({ sent, failed }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     )
   } catch (err) {
-    console.error('send-push fatal:', err)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 })
+    console.error('[send-push] Erreur globale:', err)
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 })
   }
 })

@@ -297,35 +297,3 @@ export async function hardDeleteOrders(orderIds) {
   }
   return { success: true }
 }
-
-// ─── App Badge : unseen count ─────────────────────────────────────────────────
-
-export async function getUnseenCount() {
-  try {
-    const supabase = createAdminClient()
-    const { count, error } = await supabase
-      .from('orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_seen', false)
-    if (error) { console.error('[getUnseenCount]', error.message); return 0 }
-    return count ?? 0
-  } catch (err) {
-    console.error('[getUnseenCount]', err)
-    return 0
-  }
-}
-
-export async function markOrdersSeen() {
-  try {
-    const supabase = createAdminClient()
-    const { error } = await supabase
-      .from('orders')
-      .update({ is_seen: true })
-      .eq('is_seen', false)
-    if (error) { console.error('[markOrdersSeen]', error.message); return { success: false } }
-    return { success: true }
-  } catch (err) {
-    console.error('[markOrdersSeen]', err)
-    return { success: false }
-  }
-}

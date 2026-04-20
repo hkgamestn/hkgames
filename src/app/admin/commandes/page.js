@@ -1,176 +1,383 @@
 'use client'
+import GiftCardPrint from '@/components/admin/GiftCardPrint'
+import { envoyerNavex } from '@/app/actions/navex'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { markOrdersSeen, getUnseenCount } from '@/lib/actions/orders'
+import { updateOrderStatus, softDeleteOrder, restoreOrder, hardDeleteOrders } from '@/lib/actions/orders'
+import { formatDT } from '@/lib/utils/formatDT'
+import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX } from 'lucide-react'
+import OrderTooltip from '@/components/admin/OrderTooltip'
+import OrderEditPanel from '@/components/admin/OrderEditPanel'
 import styles from './commandes.module.css'
 
-const STATUS_LABELS = {
-  pending:   { label: 'En attente', color: '#fbbf24' },
-  confirmed: { label: 'Confirmée',  color: '#06b6d4' },
-  shipped:   { label: 'Expédiée',   color: '#a855f7' },
-  delivered: { label: 'Livrée',     color: '#10b981' },
-  cancelled: { label: 'Annulée',    color: '#ef4444' },
+const STATUS_TABS = [
+  { id: null,        label: 'Toutes' },
+  { id: 'pending',   label: 'En attente' },
+  { id: 'confirmed', label: 'Confirmées' },
+  { id: 'shipped',   label: 'Expédiées' },
+  { id: 'delivered', label: 'Livrées' },
+  { id: 'cancelled', label: 'Annulées' },
+  { id: 'deleted',   label: '🗑 Supprimées' },
+]
+
+const STATUS_CONFIG = {
+  pending:   { label: 'En attente',  color: '#fbbf24' },
+  confirmed: { label: 'Confirmée',   color: '#10b981' },
+  on_hold:   { label: 'En suspens',  color: '#fb923c' },
+  shipped:   { label: 'Expédiée',    color: '#60a5fa' },
+  delivered: { label: 'Livrée',      color: '#34d399' },
+  cancelled: { label: 'Annulée',     color: '#ef4444' },
 }
 
-function clearAppBadge() {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_BADGE' })
-  }
-  if ('clearAppBadge' in navigator) {
-    navigator.clearAppBadge().catch(() => {})
-  }
-}
+const CANCEL_REASONS = [
+  'Client injoignable',
+  'Client a refusé la livraison',
+  'Stock insuffisant',
+  'Double commande',
+  'Autre',
+]
 
 export default function CommandesPage() {
   const [orders, setOrders]           = useState([])
+  const [repeatBuyers, setRepeatBuyers] = useState(new Set())
   const [loading, setLoading]         = useState(true)
-  const [filter, setFilter]           = useState('all')
-  const [unseenCount, setUnseenCount] = useState(0)
-  const supabase = createClient()
+  const [activeTab, setActiveTab]     = useState(null)
+  const [search, setSearch]           = useState('')
+  const [cancelModal, setCancelModal] = useState(null)
+  const [cancelReason, setCancelReason] = useState(CANCEL_REASONS[0])
+  const [actionLoading, setActionLoading] = useState(null)
+  const [navexLoading, setNavexLoading]   = useState(null)
+  const [selectedOrders, setSelectedOrders] = useState([])
+  const [giftCardOrder, setGiftCardOrder] = useState(null)
+  const [tooltip, setTooltip]             = useState({ order: null, pos: { x: 0, y: 0 } })
+  const [editOrder, setEditOrder]         = useState(null)
+  const [multiNavexLoading, setMultiNavexLoading] = useState(false)
+  const [navexDone, setNavexDone]         = useState({})
+  const [navexStatus, setNavexStatus]     = useState({})
 
   const fetchOrders = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
+    const supabase = createClient()
+    let q = supabase
+      .from('orders')
+      .select('id, order_number, status, customer_name, customer_phone, customer_city, customer_address, customer_notes, items, total_dt, subtotal_dt, discount_dt, shipping_dt, created_at, gift_message, gift_recipient, deleted_at')
+      .order('created_at', { ascending: false })
+
+    if (activeTab === 'deleted') q = q.not('deleted_at', 'is', null)
+    else { q = q.is('deleted_at', null); if (activeTab) q = q.eq('status', activeTab) }
+    if (search)    q = q.or(`customer_name.ilike.%${search}%,customer_phone.ilike.%${search}%,order_number.ilike.%${search}%`)
+
+      // Charger tous les téléphones pour détecter les repeat buyers
+      const { data: allPhones } = await supabase
         .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(200)
-      if (error) throw error
-      setOrders(data ?? [])
-    } catch (err) {
-      console.error('[CommandesPage] fetchOrders:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [supabase])
+        .select('customer_phone')
+        .not('deleted_at', 'is', null)
+
+      const phoneCount = {}
+      ;(allPhones || []).forEach(({ customer_phone }) => {
+        if (customer_phone) phoneCount[customer_phone] = (phoneCount[customer_phone] || 0) + 1
+      })
+      const repeats = new Set(Object.keys(phoneCount).filter((p) => phoneCount[p] >= 2))
+      setRepeatBuyers(repeats)
+
+    const { data } = await q
+    setOrders(data || [])
+    setLoading(false)
+  }, [activeTab, search])
+
+  useEffect(() => { fetchOrders() }, [fetchOrders])
+
+  // Ref stable vers fetchOrders pour le channel realtime
+  const fetchOrdersRef = useRef(fetchOrders)
+  useEffect(() => { fetchOrdersRef.current = fetchOrders }, [fetchOrders])
 
   useEffect(() => {
-    const init = async () => {
-      await fetchOrders()
-      const count = await getUnseenCount()
-      setUnseenCount(count)
-      await markOrdersSeen()
-      clearAppBadge()
-    }
-    init()
-  }, [fetchOrders])
-
-  useEffect(() => {
+    const supabase = createClient()
     const channel = supabase
-      .channel('admin-orders-live')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, async (payload) => {
-        setOrders((prev) => [payload.new, ...prev])
-        await supabase.from('orders').update({ is_seen: true }).eq('id', payload.new.id)
+      .channel('commandes-page-v3')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        fetchOrdersRef.current()
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
-        setOrders((prev) => prev.map((o) => (o.id === payload.new.id ? payload.new : o)))
+      .subscribe((status) => {
+        console.log('[HK Commandes] Realtime:', status)
       })
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
-  }, [supabase])
 
-  async function updateStatus(orderId, newStatus) {
-    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId)
-    if (error) console.error('[updateStatus]', error.message)
+    return () => { supabase.removeChannel(channel) }
+  }, []) // ← [] — se monte une seule fois, stable
+
+  async function handleMultiNavex() {
+    if (selectedOrders.length === 0) return
+    setMultiNavexLoading(true)
+    const confirmedOrders = orders.filter((o) => selectedOrders.includes(o.id) && o.status === 'confirmed')
+    let success = 0, failed = 0
+    for (const order of confirmedOrders) {
+      try {
+        const r = await envoyerNavex(order)
+        setNavexDone((prev) => ({ ...prev, [order.id]: true }))
+        setNavexStatus((prev) => ({ ...prev, [order.id]: r.status_message || 'Envoyé' }))
+        success++
+      } catch (err) {
+        failed++
+      }
+    }
+    setMultiNavexLoading(false)
+    setSelectedOrders([])
+    alert(success + ' colis envoyés avec succès' + (failed > 0 ? ', ' + failed + ' échoués' : '') + ' !')
   }
 
-  const filtered = filter === 'all' ? orders : orders.filter((o) => o.status === filter)
+  async function handleBulkDelete() {
+    if (!selectedOrders.length) return
+    if (!confirm('Supprimer (soft) ' + selectedOrders.length + ' commande(s) ?')) return
+    for (const id of selectedOrders) await softDeleteOrder(id)
+    setSelectedOrders([])
+    fetchOrders()
+  }
+
+  async function handleBulkRestore() {
+    if (!selectedOrders.length) return
+    for (const id of selectedOrders) await restoreOrder(id)
+    setSelectedOrders([])
+    fetchOrders()
+  }
+
+  async function handleBulkHardDelete() {
+    if (!selectedOrders.length) return
+    if (!confirm('⚠️ SUPPRESSION DÉFINITIVE de ' + selectedOrders.length + ' commande(s) ? Cette action est irréversible.')) return
+    await hardDeleteOrders(selectedOrders)
+    setSelectedOrders([])
+    fetchOrders()
+  }
+
+  function toggleSelect(orderId) {
+    setSelectedOrders((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    )
+  }
+
+  function toggleSelectAll() {
+    const confirmed = orders.filter((o) => o.status === 'confirmed').map((o) => o.id)
+    if (selectedOrders.length === confirmed.length) setSelectedOrders([])
+    else setSelectedOrders(confirmed)
+  }
+
+  async function handleNavex(order) {
+    setNavexLoading(order.id)
+    try {
+      const result = await envoyerNavex(order)
+      setNavexDone((prev) => ({ ...prev, [order.id]: true }))
+      setNavexStatus((prev) => ({ ...prev, [order.id]: result.status_message || 'Envoyé' }))
+      alert('Colis envoyé à Navex avec succès !')
+    } catch (err) {
+      alert('Erreur Navex : ' + err.message)
+    }
+    setNavexLoading(null)
+  }
+
+  async function handleRestore(orderId) {
+    setActionLoading(orderId + 'restore')
+    await restoreOrder(orderId)
+    setActionLoading(null)
+    fetchOrders()
+  }
+
+  async function handleAction(orderId, action, extra = {}) {
+    setActionLoading(orderId + action)
+    if (action === 'confirm')      await updateOrderStatus(orderId, 'confirmed', { navexTrigger: true })
+    else if (action === 'on_hold') await updateOrderStatus(orderId, 'on_hold')
+    else if (action === 'cancel')  await updateOrderStatus(orderId, 'cancelled', { reason: extra.reason })
+    else if (action === 'delete')  await softDeleteOrder(orderId)
+    setActionLoading(null)
+    fetchOrders()
+  }
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>
-          Commandes
-          {unseenCount > 0 && (
-            <span className={styles.newBadge}>
-              {unseenCount} nouvelle{unseenCount > 1 ? 's' : ''}
-            </span>
-          )}
-        </h1>
-        <p className={styles.subtitle}>{orders.length} commande{orders.length !== 1 ? 's' : ''} au total</p>
+        <h1 className={styles.title}>Commandes</h1>
+        {selectedOrders.length > 0 && (
+          <div className={styles.bulkBar}>
+            <span className={styles.bulkCount}>{selectedOrders.length} sélectionnée(s)</span>
+
+            {activeTab !== 'deleted' && (
+              <button className={`${styles.bulkBtn} ${styles.bulkNavex}`}
+                onClick={handleMultiNavex} disabled={multiNavexLoading} type="button">
+                <Send size={14} />
+                {multiNavexLoading ? 'Envoi...' : 'Navex'}
+              </button>
+            )}
+
+            {activeTab !== 'deleted' && (
+              <button className={`${styles.bulkBtn} ${styles.bulkDelete}`}
+                onClick={handleBulkDelete} type="button">
+                <Trash2 size={14} />
+                Supprimer
+              </button>
+            )}
+
+            {activeTab === 'deleted' && (
+              <button className={`${styles.bulkBtn} ${styles.bulkRestore}`}
+                onClick={handleBulkRestore} type="button">
+                <RotateCcw size={14} />
+                Restaurer
+              </button>
+            )}
+
+            {activeTab === 'deleted' && (
+              <button className={`${styles.bulkBtn} ${styles.bulkHardDelete}`}
+                onClick={handleBulkHardDelete} type="button">
+                <ArchiveX size={14} />
+                Suppr. définitive
+              </button>
+            )}
+          </div>
+        )}
+        <input
+          className={styles.search}
+          placeholder="Rechercher par nom, téléphone, #..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
-      <div className={styles.filters}>
-        {['all', 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled'].map((s) => (
+      <div className={styles.tabs}>
+        {STATUS_TABS.map((tab) => (
           <button
-            key={s}
-            className={`${styles.filterBtn} ${filter === s ? styles.filterActive : ''}`}
-            onClick={() => setFilter(s)}
+            key={String(tab.id)}
+            className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+            type="button"
           >
-            {s === 'all' ? 'Toutes' : STATUS_LABELS[s]?.label ?? s}
-            <span className={styles.filterCount}>
-              {s === 'all' ? orders.length : orders.filter((o) => o.status === s).length}
-            </span>
+            {tab.label}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className={styles.loader}>Chargement des commandes...</div>
-      ) : filtered.length === 0 ? (
-        <div className={styles.empty}>Aucune commande{filter !== 'all' ? ' avec ce statut' : ''}.</div>
+        <p className={styles.loading}>Chargement...</p>
+      ) : orders.length === 0 ? (
+        <p className={styles.empty}>Aucune commande trouvée.</p>
       ) : (
-        <div className={styles.list}>
-          {filtered.map((order) => (
-            <OrderCard key={order.id} order={order} onStatusChange={updateStatus} />
-          ))}
+        <div className={styles.table}>
+          <div className={styles.tableHead}>
+            <input
+              type="checkbox"
+              className={styles.checkbox}
+              onChange={toggleSelectAll}
+              checked={selectedOrders.length > 0 && selectedOrders.length === orders.filter(o => o.status === 'confirmed').length}
+              title="Tout sélectionner"
+            />
+            <span>#</span><span>Client</span><span>Téléphone</span>
+            <span>Ville</span><span>Total</span><span>Statut</span>
+            <span>Date</span><span>Actions</span>
+          </div>
+          {orders.map((order) => {
+            const cfg = STATUS_CONFIG[order.status] || {}
+            return (
+              <div key={order.id} className={styles.tableRow + (selectedOrders.includes(order.id) ? ' ' + styles.tableRowSelected : '')} onMouseEnter={(e) => setTooltip({ order, pos: { x: e.clientX, y: e.clientY } })} onMouseMove={(e) => setTooltip(t => ({ ...t, pos: { x: e.clientX, y: e.clientY } }))} onMouseLeave={() => setTooltip({ order: null, pos: { x: 0, y: 0 } })}>
+                <input
+                  type="checkbox"
+                  checked={selectedOrders.includes(order.id)}
+                  onChange={() => toggleSelect(order.id)}
+                  className={styles.checkbox}
+                  disabled={order.status !== 'confirmed'}
+                />
+                <span className={styles.orderNum}>{order.order_number || order.id.slice(0,8)}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                  {order.customer_name || '—'}
+                  {repeatBuyers.has(order.customer_phone) && (
+                    <span style={{
+                      fontSize: '0.65rem', fontWeight: 700, background: 'rgba(251,191,36,0.15)',
+                      color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)',
+                      borderRadius: '99px', padding: '1px 7px', whiteSpace: 'nowrap', flexShrink: 0
+                    }}>⭐ Fidèle</span>
+                  )}
+                  {order.gift_message && (
+                    <button onClick={() => setGiftCardOrder(order)} style={{
+                      fontSize: '0.65rem', fontWeight: 700,
+                      background: 'linear-gradient(135deg,rgba(168,85,247,0.18),rgba(236,72,153,0.14))',
+                      color: '#a855f7', border: '1px solid rgba(168,85,247,0.4)',
+                      borderRadius: '99px', padding: '1px 7px', whiteSpace: 'nowrap',
+                      flexShrink: 0, cursor: 'pointer'
+                    }}>🎁 Carte cadeau</button>
+                  )}
+                </span>
+                <span>
+                  <a href={`tel:${order.customer_phone}`} className={styles.phoneLink}>
+                    {order.customer_phone}
+                  </a>
+                </span>
+                <span>{order.customer_city || '—'}</span>
+                <span className={styles.total}>{formatDT(order.total_dt || 0)}</span>
+                <span>
+                  <span className={styles.statusBadge} style={{ '--status-color': cfg.color }}>
+                    {cfg.label || order.status}
+                  </span>
+                </span>
+                <span className={styles.date}>
+                  {new Date(order.created_at).toLocaleDateString('fr-TN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <div className={styles.actions}>
+                  {order.status === 'pending' && (
+                    <button className={`${styles.actionBtn} ${styles.confirm}`} onClick={() => handleAction(order.id, 'confirm')} disabled={actionLoading === order.id + 'confirm'} title="Confirmer" type="button">
+                      <CheckCircle size={15} />
+                    </button>
+                  )}
+                  {order.status === 'confirmed' && !navexDone[order.id] && (
+                    <button
+                      className={styles.actionBtn + ' ' + styles.navex}
+                      onClick={() => handleNavex(order)}
+                      disabled={navexLoading === order.id}
+                      title="Envoyer a Navex"
+                      type="button"
+                    >
+                      {navexLoading === order.id ? '...' : '🚚'}
+                    </button>
+                  )}
+                  {navexDone[order.id] && (
+                    <span className={styles.navexStatusBadge}>
+                      ✅ {navexStatus[order.id] || 'Navex'}
+                    </span>
+                  )}
+                  {['pending', 'confirmed'].includes(order.status) && (
+                    <button className={styles.actionBtn + ' ' + styles.hold} onClick={() => handleAction(order.id, 'on_hold')} title="Injoignable" type="button">
+                      <Phone size={15} />
+                    </button>
+                  )}
+                  {order.status !== 'cancelled' && (
+                    <button className={`${styles.actionBtn} ${styles.cancel}`} onClick={() => setCancelModal(order.id)} title="Annuler" type="button">
+                      <XCircle size={15} />
+                    </button>
+                  )}
+                  <button className={`${styles.actionBtn} ${styles.delete}`} onClick={() => { if (confirm('Supprimer ?')) handleAction(order.id, 'delete') }} title="Supprimer" type="button">
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
-    </div>
-  )
-}
 
-function OrderCard({ order, onStatusChange }) {
-  const s     = STATUS_LABELS[order.status] ?? { label: order.status, color: '#7c6fa8' }
-  const total = typeof order.total_dt === 'number' ? order.total_dt.toFixed(2) : '—'
-  const items = Array.isArray(order.items) ? order.items : []
-  const date  = order.created_at
-    ? new Date(order.created_at).toLocaleString('fr-TN', { dateStyle: 'short', timeStyle: 'short' })
-    : '—'
-
-  return (
-    <div className={styles.card}>
-      <div className={styles.cardHeader}>
-        <div className={styles.cardMeta}>
-          <span className={styles.orderId}>#{order.id?.slice(0, 8).toUpperCase()}</span>
-          <span className={styles.orderDate}>{date}</span>
-        </div>
-        <span className={styles.statusPill} style={{ background: s.color + '22', color: s.color, border: `1px solid ${s.color}44` }}>
-          {s.label}
-        </span>
-      </div>
-
-      <div className={styles.cardBody}>
-        <div className={styles.customerInfo}>
-          <p className={styles.customerName}>{order.customer_name || 'Client inconnu'}</p>
-          <p className={styles.customerPhone}>{order.phone || '—'}</p>
-          {order.address && <p className={styles.customerAddr}>{order.address}</p>}
-        </div>
-
-        <div className={styles.itemsList}>
-          {items.map((item, i) => (
-            <div key={i} className={styles.item}>
-              <span className={styles.itemName}>{item.name || item.product_name || 'Produit'}</span>
-              {item.color && <span className={styles.itemColor}>{item.color}</span>}
-              <span className={styles.itemQty}>×{item.quantity ?? 1}</span>
+      {cancelModal && (
+        <div className={styles.overlay} onClick={() => setCancelModal(null)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Raison d'annulation</h3>
+            <select className={styles.select} value={cancelReason} onChange={(e) => setCancelReason(e.target.value)}>
+              {CANCEL_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <div className={styles.modalActions}>
+              <button className={styles.cancelConfirmBtn} type="button"
+                onClick={async () => { await handleAction(cancelModal, 'cancel', { reason: cancelReason }); setCancelModal(null) }}>
+                Confirmer l'annulation
+              </button>
+              <button className={styles.modalClose} type="button" onClick={() => setCancelModal(null)}>Retour</button>
             </div>
-          ))}
+          </div>
         </div>
-
-        <div className={styles.cardFooter}>
-          <span className={styles.total}>{total} DT</span>
-          <select
-            className={styles.statusSelect}
-            value={order.status}
-            onChange={(e) => onStatusChange(order.id, e.target.value)}
-          >
-            {Object.entries(STATUS_LABELS).map(([val, { label }]) => (
-              <option key={val} value={val}>{label}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      )}
+      {giftCardOrder && <GiftCardPrint order={giftCardOrder} onClose={() => setGiftCardOrder(null)} />}
+      <OrderTooltip order={tooltip.order} pos={tooltip.pos} />
+      <OrderEditPanel order={editOrder} onClose={() => setEditOrder(null)} onSaved={fetchOrders} />
     </div>
   )
 }
