@@ -1,60 +1,105 @@
-self.addEventListener('install', () => self.skipWaiting())
-self.addEventListener('activate', (e) => e.waitUntil(clients.claim()))
-self.addEventListener('fetch', () => {})
+// public/sw.js — App Badge API + Web Push
 
+// ─── FETCH : PAS de cache (évite ERR_INTERNET_DISCONNECTED) ─────────────────
+self.addEventListener('fetch', () => { return })
+
+// ─── PUSH NOTIFICATION ───────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
-  if (!event.data) return
-  let data
-  try { data = event.data.json() }
-  catch { data = { title: 'HK Games Admin', body: event.data.text() } }
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = { title: 'HK Games', body: 'Nouvelle commande reçue !' }
+  }
 
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'HK Games Admin', {
-      body:              data.body || '',
-      icon:              '/icons/hk-logo-192.png',
-      badge:             '/icons/badge-72.png',
-      tag:               data.tag || 'hkgames-order',
-      data:              data.data || {},
-      vibrate:           [300, 100, 300, 100, 300],
-      requireInteraction: true,
-      silent:            false,
-      actions:           data.actions || [
-        { action: 'view',     title: '👁 Voir commande' },
-        { action: 'whatsapp', title: '💬 WhatsApp' },
-      ],
-    })
-  )
-})
+  const title   = data.title   || '🛍️ HK Games'
+  const body    = data.body    || 'Nouvelle commande reçue !'
+  const badge   = data.badge   || '/icons/badge-72.png'
+  const icon    = data.icon    || '/icons/hk-logo-192.png'
+  const unseen  = typeof data.unseen_count === 'number' ? data.unseen_count : null
+  const url     = data.url    || '/admin/commandes'
 
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close()
-  const d = event.notification.data || {}
-
-  let target = '/admin/commandes'
-  if (d.orderId) target = '/admin/commandes?id=' + d.orderId
-
-  if (event.action === 'whatsapp' && d.phone) {
-    const num = String(d.phone).replace(/[^0-9]/g, '').replace(/^0/, '216')
-    const msg = encodeURIComponent('Bonjour, je vous contacte pour votre commande HK Games.')
-    target = 'https://wa.me/' + num + '?text=' + msg
+  const notifOptions = {
+    body,
+    icon,
+    badge,
+    tag:           'new-order',
+    renotify:      true,
+    requireInteraction: true,
+    data:          { url },
+    actions: [
+      { action: 'view',    title: '👀 Voir commande' },
+      { action: 'dismiss', title: 'Ignorer'          },
+    ],
   }
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-      // Chercher une fenêtre admin ouverte
-      const adminWindow = list.find((c) => c.url.includes('/admin'))
-      if (adminWindow) {
-        adminWindow.focus()
-        return adminWindow.navigate(target)
+    (async () => {
+      await self.registration.showNotification(title, notifOptions)
+
+      // ── App Badge API ──────────────────────────────────────────────────────
+      if ('setAppBadge' in self.registration) {
+        try {
+          if (unseen !== null && unseen > 0) {
+            await self.registration.setAppBadge(unseen)
+          } else {
+            await self.registration.setAppBadge()
+          }
+        } catch (e) {
+          console.warn('[SW] App Badge not supported:', e)
+        }
       }
-      // Chercher n'importe quelle fenêtre ouverte
-      const anyWindow = list.find((c) => 'focus' in c)
-      if (anyWindow) {
-        anyWindow.focus()
-        return anyWindow.navigate(target)
-      }
-      // Ouvrir nouvelle fenêtre
-      return clients.openWindow(target)
-    })
+    })()
   )
+})
+
+// ─── NOTIFICATION CLICK ──────────────────────────────────────────────────────
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  if (event.action === 'dismiss') return
+
+  const targetUrl = event.notification.data?.url || '/admin/commandes'
+
+  event.waitUntil(
+    (async () => {
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      const adminClient = clients.find((c) => c.url.includes('/admin'))
+
+      if (adminClient) {
+        await adminClient.focus()
+        adminClient.navigate(targetUrl)
+      } else {
+        await self.clients.openWindow(targetUrl)
+      }
+
+      clients.forEach((c) => c.postMessage({ type: 'NOTIFICATION_CLICKED' }))
+    })()
+  )
+})
+
+// ─── MESSAGE depuis la page (clear / set badge) ───────────────────────────────
+self.addEventListener('message', (event) => {
+  if (!event.data) return
+
+  if (event.data.type === 'CLEAR_BADGE') {
+    if ('clearAppBadge' in self.registration) {
+      self.registration.clearAppBadge().catch(() => {})
+    }
+  }
+
+  if (event.data.type === 'SET_BADGE' && typeof event.data.count === 'number') {
+    if ('setAppBadge' in self.registration) {
+      if (event.data.count > 0) {
+        self.registration.setAppBadge(event.data.count).catch(() => {})
+      } else {
+        self.registration.clearAppBadge().catch(() => {})
+      }
+    }
+  }
+})
+
+// ─── INSTALL / ACTIVATE ──────────────────────────────────────────────────────
+self.addEventListener('install', () => self.skipWaiting())
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim())
 })
