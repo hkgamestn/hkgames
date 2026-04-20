@@ -58,7 +58,7 @@
 
 .tableHead {
   display: grid;
-  grid-template-columns: 32px 140px 1fr 140px 80px 90px 110px 100px;
+  grid-template-columns: 32px 100px 1fr 130px 70px 90px 100px 220px;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-5);
   border-bottom: 1px solid var(--bg-card-border);
@@ -67,12 +67,12 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  min-width: 860px;
+  min-width: 960px;
 }
 
 .tableRow {
   display: grid;
-  grid-template-columns: 32px 140px 1fr 140px 80px 90px 110px 100px;
+  grid-template-columns: 32px 100px 1fr 130px 70px 90px 100px 220px;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-5);
   border-bottom: 1px solid var(--bg-card-border);
@@ -80,7 +80,7 @@
   font-size: 0.88rem;
   color: var(--text-secondary);
   transition: background var(--transition-fast);
-  min-width: 860px;
+  min-width: 960px;
 }
 
 .tableRow:last-child { border-bottom: none; }
@@ -104,22 +104,23 @@
 }
 
 .date { font-size: 0.78rem; }
-.actions { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.actions { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; overflow: visible; }
 
 .actionBtn {
-  min-width: 36px; height: 36px;
-  padding: 0 10px;
-  display: flex; align-items: center; justify-content: center; gap: 4px;
+  min-width: 34px; height: 34px;
+  padding: 0 8px;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.08);
   cursor: pointer;
-  font-size: 0.78rem; font-weight: 600;
+  font-size: 0.76rem; font-weight: 600;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   color: var(--text-muted);
   background: rgba(255,255,255,0.04);
   white-space: nowrap;
+  flex-shrink: 0;
 }
-.actionBtn:active { transform: scale(0.95); }
+.actionBtn:active { transform: scale(0.93); }
 
 .confirm { color: #10b981; border-color: rgba(16,185,129,0.25); background: rgba(16,185,129,0.08); }
 .confirm:hover { background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.4); }
