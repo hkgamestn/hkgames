@@ -60,7 +60,7 @@ export async function createPendingOrder({ phone, items, subtotalDt, giftMessage
 
   if (error) { console.error('NAVEX INSERT ERROR:', JSON.stringify(error)); return { error: 'Erreur: ' + error.message } }
 
-  await sendPushNotification(data.id, 'pending')
+  // Push uniquement sur 'confirmed' — pas sur pending (évite double notif)
 
   return { orderId: data.id }
 }

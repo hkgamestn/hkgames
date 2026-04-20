@@ -127,7 +127,10 @@ Deno.serve(async (req) => {
           ? { endpoint, keys: { p256dh, auth } }
           : subscription
         try {
-          await webpush.sendNotification(pushSub, JSON.stringify(payload))
+          await webpush.sendNotification(pushSub, JSON.stringify(payload), {
+            urgency: 'high',
+            TTL: 60,
+          })
           await supabaseAdmin
             .from('push_subscriptions')
             .update({ last_used_at: new Date().toISOString() })
