@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(
 
 const DOMAIN = 'https://hap-p-kids.store'
 
-function buildPayload(type, orderId, orderData) {
+function buildPayload(type, orderId, orderData, unseenCount = 1) {
   const phone = orderData?.customer_phone || ''
   const name  = orderData?.customer_name  || 'Nouveau client'
   const city  = orderData?.customer_city  || ''
@@ -22,6 +22,7 @@ function buildPayload(type, orderId, orderData) {
     vibrate: [300, 100, 300, 100, 300],
     silent: false,
     timestamp: Date.now(),
+    unseen_count: unseenCount,
   }
 
   if (type === 'pending') {
@@ -98,7 +99,13 @@ Deno.serve(async (req) => {
       .eq('id', orderId)
       .single()
 
-    const payload = buildPayload(type, orderId, orderData)
+    // Compter les commandes pending (non traitées) pour le badge icône
+    const { count: unseenCount } = await supabaseAdmin
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending')
+
+    const payload = buildPayload(type, orderId, orderData, unseenCount ?? 1)
     console.log('[send-push] Payload:', JSON.stringify(payload))
 
     const { data: subs } = await supabaseAdmin

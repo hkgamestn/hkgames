@@ -9,7 +9,13 @@ self.addEventListener('push', (event) => {
   catch { data = { title: 'HK Games Admin', body: event.data.text() } }
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'HK Games Admin', {
+    (async () => {
+      // Badge sur l'icône de l'app
+      if ('setAppBadge' in self.registration) {
+        const count = typeof data.unseen_count === 'number' ? data.unseen_count : 1
+        await self.registration.setAppBadge(count).catch(() => {})
+      }
+      await self.registration.showNotification(data.title || 'HK Games Admin', {
       body:              data.body || '',
       icon:              '/icons/hk-logo-192.png',
       badge:             '/icons/badge-72.png',
@@ -23,11 +29,16 @@ self.addEventListener('push', (event) => {
         { action: 'whatsapp', title: '💬 WhatsApp' },
       ],
     })
+    })()
   )
 })
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
+  // Clear badge icône quand l'admin clique sur la notif
+  if ('clearAppBadge' in self.registration) {
+    self.registration.clearAppBadge().catch(() => {})
+  }
   const d = event.notification.data || {}
 
   let target = '/admin/commandes'
