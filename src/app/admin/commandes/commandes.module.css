@@ -284,3 +284,18 @@
   font-weight: 800;
 }
 .bulkHardDelete:hover { background: rgba(239,68,68,0.35); }
+
+/* Bouton nouvelle commande */
+.newOrderBtn {
+  display: flex; align-items: center; gap: 7px;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  border: none; color: #fff; padding: 9px 18px;
+  border-radius: 10px; font-size: 0.88rem; font-weight: 700;
+  cursor: pointer; transition: opacity 0.2s;
+  box-shadow: 0 4px 15px rgba(168,85,247,0.35);
+}
+.newOrderBtn:hover { opacity: 0.9; }
+
+/* Bouton edit dans les lignes */
+.edit { background: rgba(168,85,247,0.1) !important; color: var(--color-primary) !important; border-color: rgba(168,85,247,0.25) !important; }
+.edit:hover { background: rgba(168,85,247,0.2) !important; }

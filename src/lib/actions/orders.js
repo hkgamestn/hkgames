@@ -298,3 +298,57 @@ export async function hardDeleteOrders(orderIds) {
   }
   return { success: true }
 }
+
+// ─── Création manuelle commande par admin ─────────────────────────────────────
+
+export async function createAdminOrder(data) {
+  try {
+    const supabase = createAdminClient()
+
+    // Numéro séquentiel via séquence DB
+    const { data: seqData, error: seqError } = await supabase.rpc('next_order_number')
+    if (seqError) {
+      console.error('[createAdminOrder] next_order_number error:', seqError.message)
+      return { error: 'Erreur génération numéro commande.' }
+    }
+    const orderNumber = String(seqData).padStart(6, '0')
+
+    const { data: order, error } = await supabase
+      .from('orders')
+      .insert({
+        order_number:     orderNumber,
+        status:           'confirmed',
+        source:           'admin',
+        customer_name:    String(data.customer_name || '').slice(0, 100).trim(),
+        customer_phone:   String(data.customer_phone || '').slice(0, 20).trim(),
+        customer_address: String(data.customer_address || '').slice(0, 300).trim(),
+        customer_city:    String(data.customer_city || '').slice(0, 50),
+        customer_notes:   String(data.customer_notes || '').slice(0, 500).trim(),
+        items:            Array.isArray(data.items) ? data.items : [],
+        subtotal_dt:      parseFloat(data.subtotal_dt) || 0,
+        shipping_dt:      parseFloat(data.shipping_dt) || 8,
+        discount_dt:      0,
+        total_dt:         parseFloat(data.total_dt) || 0,
+        created_at:       new Date().toISOString(),
+        updated_at:       new Date().toISOString(),
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      console.error('[createAdminOrder] insert error:', error.message)
+      return { error: 'Erreur création commande: ' + error.message }
+    }
+
+    await supabase.from('order_logs').insert({
+      order_id: order.id,
+      action:   'admin_created',
+      new_value: { source: 'admin', order_number: orderNumber },
+    }).catch(() => {})
+
+    return { success: true, orderId: order.id }
+  } catch (err) {
+    console.error('[createAdminOrder] unexpected:', err)
+    return { error: 'Erreur inattendue.' }
+  }
+}

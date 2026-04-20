@@ -6,9 +6,10 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { updateOrderStatus, softDeleteOrder, restoreOrder, hardDeleteOrders } from '@/lib/actions/orders'
 import { formatDT } from '@/lib/utils/formatDT'
-import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX } from 'lucide-react'
+import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX, Plus } from 'lucide-react'
 import OrderTooltip from '@/components/admin/OrderTooltip'
 import OrderEditPanel from '@/components/admin/OrderEditPanel'
+import CreateOrderModal from '@/components/admin/CreateOrderModal'
 import styles from './commandes.module.css'
 
 const STATUS_TABS = [
@@ -52,6 +53,7 @@ export default function CommandesPage() {
   const [giftCardOrder, setGiftCardOrder] = useState(null)
   const [tooltip, setTooltip]             = useState({ order: null, pos: { x: 0, y: 0 } })
   const [editOrder, setEditOrder]         = useState(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [multiNavexLoading, setMultiNavexLoading] = useState(false)
   const [navexDone, setNavexDone]         = useState({})
   const [navexStatus, setNavexStatus]     = useState({})
@@ -194,6 +196,13 @@ export default function CommandesPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Commandes</h1>
+        <button
+          className={styles.newOrderBtn}
+          onClick={() => setShowCreateModal(true)}
+          type="button"
+        >
+          <Plus size={16} /> Nouvelle commande
+        </button>
         {selectedOrders.length > 0 && (
           <div className={styles.bulkBar}>
             <span className={styles.bulkCount}>{selectedOrders.length} sélectionnée(s)</span>
@@ -317,6 +326,9 @@ export default function CommandesPage() {
                   {new Date(order.created_at).toLocaleDateString('fr-TN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </span>
                 <div className={styles.actions}>
+                  <button className={`${styles.actionBtn} ${styles.edit}`} onClick={() => setEditOrder(order)} title="Modifier" type="button">
+                    <Pencil size={15} />
+                  </button>
                   {order.status === 'pending' && (
                     <button className={`${styles.actionBtn} ${styles.confirm}`} onClick={() => handleAction(order.id, 'confirm')} disabled={actionLoading === order.id + 'confirm'} title="Confirmer" type="button">
                       <CheckCircle size={15} />
@@ -378,6 +390,12 @@ export default function CommandesPage() {
       {giftCardOrder && <GiftCardPrint order={giftCardOrder} onClose={() => setGiftCardOrder(null)} />}
       <OrderTooltip order={tooltip.order} pos={tooltip.pos} />
       <OrderEditPanel order={editOrder} onClose={() => setEditOrder(null)} onSaved={fetchOrders} />
+      {showCreateModal && (
+        <CreateOrderModal
+          onClose={() => setShowCreateModal(false)}
+          onCreated={() => { setShowCreateModal(false); fetchOrders() }}
+        />
+      )}
     </div>
   )
 }
