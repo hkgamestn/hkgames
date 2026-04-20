@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
 
     const { data: subs } = await supabaseAdmin
       .from('push_subscriptions')
-      .select('id, subscription')
+      .select('id, endpoint, p256dh, auth, subscription')
       .eq('is_active', true)
 
     if (!subs || subs.length === 0) {
@@ -121,9 +121,13 @@ Deno.serve(async (req) => {
     console.log('[send-push] Envoi à', subs.length, 'subscription(s)')
 
     const results = await Promise.allSettled(
-      subs.map(async ({ id, subscription }) => {
+      subs.map(async ({ id, endpoint, p256dh, auth, subscription }) => {
+        // Construire l'objet push subscription (colonnes séparées en priorité, fallback JSON)
+        const pushSub = endpoint && p256dh && auth
+          ? { endpoint, keys: { p256dh, auth } }
+          : subscription
         try {
-          await webpush.sendNotification(subscription, JSON.stringify(payload))
+          await webpush.sendNotification(pushSub, JSON.stringify(payload))
           await supabaseAdmin
             .from('push_subscriptions')
             .update({ last_used_at: new Date().toISOString() })
