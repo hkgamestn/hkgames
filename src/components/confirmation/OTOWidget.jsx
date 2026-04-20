@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react'
 import { Zap, X } from 'lucide-react'
 import { acceptOTO } from '@/lib/actions/orders'
+import { createClient } from '@/lib/supabase/client'
 import { formatDT } from '@/lib/utils/formatDT'
 import styles from './OTOWidget.module.css'
 
 const OTO_PRICE_REDUCTION = 6
-const BUDDY_PRICE         = 18
-const OTO_FINAL_PRICE     = BUDDY_PRICE - OTO_PRICE_REDUCTION
+const BUDDY_PRICE_DEFAULT = 18
 
 const BUDDY_COLORS = [
   { name: 'Rouge',  hex: '#ef4444' },
@@ -18,14 +18,32 @@ const BUDDY_COLORS = [
   { name: 'Vert',   hex: '#22c55e' },
 ]
 
-const COUNTDOWN = 300 // 5 minutes
+const COUNTDOWN = 300
 
 export default function OTOWidget({ orderId }) {
-  const [timeLeft, setTimeLeft]       = useState(COUNTDOWN)
-  const [dismissed, setDismissed]     = useState(false)
-  const [selectedColor, setSelected]  = useState(null)
-  const [loading, setLoading]         = useState(false)
-  const [accepted, setAccepted]       = useState(false)
+  const [timeLeft, setTimeLeft]      = useState(COUNTDOWN)
+  const [dismissed, setDismissed]    = useState(false)
+  const [selectedColor, setSelected] = useState(null)
+  const [loading, setLoading]        = useState(false)
+  const [accepted, setAccepted]      = useState(false)
+  const [buddyPrice, setBuddyPrice]  = useState(BUDDY_PRICE_DEFAULT)
+  const [buddyProductId, setBuddyProductId] = useState(null)
+
+  // Récupérer le vrai prix du Buddy depuis la DB
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('products')
+      .select('id, price_dt')
+      .eq('line', 'buddies')
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.price_dt) setBuddyPrice(data.price_dt)
+        if (data?.id)       setBuddyProductId(data.id)
+      })
+  }, [])
 
   useEffect(() => {
     if (timeLeft <= 0 || dismissed) return
@@ -33,16 +51,18 @@ export default function OTOWidget({ orderId }) {
     return () => clearTimeout(timer)
   }, [timeLeft, dismissed])
 
+  const otaFinalPrice = buddyPrice - OTO_PRICE_REDUCTION
+
   async function handleAccept() {
     if (!selectedColor) return
     setLoading(true)
     const result = await acceptOTO(orderId, {
-      product_id: 'oto-buddy',
+      product_id: buddyProductId || 'oto-buddy',
       name: `Buddy ${selectedColor.name}`,
       line: 'buddies',
       color: selectedColor.name,
       color_hex: selectedColor.hex,
-      price_dt: BUDDY_PRICE,
+      price_dt: buddyPrice,
       qty: 1,
     })
     if (result.success) setAccepted(true)
@@ -73,7 +93,7 @@ export default function OTOWidget({ orderId }) {
       </div>
 
       <h3 className={styles.title}>
-        Ajoute 1 Buddy à ta commande pour seulement +{formatDT(OTO_FINAL_PRICE)} !
+        Ajoute 1 Buddy à ta commande pour seulement +{formatDT(otaFinalPrice)} !
       </h3>
       <p className={styles.subtitle}>Livré avec ton colis, sans frais supplémentaires.</p>
 
@@ -99,7 +119,7 @@ export default function OTOWidget({ orderId }) {
           disabled={!selectedColor || loading}
           type="button"
         >
-          {loading ? 'Ajout...' : `Ajouter pour +${formatDT(OTO_FINAL_PRICE)}`}
+          {loading ? 'Ajout...' : `Ajouter pour +${formatDT(otaFinalPrice)}`}
         </button>
         <button className={styles.declineBtn} onClick={() => setDismissed(true)} type="button">
           Non merci
