@@ -128,10 +128,6 @@ export default function OrderNotifier() {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }
 
-  // Bouton test (visible uniquement si aucun toast actif)
-)
-  }
-
   return (
     <>
 
