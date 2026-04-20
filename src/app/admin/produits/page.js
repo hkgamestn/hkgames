@@ -277,20 +277,27 @@ export default function ProduitsPage() {
               {/* Couleurs preview */}
               {(editData.colors || []).length > 0 && (
                 <div className={styles.colorsPreview}>
-                  <div className={styles.colorsTitle}>Couleurs ({editData.colors.length})</div>
+                  <div className={styles.colorsTitle}>Stock par couleur</div>
                   <div className={styles.colorsList}>
                     {editData.colors.map((c, i) => (
                       <div key={i} className={styles.colorItem}>
                         <span className={styles.colorItemDot} style={{ background: c.hex || '#a855f7' }} />
                         <span className={styles.colorItemName}>{c.name}</span>
-                        <span className={styles.colorItemStock}>Stock: {c.stock ?? '—'}</span>
+                        <div className={styles.stockControl}>
+                          <button type="button" className={styles.stockBtn}
+                            onClick={() => { const u = editData.colors.map((col,idx) => idx===i ? {...col, stock: Math.max(0,(col.stock||0)-1)} : col); set('colors',u) }}>−</button>
+                          <input type="number" min="0" className={styles.stockInput}
+                            value={c.stock ?? 0}
+                            onChange={(e) => { const u = editData.colors.map((col,idx) => idx===i ? {...col, stock: Math.max(0,parseInt(e.target.value)||0)} : col); set('colors',u) }} />
+                          <button type="button" className={styles.stockBtn}
+                            onClick={() => { const u = editData.colors.map((col,idx) => idx===i ? {...col, stock: (col.stock||0)+1} : col); set('colors',u) }}>+</button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-
             {/* Panel Footer */}
             <div className={styles.panelFooter}>
               <button className={styles.cancelBtn} onClick={closePanel} type="button">Annuler</button>

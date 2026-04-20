@@ -263,13 +263,16 @@ export async function updateOrderItems(orderId, updatedData) {
 }
 
 export async function acceptOTO(orderId, otoBuddyItem) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single()
   if (!order) return { error: 'Commande introuvable.' }
 
   const otoPriceDt = parseFloat((await getSettingValue('oto_discount_dt')) || '6')
-  const newItems   = [...(order.items || []), { ...otoBuddyItem, price_dt: otoBuddyItem.price_dt - otoPriceDt }]
-  const newTotal   = parseFloat((order.total_dt + (otoBuddyItem.price_dt - otoPriceDt)).toFixed(3))
+  const discountedPrice = parseFloat((otoBuddyItem.price_dt - otoPriceDt).toFixed(3))
+  console.log('[acceptOTO] buddyPrice:', otoBuddyItem.price_dt, 'discount:', otoPriceDt, 'final:', discountedPrice)
+
+  const newItems = [...(order.items || []), { ...otoBuddyItem, price_dt: discountedPrice }]
+  const newTotal = parseFloat((order.total_dt + discountedPrice).toFixed(3))
 
   await supabase.from('orders').update({
     items:      newItems,

@@ -20,7 +20,7 @@ const BUDDY_COLORS = [
 
 const COUNTDOWN = 300
 
-export default function OTOWidget({ orderId }) {
+export default function OTOWidget({ orderId, onAccepted }) {
   const [timeLeft, setTimeLeft]      = useState(COUNTDOWN)
   const [dismissed, setDismissed]    = useState(false)
   const [selectedColor, setSelected] = useState(null)
@@ -65,7 +65,10 @@ export default function OTOWidget({ orderId }) {
       price_dt: buddyPrice,
       qty: 1,
     })
-    if (result.success) setAccepted(true)
+    if (result.success) {
+      setAccepted(true)
+      if (onAccepted) onAccepted()
+    }
     setLoading(false)
   }
 

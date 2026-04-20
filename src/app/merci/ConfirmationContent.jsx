@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import confetti from 'canvas-confetti'
@@ -17,41 +17,34 @@ export default function ConfirmationContent() {
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // Confetti au chargement
   useEffect(() => {
-    confetti({
-      particleCount: 150,
-      spread: 100,
-      origin: { y: 0.5 },
-      colors: ['#a855f7', '#ec4899', '#06b6d4', '#fbbf24', '#10b981'],
-    })
+    confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 }, colors: ['#a855f7','#ec4899','#06b6d4','#fbbf24','#10b981'] })
     setTimeout(() => {
-      confetti({
-        particleCount: 80,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: ['#a855f7', '#fbbf24'],
-      })
-      confetti({
-        particleCount: 80,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: ['#ec4899', '#10b981'],
-      })
+      confetti({ particleCount: 80, angle: 60,  spread: 55, origin: { x: 0 }, colors: ['#a855f7','#fbbf24'] })
+      confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#ec4899','#10b981'] })
     }, 400)
   }, [])
 
-  useEffect(() => {
+  // Charger la commande
+  const fetchOrder = useCallback(async () => {
     if (!orderId) { setLoading(false); return }
     const supabase = createClient()
-    supabase
+    const { data } = await supabase
       .from('orders')
-      .select('id, order_number, customer_name, customer_city, items, total_dt, status, oto_accepted')
+      .select('id, customer_name, items, total_dt, status, oto_accepted, gift_message, gift_recipient')
       .eq('id', orderId)
       .single()
-      .then(({ data }) => { setOrder(data); setLoading(false) })
+    setOrder(data)
+    setLoading(false)
   }, [orderId])
+
+  useEffect(() => { fetchOrder() }, [fetchOrder])
+
+  // Rafraîchir la commande après acceptation OTO
+  function handleOTOAccepted() {
+    setTimeout(() => fetchOrder(), 600) // laisser le temps à Supabase de commit
+  }
 
   if (loading) return <div className={styles.loading}>Chargement...</div>
 
@@ -67,35 +60,28 @@ export default function ConfirmationContent() {
 
         <h1 className={styles.title}>Commande confirmée !</h1>
 
-        {order && (
-          <p className={styles.orderNumber}>
-            #{order.order_number || orderId?.slice(0, 8).toUpperCase()}
-          </p>
-        )}
+        {/* Numéro de commande CACHÉ — pas affiché au client */}
 
         <p className={styles.subtitle}>
           Merci {order?.customer_name?.split(' ')[0] || ''} ! Notre équipe va vous appeler pour confirmer votre livraison.
         </p>
 
-        {/* Status steps */}
+        {/* Steps */}
         <div className={styles.steps}>
           <div className={`${styles.step} ${styles.stepDone}`}>
-            <CheckCircle size={20} />
-            <span>Commande reçue</span>
+            <CheckCircle size={20} /><span>Commande reçue</span>
           </div>
           <div className={styles.stepConnector} />
           <div className={`${styles.step} ${styles.stepActive}`}>
-            <Package size={20} />
-            <span>Confirmation téléphonique</span>
+            <Package size={20} /><span>Confirmation téléphonique</span>
           </div>
           <div className={styles.stepConnector} />
           <div className={styles.step}>
-            <Clock size={20} />
-            <span>En préparation</span>
+            <Clock size={20} /><span>En préparation</span>
           </div>
         </div>
 
-        {/* Order summary */}
+        {/* Récapitulatif */}
         {order?.items && (
           <div className={styles.summaryCard}>
             <h2 className={styles.summaryTitle}>Récapitulatif</h2>
@@ -117,21 +103,17 @@ export default function ConfirmationContent() {
 
         {/* Carte cadeau */}
         {order?.gift_message && (
-          <GiftCardConfirmation
-            message={order.gift_message}
-            recipient={order.gift_recipient}
-          />
+          <GiftCardConfirmation message={order.gift_message} recipient={order.gift_recipient} />
         )}
 
-        {/* OTO */}
-        {showOTO && <OTOWidget orderId={orderId} />}
+        {/* OTO — passer le callback de refresh */}
+        {showOTO && <OTOWidget orderId={orderId} onAccepted={handleOTOAccepted} />}
 
-        {/* WhatsApp share if Buddy */}
+        {/* WhatsApp share si Buddy */}
         {hasBuddy && (
           <a
             href={`https://wa.me/?text=${encodeURIComponent('Je viens de commander mon Slime Buddy sur hkgames.tn ! 🎉')}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            target="_blank" rel="noopener noreferrer"
             className={styles.whatsappBtn}
           >
             Partager sur WhatsApp
@@ -140,7 +122,7 @@ export default function ConfirmationContent() {
 
         <Link href="/" className={styles.homeBtn}>
           <Home size={16} />
-          Retour à l'accueil
+          Retour à l&apos;accueil
         </Link>
       </div>
     </div>
