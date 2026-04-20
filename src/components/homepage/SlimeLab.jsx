@@ -92,12 +92,128 @@ function useSound() {
 
 function BuddyEyesFlash({ size = 'sm' }) {
   const [visible, setVisible] = useState(true)
+  const [fading, setFading]   = useState(false)
+  const canvasRef = useRef(null)
+  const mouseRef  = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+  const blinkRef  = useRef(false)
+  const animRef   = useRef(null)
+
   useEffect(() => {
-    const t = setTimeout(() => setVisible(false), 3000)
+    const fadeTimer = setTimeout(() => setFading(true), 2400)
+    const hideTimer = setTimeout(() => setVisible(false), 3000)
+    return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer) }
+  }, [])
+
+  useEffect(() => {
+    function handleMouse(e) {
+      mouseRef.current = { x: e.clientX, y: e.clientY }
+    }
+    function handleTouch(e) {
+      const t = e.touches[0]
+      if (t) mouseRef.current = { x: t.clientX, y: t.clientY }
+    }
+    window.addEventListener('mousemove', handleMouse)
+    window.addEventListener('touchmove', handleTouch)
+    return () => {
+      window.removeEventListener('mousemove', handleMouse)
+      window.removeEventListener('touchmove', handleTouch)
+    }
+  }, [])
+
+  useEffect(() => {
+    let t
+    function sched() {
+      t = setTimeout(() => {
+        blinkRef.current = true
+        setTimeout(() => { blinkRef.current = false; sched() }, 120)
+      }, 800 + Math.random() * 1200)
+    }
+    sched()
     return () => clearTimeout(t)
   }, [])
+
+  useEffect(() => {
+    function draw() {
+      const canvas = canvasRef.current; if (!canvas) return
+      const ctx    = canvas.getContext('2d')
+      const W      = canvas.width
+      const H      = canvas.height
+      ctx.clearRect(0, 0, W, H)
+
+      const R  = Math.min(W, H) * 0.22
+      const PR = R * 0.45
+      const HR = R * 0.12
+      const maxMove = R * 0.28
+      const eyes = [{ x: W * 0.30, y: H * 0.5 }, { x: W * 0.70, y: H * 0.5 }]
+
+      eyes.forEach(({ x, y }) => {
+        // Glow
+        const grd = ctx.createRadialGradient(x, y, R * 0.5, x, y, R * 1.6)
+        grd.addColorStop(0, 'rgba(168,85,247,0.18)')
+        grd.addColorStop(1, 'rgba(168,85,247,0)')
+        ctx.beginPath(); ctx.arc(x, y, R * 1.6, 0, Math.PI * 2)
+        ctx.fillStyle = grd; ctx.fill()
+
+        // White eye
+        ctx.beginPath()
+        ctx.ellipse(x, y, R, blinkRef.current ? R * 0.08 : R, 0, 0, Math.PI * 2)
+        ctx.fillStyle = '#fff'; ctx.fill()
+        ctx.strokeStyle = 'rgba(168,85,247,0.3)'; ctx.lineWidth = 3; ctx.stroke()
+
+        if (!blinkRef.current) {
+          const dx   = mouseRef.current.x - x
+          const dy   = mouseRef.current.y - y
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1
+          const px   = x + (dx / dist) * Math.min(dist, maxMove)
+          const py   = y + (dy / dist) * Math.min(dist, maxMove)
+
+          // Pupil
+          ctx.beginPath(); ctx.arc(px, py, PR, 0, Math.PI * 2)
+          ctx.fillStyle = '#0f0a1e'; ctx.fill()
+
+          // Iris ring
+          ctx.beginPath(); ctx.arc(px, py, PR, 0, Math.PI * 2)
+          ctx.strokeStyle = 'rgba(168,85,247,0.5)'; ctx.lineWidth = 2; ctx.stroke()
+
+          // Highlight
+          ctx.beginPath(); ctx.arc(px - HR, py - HR, HR, 0, Math.PI * 2)
+          ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fill()
+
+          // Small highlight
+          ctx.beginPath(); ctx.arc(px + HR * 0.6, py + HR * 0.6, HR * 0.4, 0, Math.PI * 2)
+          ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fill()
+        }
+      })
+      animRef.current = requestAnimationFrame(draw)
+    }
+    animRef.current = requestAnimationFrame(draw)
+    return () => cancelAnimationFrame(animRef.current)
+  }, [])
+
   if (!visible) return null
-  return <BuddyEyes size={size} />
+
+  return (
+    <div style={{
+      position:       'fixed',
+      inset:          0,
+      zIndex:         99999,
+      display:        'flex',
+      alignItems:     'center',
+      justifyContent: 'center',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      background:     'rgba(15,10,30,0.75)',
+      opacity:        fading ? 0 : 1,
+      transition:     'opacity 0.6s ease',
+    }}>
+      <canvas
+        ref={canvasRef}
+        width={Math.min(window.innerWidth, 700)}
+        height={Math.min(window.innerHeight * 0.6, 400)}
+        style={{ width: '100%', maxWidth: 700, height: 'auto' }}
+      />
+    </div>
+  )
 }
 
 function BuddyEyes({ size = 'sm' }) {
