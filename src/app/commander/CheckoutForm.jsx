@@ -97,12 +97,14 @@ export default function CheckoutForm() {
       const total = items.reduce((s, i) => s + i.price_dt * i.qty, 0)
       window.fbq('track', 'Purchase', { value: total, currency: 'TND', order_id: result.orderId })
     }
-    clearCart()
+    // ⚠️ router.push AVANT clearCart — évite la redirection /panier
     router.push(`/merci?id=${result.orderId}`)
+    clearCart()
   }
 
   if (!mounted) return null
-  if (items.length === 0) { router.replace('/panier'); return null }
+  // Ne pas rediriger vers /panier si on vient de confirmer (navigation en cours)
+  if (items.length === 0 && !submitting) { router.replace('/panier'); return null }
 
   const subtotal = items.reduce((s, i) => s + i.price_dt * i.qty, 0)
   const { savings, bundleType } = computeBundle(items, discounts)
