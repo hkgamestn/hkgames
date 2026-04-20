@@ -61,9 +61,8 @@ export default function AdminNav() {
           )
         })}
       </nav>
-      <button className={styles.logout} onClick={handleLogout} type="button">
-        <LogOut size={16} />
-        Déconnexion
+      <button className={styles.logout} onClick={handleLogout} type="button" title="Déconnexion">
+        <LogOut size={18} />
       </button>
     </aside>
   )

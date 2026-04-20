@@ -77,16 +77,8 @@ export default function PushSetup() {
         </div>
       )}
 
-      <div className={styles.waBox}>
-        <p className={styles.waTitle}>Alternative recommandée — WhatsApp</p>
-        <p className={styles.waText}>Reçois les notifications de commandes directement sur WhatsApp, fonctionne sur tous les téléphones.</p>
-        <a href={waLink} target="_blank" rel="noopener noreferrer" className={styles.waBtn}>
-          Activer via WhatsApp
-        </a>
-      </div>
-
       {msg === 'success' && <p className={styles.successMsg}>Notifications web activées !</p>}
-      {msg === 'error'   && <p className={styles.errorMsg}>Erreur — réessaie ou utilise WhatsApp.</p>}
+      {msg === 'error'   && <p className={styles.errorMsg}>Erreur — réessaie.</p>}
 
       <div className={styles.actions}>
         {!subscribed ? (

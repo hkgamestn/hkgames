@@ -129,31 +129,11 @@ export default function OrderNotifier() {
   }
 
   // Bouton test (visible uniquement si aucun toast actif)
-  function testToast() {
-    addToast({
-      type:  'new',
-      title: '🛒 Test notification',
-      name:  'Client Test',
-      city:  'Tunis',
-      total: 32,
-    })
+)
   }
 
   return (
     <>
-      {/* Bouton test fixe en bas à gauche */}
-      <button
-        onClick={testToast}
-        style={{
-          position: 'fixed', bottom: 80, left: 24, zIndex: 99998,
-          background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)',
-          color: '#c4b5fd', borderRadius: '10px', padding: '6px 14px',
-          fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
-        }}
-        title="Tester le son et les notifications"
-      >
-        🔔 Test notif
-      </button>
 
       {toasts.length > 0 && (
         <div className={styles.container}>
