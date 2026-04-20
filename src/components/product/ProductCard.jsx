@@ -118,6 +118,19 @@ export default function ProductCard({ product }) {
           )}
           <div className={styles.lineBadge}>{LINE_LABELS[product.line]}</div>
           <div className={styles.stockOverlay}><StockBadge stock={stock} /></div>
+
+          {/* Overlay hover — "Voir les détails" */}
+          <div className={styles.hoverOverlay} aria-hidden="true">
+            <span className={styles.hoverText}>👁 Voir les détails</span>
+          </div>
+
+          {/* Icône œil permanente — hint cliquable */}
+          <div className={styles.eyeHint} aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
         </div>
 
         <div className={styles.body}>
