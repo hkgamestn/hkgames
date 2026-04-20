@@ -1,0 +1,8 @@
+
+.discountTotal {
+  font-weight: 800;
+  color: #10b981;
+  border-top: 1px dashed rgba(16,185,129,0.3);
+  padding-top: 4px;
+  margin-top: 2px;
+}

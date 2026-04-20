@@ -1,5 +1,6 @@
 import { Nunito, Inter } from 'next/font/google'
 import Script from 'next/script'
+import BundleToast from '@/components/cart/BundleToast'
 import './globals.css'
 import WhatsAppFloat from '@/components/layout/WhatsAppFloat'
 
@@ -62,6 +63,7 @@ export default function RootLayout({ children }) {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           {children}
+      <BundleToast />
         </div>
 
         {/* Microsoft Clarity */}

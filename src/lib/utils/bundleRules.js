@@ -1,5 +1,5 @@
 export function computeBundle(items, discounts = {}) {
-  if (!items || items.length === 0) return { discount: 0, bundleType: null, savings: 0 }
+  if (!items || items.length === 0) return { discount: 0, bundleType: null, savings: 0, activeBundles: [] }
 
   const unicolores = items.filter((i) => i.line === 'unicolore')
   const bicolores  = items.filter((i) => i.line === 'bicolore')
@@ -10,20 +10,34 @@ export function computeBundle(items, discounts = {}) {
 
   const subtotal = items.reduce((s, i) => s + (i.price_dt || 0) * (i.qty || 1), 0)
 
+  const activeBundles = []
+  let totalPct = 0
+
   if (uniqueB.size >= 3) {
     const pct = parseFloat(discounts.famille || 18)
-    return { discount: pct, bundleType: 'famille_monstre', savings: parseFloat((subtotal * pct / 100).toFixed(3)) }
+    totalPct += pct
+    activeBundles.push({ type: 'famille_monstre', pct, label: `👨‍👩‍👧 Pack Famille Monstre (-${pct}%)`, savings: parseFloat((subtotal * pct / 100).toFixed(3)) })
   }
   if (bicolores.length >= 3) {
     const pct = parseFloat(discounts.alchimiste || 20)
-    return { discount: pct, bundleType: 'alchimiste', savings: parseFloat((subtotal * pct / 100).toFixed(3)) }
+    totalPct += pct
+    activeBundles.push({ type: 'alchimiste', pct, label: `⚗️ Pack Alchimiste (-${pct}%)`, savings: parseFloat((subtotal * pct / 100).toFixed(3)) })
   }
   if (uniqueU.size >= 3) {
     const pct = parseFloat(discounts.decouverte || 15)
-    return { discount: pct, bundleType: 'decouverte', savings: parseFloat((subtotal * pct / 100).toFixed(3)) }
+    totalPct += pct
+    activeBundles.push({ type: 'decouverte', pct, label: `🎁 Pack Découverte (-${pct}%)`, savings: parseFloat((subtotal * pct / 100).toFixed(3)) })
   }
 
-  return { discount: 0, bundleType: null, savings: 0 }
+  if (activeBundles.length === 0) return { discount: 0, bundleType: null, savings: 0, activeBundles: [] }
+
+  const totalSavings = parseFloat((subtotal * totalPct / 100).toFixed(3))
+  return {
+    discount:      totalPct,
+    bundleType:    activeBundles[0].type,
+    savings:       totalSavings,
+    activeBundles,
+  }
 }
 
 export function getBundleUpsell(items) {

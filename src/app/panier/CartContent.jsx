@@ -54,7 +54,7 @@ export default function CartContent() {
   }
 
   const subtotal = items.reduce((s, i) => s + i.price_dt * i.qty, 0)
-  const { bundleType, savings, discount } = computeBundle(items, discounts)
+  const { bundleType, savings, discount, activeBundles = [] } = computeBundle(items, discounts)
   const upsell   = getBundleUpsell(items)
   const shipping = subtotal >= freeThreshold ? 0 : shippingPrice
   const total    = subtotal - savings + shipping
@@ -79,12 +79,12 @@ export default function CartContent() {
         {/* ── Colonne gauche ── */}
         <div className={styles.itemsList}>
 
-          {bundleType && (
-            <div className={styles.bundleBadge}>
-              <span>{BUNDLE_LABELS[bundleType]}</span>
-              <span className={styles.bundleSavings}>Tu économises {formatDT(savings)}</span>
+          {activeBundles && activeBundles.length > 0 && activeBundles.map((b) => (
+            <div key={b.type} className={styles.bundleBadge}>
+              <span>{b.label}</span>
+              <span className={styles.bundleSavings}>Tu économises {formatDT(b.savings)}</span>
             </div>
-          )}
+          ))}
 
           {upsell && !bundleType && (
             <div className={styles.upsellBanner}>
