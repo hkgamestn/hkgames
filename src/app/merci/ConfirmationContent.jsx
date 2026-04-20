@@ -81,6 +81,9 @@ export default function ConfirmationContent() {
           </div>
         </div>
 
+        {/* OTO — affiché juste après les steps, avant le récap */}
+        {showOTO && <OTOWidget orderId={orderId} onAccepted={handleOTOAccepted} />}
+
         {/* Récapitulatif */}
         {order?.items && (
           <div className={styles.summaryCard}>
@@ -106,8 +109,6 @@ export default function ConfirmationContent() {
           <GiftCardConfirmation message={order.gift_message} recipient={order.gift_recipient} />
         )}
 
-        {/* OTO — passer le callback de refresh */}
-        {showOTO && <OTOWidget orderId={orderId} onAccepted={handleOTOAccepted} />}
 
         {/* WhatsApp share si Buddy */}
         {hasBuddy && (
