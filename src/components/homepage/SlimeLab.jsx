@@ -14,8 +14,8 @@ const BASE = 'https://rsmebjtwmvwyeocvsowg.supabase.co/storage/v1/object/public/
 // Prix chargés depuis Supabase via useEffect
 const PRODUCT_TYPES = [
   { id: 'unicolore', label: 'Unicolore', price: 12, line: 'unicolore', image: `${BASE}/unicolore-violet.jpg`, desc: 'Une couleur pure, intense' },
-  { id: 'bicolore',  label: 'Bicolore',  price: 15, line: 'bicolore',  image: `${BASE}/bicolore-rose-bleu.jpg`, desc: 'Mélange magique de 2 couleurs' },
-  { id: 'buddies',   label: 'Buddy',     price: 18, line: 'buddies',   image: `${BASE}/buddies-violet.jpg`, desc: 'Mon monstre, mon ami', hasBuddyEyes: true },
+  { id: 'bicolore',  label: 'Bicolore',  price: 13.5, line: 'bicolore',  image: `${BASE}/bicolore-rose-bleu.jpg`, desc: 'Mélange magique de 2 couleurs' },
+  { id: 'buddies',   label: 'Buddy',     price: 15, line: 'buddies',   image: `${BASE}/buddies-violet.jpg`, desc: 'Mon monstre, mon ami', hasBuddyEyes: true },
 ]
 
 const COLORS = [
@@ -164,7 +164,7 @@ function BuddyEyes({ size = 'sm' }) {
 }
 
 export default function SlimeLab() {
-  const [prices, setPrices] = useState({ unicolore: 12, bicolore: 15, buddies: 18 })
+  const [prices, setPrices] = useState({ unicolore: 12, bicolore: 13.5, buddies: 15 })
 
   useEffect(() => {
     import('@/lib/supabase/client').then(({ createClient }) => {
