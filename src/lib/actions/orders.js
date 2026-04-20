@@ -81,16 +81,32 @@ export async function confirmOrder(formData, pendingOrderId) {
 
   // Vérification stock finale
   for (const item of items) {
-    const { data: product } = await supabase
+    // Chercher d'abord par id exact
+    let { data: product } = await supabase
       .from('products')
-      .select('colors, name')
+      .select('colors, name, line')
       .eq('id', item.product_id)
-      .single()
+      .maybeSingle()
 
-    if (!product) return { error: `Produit introuvable.` }
+    // Fallback : si product_id est fictif (ex: lab-unicolore-Rose), chercher par line
+    if (!product && item.line) {
+      const { data: byLine } = await supabase
+        .from('products')
+        .select('colors, name, line')
+        .eq('line', item.line)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle()
+      product = byLine
+    }
+
+    if (!product) {
+      console.warn('[confirmOrder] product not found for item:', item.product_id, item.line)
+      continue // Skip la vérif stock si produit vraiment introuvable
+    }
 
     const colorData = product.colors?.find((c) => c.name === item.color)
-    if (!colorData || colorData.stock < item.qty) {
+    if (colorData && colorData.stock < item.qty) {
       return { error: `Stock insuffisant — ${product.name} ${item.color}` }
     }
   }

@@ -306,14 +306,25 @@ function BuddyEyes({ size = 'sm' }) {
 }
 
 export default function SlimeLab() {
-  const [prices, setPrices] = useState({ unicolore: 12, bicolore: 13.5, buddies: 15 })
+  const [prices, setPrices]       = useState({ unicolore: 12, bicolore: 13.5, buddies: 15 })
+  const [productIds, setProductIds] = useState({ unicolore: null, bicolore: null, buddies: null })
 
   useEffect(() => {
     import('@/lib/supabase/client').then(({ createClient }) => {
       const supabase = createClient()
-      supabase.from('products').select('line, price_dt').then(({ data }) => {
-        const map = {}
-        setPrices((prev) => ({ ...prev, ...map }))
+      supabase.from('products').select('id, line, price_dt').eq('is_active', true).then(({ data }) => {
+        if (!data) return
+        const priceMap = {}
+        const idMap    = {}
+        data.forEach((p) => {
+          // Pour bicolore on prend le premier trouvé (unicolore/buddies ont 1 produit par line)
+          if (!idMap[p.line]) {
+            priceMap[p.line] = p.price_dt
+            idMap[p.line]    = p.id
+          }
+        })
+        setPrices((prev) => ({ ...prev, ...priceMap }))
+        setProductIds((prev) => ({ ...prev, ...idMap }))
       })
     })
   }, [])
@@ -347,7 +358,7 @@ export default function SlimeLab() {
     const colorName = color?.name || 'Violet'
     const colorHex  = color?.hex  || '#a855f7'
     addItem({
-      product_id: `lab-${type}-${colorName}`,
+      product_id: productIds[type] || `lab-${type}-${colorName}`,
       slug: type === 'bicolore' ? (color?.slug || 'bicolore-rose-bleu') : type,
       name: type === 'buddies' ? `Buddy ${colorName}` : `Slime ${selectedType.label} ${colorName}`,
       price_dt: selectedType.price,
