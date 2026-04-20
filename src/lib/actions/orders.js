@@ -105,12 +105,13 @@ export async function confirmOrder(formData, pendingOrderId) {
   const shipping    = subtotal >= freeThreshold ? 0 : shippingDt
   const total       = parseFloat((subtotal - discountAmt + shipping).toFixed(3))
 
-  // Numéro séquentiel 000001, 000002...
-  const { count } = await supabase
-    .from('orders')
-    .select('*', { count: 'exact', head: true })
-  const seq = String((count || 0) + 1).padStart(6, '0')
-  const orderNumber = seq
+  // Numéro séquentiel via séquence DB (atomique — pas de race condition)
+  const { data: seqData, error: seqError } = await supabase.rpc('next_order_number')
+  if (seqError) {
+    console.error('[confirmOrder] next_order_number RPC error:', seqError.message)
+    return { error: 'Erreur génération numéro commande.' }
+  }
+  const orderNumber = String(seqData).padStart(6, '0')
 
   const upsertData = {
     order_number:     orderNumber,
