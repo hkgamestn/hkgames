@@ -254,7 +254,7 @@ export default function ProductDetail({ product, related, testimonials }) {
             <h2 className={styles.sectionTitle}>Tu pourrais aussi aimer</h2>
             <div className={styles.relatedGrid}>
               {related.slice(0, 4).map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard key={p.id} product={p} index={99} />
               ))}
             </div>
           </section>

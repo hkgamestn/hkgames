@@ -96,7 +96,7 @@ export default function CatalogueContent({ initialProducts = [], initialLine }) 
         </div>
       ) : (
         <div className={`${styles.grid} ${isPending ? styles.pending : ''}`}>
-          {products.map((product) => <ProductCard key={product.id} product={product} />)}
+          {products.map((product, index) => <ProductCard key={product.id} product={product} index={index} />)}
         </div>
       )}
     </div>

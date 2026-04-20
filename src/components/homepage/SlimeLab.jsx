@@ -199,8 +199,13 @@ function BuddyEyesFlash({ size = 'sm' }) {
         animRef.current = requestAnimationFrame(draw)
       }
     }
-    animRef.current = requestAnimationFrame(draw)
-    return () => { cancelAnimationFrame(animRef.current); clearTimeout(animRef.current) }
+    if (!document.hidden) animRef.current = requestAnimationFrame(draw)
+    const onVisibility = () => {
+      if (document.hidden) { cancelAnimationFrame(animRef.current); clearTimeout(animRef.current) }
+      else animRef.current = requestAnimationFrame(draw)
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => { cancelAnimationFrame(animRef.current); clearTimeout(animRef.current); document.removeEventListener('visibilitychange', onVisibility) }
   }, [])
 
   if (!visible) return null
@@ -291,8 +296,13 @@ function BuddyEyes({ size = 'sm' }) {
         ? setTimeout(() => { animRef.current = requestAnimationFrame(draw) }, 33)
         : requestAnimationFrame(draw)
     }
-    animRef.current = requestAnimationFrame(draw)
-    return () => { cancelAnimationFrame(animRef.current); clearTimeout(animRef.current) }
+    if (!document.hidden) animRef.current = requestAnimationFrame(draw)
+    const onVis = () => {
+      if (document.hidden) { cancelAnimationFrame(animRef.current); clearTimeout(animRef.current) }
+      else animRef.current = requestAnimationFrame(draw)
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => { cancelAnimationFrame(animRef.current); clearTimeout(animRef.current); document.removeEventListener('visibilitychange', onVis) }
   }, [eyeRadius, pupilR, highlightR, maxPupilMove])
 
   return (
@@ -308,6 +318,20 @@ function BuddyEyes({ size = 'sm' }) {
 export default function SlimeLab() {
   const [prices, setPrices]       = useState({ unicolore: 12, bicolore: 13.5, buddies: 15 })
   const [productIds, setProductIds] = useState({ unicolore: null, bicolore: null, buddies: null })
+  const [inView, setInView]       = useState(false)
+  const labRef                    = useRef(null)
+
+  // Stopper les animations canvas quand la section est hors écran → réduit INP
+  useEffect(() => {
+    const el = labRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') { setInView(true); return }
+    const obs = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.1 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
   useEffect(() => {
     import('@/lib/supabase/client').then(({ createClient }) => {
@@ -374,7 +398,7 @@ export default function SlimeLab() {
   }
 
   return (
-    <section className={styles.lab} id="labo">
+    <section className={styles.lab} id="labo" ref={labRef}>
       <div className={styles.container}>
         <div className={styles.header}>
           <FlaskConical size={28} className={styles.headerIcon} />

@@ -43,6 +43,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="fr" className={`${nunito.variable} ${inter.variable}`}>
       <head>
+        {/* Préconnexion Supabase — réduit le LCP des images */}
+        <link rel="preconnect" href="https://rsmebjtwmvwyeocvsowg.supabase.co" />
+        <link rel="dns-prefetch" href="https://rsmebjtwmvwyeocvsowg.supabase.co" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {pixelId && (
           <script
             dangerouslySetInnerHTML={{

@@ -20,8 +20,8 @@ export default async function CataloguePreview() {
         </div>
 
         <div className={styles.grid}>
-          {preview.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {preview.map((product, index) => (
+            <ProductCard key={product.id} product={product} index={index} />
           ))}
         </div>
 

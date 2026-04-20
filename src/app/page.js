@@ -5,11 +5,12 @@ import dynamic from 'next/dynamic'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import HeroSection from '@/components/homepage/HeroSection'
-import SlimeLab from '@/components/homepage/SlimeLab'
-import SocialProof from '@/components/homepage/SocialProof'
-import WhySlime from '@/components/homepage/WhySlime'
-import ReviewSection from '@/components/homepage/ReviewSection'
 
+// Lazy load tout ce qui est below-fold → libère le thread principal pour le LCP
+const SlimeLab       = dynamic(() => import('@/components/homepage/SlimeLab'),       { ssr: false })
+const SocialProof    = dynamic(() => import('@/components/homepage/SocialProof'),    { ssr: false })
+const WhySlime       = dynamic(() => import('@/components/homepage/WhySlime'),       { ssr: false })
+const ReviewSection  = dynamic(() => import('@/components/homepage/ReviewSection'),  { ssr: false })
 const SplashScreen     = dynamic(() => import('@/components/homepage/SplashScreen'),     { ssr: false })
 const CataloguePreview = dynamic(() => import('@/components/homepage/CataloguePreview'), { ssr: false })
 

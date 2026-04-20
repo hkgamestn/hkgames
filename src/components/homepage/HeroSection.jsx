@@ -85,7 +85,7 @@ export default function HeroSection() {
               aria-label={`Voir ${product.name}`}
             >
               <div className={styles.cardImageWrap}>
-                <Image src={meta.cardImage || product.images?.[0]} alt={product.name} fill sizes="240px" className={styles.cardImage} priority={i === 0} />
+                <Image src={meta.cardImage || product.images?.[0]} alt={product.name} fill sizes="240px" className={styles.cardImage} priority quality={85} />
                 <div className={styles.cardOverlay} />
               </div>
               <div className={styles.cardInfo}>

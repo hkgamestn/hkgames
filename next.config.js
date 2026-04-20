@@ -15,8 +15,23 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ['localhost:3000', 'hkgames.tn'],
+      allowedOrigins: ['localhost:3000', 'hap-p-kids.store'],
     },
+  },
+  // Compression
+  compress: true,
+  // Headers cache statiques
+  async headers() {
+    return [
+      {
+        source: '/icons/(.*)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/sounds/(.*)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+    ]
   },
 }
 

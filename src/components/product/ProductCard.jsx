@@ -57,7 +57,7 @@ function useCardSound() {
   return { playHover, playAdd, playColor }
 }
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, index = 99 }) {
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || null)
   const [hoverStyle, setHoverStyle] = useState({})
   const [showModal, setShowModal]   = useState(false)
@@ -110,7 +110,7 @@ export default function ProductCard({ product }) {
       >
         <div className={styles.imageWrap}>
           {currentImage ? (
-            <Image src={currentImage} alt={product.name} fill sizes="(max-width: 768px) 50vw, 25vw" className={styles.image} quality={80} />
+            <Image src={currentImage} alt={product.name} fill sizes="(max-width: 768px) 50vw, 25vw" className={styles.image} quality={80} priority={index < 4} />
           ) : (
             <div className={styles.imagePlaceholder} style={{ background: `radial-gradient(circle, ${selectedColor?.hex || '#a855f7'}88, transparent)` }}>
               <PotSVG color={selectedColor?.hex || '#a855f7'} />
