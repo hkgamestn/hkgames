@@ -44,7 +44,7 @@ export default function AdminLogin() {
               className={styles.input}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@hkgames.tn"
+              placeholder="admin@hap-p-kids.store"
               required
               autoComplete="email"
             />

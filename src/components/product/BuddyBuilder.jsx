@@ -172,7 +172,7 @@ export default function BuddyBuilder({ selectedColor, onColorChange, onNameChang
     const canvas = canvasRef.current
     if (!canvas) return
     canvas.toBlob((blob) => {
-      const url = `https://wa.me/?text=${encodeURIComponent(`J'ai créé ${buddyName} ! Commande le tien sur hkgames.tn`)}`
+      const url = `https://wa.me/?text=${encodeURIComponent(`J'ai créé ${buddyName} ! Commande le tien sur hap-p-kids.store`)}`
       window.open(url, '_blank')
     })
   }

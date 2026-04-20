@@ -113,7 +113,7 @@ export default function ConfirmationContent() {
         {/* WhatsApp share si Buddy */}
         {hasBuddy && (
           <a
-            href={`https://wa.me/?text=${encodeURIComponent('Je viens de commander mon Slime Buddy sur hkgames.tn ! 🎉')}`}
+            href={`https://wa.me/?text=${encodeURIComponent('Je viens de commander mon Slime Buddy sur hap-p-kids.store ! 🎉')}`}
             target="_blank" rel="noopener noreferrer"
             className={styles.whatsappBtn}
           >

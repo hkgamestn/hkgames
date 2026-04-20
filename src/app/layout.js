@@ -22,7 +22,7 @@ const inter = Inter({
 export const metadata = {
   title: { default: 'HK Games — Slime Artisanal Premium Tunisie', template: '%s | HK Games' },
   description: 'Slimes artisanaux premium en Tunisie — Unicolores, Bicolores et Buddies. Commandez en ligne, paiement à la livraison partout en Tunisie.',
-  metadataBase: new URL('https://hkgames.tn'),
+  metadataBase: new URL('https://hap-p-kids.store'),
   openGraph: {
     title: 'HK Games Slime Store',
     description: 'Le Slime N°1 de Tunisie',
