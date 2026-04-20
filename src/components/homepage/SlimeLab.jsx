@@ -89,6 +89,17 @@ function useSound() {
   return { playPop, playSquish, playSuccess, playWobble }
 }
 
+
+function BuddyEyesFlash({ size = 'sm' }) {
+  const [visible, setVisible] = useState(true)
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(false), 3000)
+    return () => clearTimeout(t)
+  }, [])
+  if (!visible) return null
+  return <BuddyEyes size={size} />
+}
+
 function BuddyEyes({ size = 'sm' }) {
   const canvasRef = useRef(null)
   const mouseRef  = useRef({ x: 0, y: 0 })
@@ -245,13 +256,12 @@ export default function SlimeLab() {
               <button key={t.id} className={styles.typeCard} onClick={() => handleTypeSelect(t.id)} type="button">
                 <div className={styles.typeImgWrap}>
                   <Image src={t.image} alt={t.label} fill sizes="160px" className={styles.typeImg} />
-                  {t.hasBuddyEyes && <BuddyEyes size="sm" />}
                   <div className={styles.typeImgOverlay} />
                 </div>
                 <div className={styles.typeInfo}>
                   <span className={styles.typeName}>{t.label}</span>
                   <span className={styles.typeDesc}>{t.desc}</span>
-                  <span className={styles.typePrice}>{t.price},000 DT</span>
+                  <span className={styles.typePrice}>{formatDT(t.price)}</span>
                 </div>
               </button>
             ))}
@@ -278,7 +288,7 @@ export default function SlimeLab() {
                       sizes="110px"
                       className={styles.colorPreviewImg}
                     />
-                    {type === 'buddies' && <BuddyEyes size="sm" />}
+                    {type === 'buddies' && <BuddyEyesFlash size="sm" />}
                   </div>
                   <span className={styles.colorPreviewName}>{c.name}</span>
                   <span className={styles.colorPreviewDot} style={{ background: c.hex }} />
@@ -336,7 +346,7 @@ export default function SlimeLab() {
                   {getCurrentImage() && (
                     <Image src={getCurrentImage()} alt="ton slime" fill sizes="220px" className={styles.resultImg} />
                   )}
-                  {type === 'buddies' && <BuddyEyes size="lg" />}
+                  {type === 'buddies' && <BuddyEyesFlash size="lg" />}
                 </div>
 
                 {type === 'buddies' && (
