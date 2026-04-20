@@ -93,7 +93,12 @@ export default function CheckoutForm() {
       setSubmitting(false)
       return
     }
-    if (typeof window !== 'undefined' && window.fbq) {
+    const isTest = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname.includes('.vercel.app') ||
+      window.location.search.includes('test=1')
+    )
+    if (!isTest && typeof window !== 'undefined' && window.fbq) {
       const total = items.reduce((s, i) => s + i.price_dt * i.qty, 0)
       window.fbq('track', 'Purchase', { value: total, currency: 'TND', order_id: result.orderId })
     }
