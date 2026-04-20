@@ -104,7 +104,12 @@ export async function confirmOrder(formData, pendingOrderId) {
   const shipping    = subtotal >= freeThreshold ? 0 : shippingDt
   const total       = parseFloat((subtotal - discountAmt + shipping).toFixed(3))
 
-  const orderNumber = `HK-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`
+  // Numéro séquentiel 000001, 000002...
+  const { count } = await supabase
+    .from('orders')
+    .select('*', { count: 'exact', head: true })
+  const seq = String((count || 0) + 1).padStart(6, '0')
+  const orderNumber = seq
 
   const upsertData = {
     order_number:     orderNumber,
@@ -275,10 +280,19 @@ export async function restoreOrder(orderId) {
 export async function hardDeleteOrders(orderIds) {
   const supabase = createAdminClient()
   if (!Array.isArray(orderIds) || orderIds.length === 0) return { error: 'Aucun ID.' }
+
+  // Supprimer les dépendances d'abord (FK sans CASCADE)
+  await supabase.from('inventory_logs').delete().in('order_id', orderIds)
+  await supabase.from('upsell_events').delete().in('order_id', orderIds)
+
   const { error } = await supabase
     .from('orders')
     .delete()
     .in('id', orderIds)
-  if (error) return { error: 'Erreur suppression définitive.' }
+
+  if (error) {
+    console.error('[hardDeleteOrders]', error)
+    return { error: 'Erreur suppression définitive: ' + error.message }
+  }
   return { success: true }
 }
