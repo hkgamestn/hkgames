@@ -87,7 +87,7 @@ export default function CheckoutForm() {
     setSubmitting(true)
     setServerError(null)
     const fullPhone = '+216' + data.phone
-    const result = await confirmOrder({ ...data, phone: fullPhone, items, giftMessage: giftCard.enabled ? giftCard.message : null, giftRecipient: giftCard.enabled ? giftCard.recipient : null }, pendingOrderId)
+    const result = await confirmOrder({ ...data, phone: fullPhone, items, discounts, giftMessage: giftCard.enabled ? giftCard.message : null, giftRecipient: giftCard.enabled ? giftCard.recipient : null }, pendingOrderId)
     if (result.error) {
       setServerError(typeof result.error === 'string' ? result.error : 'Veuillez vérifier vos informations.')
       setSubmitting(false)

@@ -77,6 +77,7 @@ export async function confirmOrder(formData, pendingOrderId) {
   const items = formData.items || []
   const giftMessage   = formData.giftMessage   ? String(formData.giftMessage).slice(0, 200).trim()   : null
   const giftRecipient = formData.giftRecipient ? String(formData.giftRecipient).slice(0, 40).trim()  : null
+  const clientDiscounts = formData.discounts || {}
 
   // Vérification stock finale
   for (const item of items) {
@@ -95,7 +96,7 @@ export async function confirmOrder(formData, pendingOrderId) {
   }
 
   // Calcul bundle
-  const { discount, bundleType, savings } = computeBundle(items)
+  const { discount, bundleType, savings } = computeBundle(items, clientDiscounts)
   const shippingDt    = parseFloat((await getSettingValue('shipping_price_dt')) || '8')
   const freeThreshold = parseFloat((await getSettingValue('free_shipping_threshold_dt')) || '50')
 
