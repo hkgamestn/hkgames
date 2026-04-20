@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { ShoppingBag } from 'lucide-react'
 import styles from './SocialToast.module.css'
 
@@ -28,10 +29,14 @@ const EVENTS = [
 ]
 
 export default function SocialToast() {
-  const [toast, setToast]   = useState(null)
+  const pathname = usePathname()
+  const [toast, setToast]     = useState(null)
   const [visible, setVisible] = useState(false)
-  const idxRef              = useRef(Math.floor(Math.random() * EVENTS.length))
-  const timerRef            = useRef(null)
+  const idxRef                = useRef(Math.floor(Math.random() * EVENTS.length))
+  const timerRef              = useRef(null)
+
+  // Ne rien afficher sur les pages admin
+  if (pathname?.startsWith('/admin')) return null
 
   useEffect(() => {
     function showNext() {

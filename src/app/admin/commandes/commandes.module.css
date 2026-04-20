@@ -104,21 +104,37 @@
 }
 
 .date { font-size: 0.78rem; }
-.actions { display: flex; gap: var(--space-1); }
+.actions { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
 
 .actionBtn {
-  width: 30px; height: 30px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: var(--radius-sm);
+  min-width: 36px; height: 36px;
+  padding: 0 10px;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  font-size: 0.78rem; font-weight: 600;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  white-space: nowrap;
 }
+.actionBtn:active { transform: scale(0.95); }
 
-.confirm:hover { background: rgba(16,185,129,0.15); color: var(--color-success); }
-.hold:hover    { background: rgba(251,146,60,0.15);  color: #fb923c; }
-.cancel:hover  { background: rgba(239,68,68,0.15);   color: var(--color-danger); }
-.delete:hover  { background: rgba(239,68,68,0.15);   color: var(--color-danger); }
+.confirm { color: #10b981; border-color: rgba(16,185,129,0.25); background: rgba(16,185,129,0.08); }
+.confirm:hover { background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.4); }
+
+.hold { color: #fb923c; border-color: rgba(251,146,60,0.25); background: rgba(251,146,60,0.08); }
+.hold:hover { background: rgba(251,146,60,0.18); border-color: rgba(251,146,60,0.4); }
+
+.cancel { color: #ef4444; border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.08); }
+.cancel:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.4); }
+
+.delete { color: #ef4444; border-color: rgba(239,68,68,0.2); background: transparent; }
+.delete:hover { background: rgba(239,68,68,0.12); }
+
+.navex { color: #06b6d4; border-color: rgba(6,182,212,0.25); background: rgba(6,182,212,0.08); }
+.navex:hover { background: rgba(6,182,212,0.18); }
 
 .overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.6);
