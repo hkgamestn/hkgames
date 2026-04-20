@@ -105,7 +105,7 @@ export function getBundleProgress(items, discounts = {}) {
       estSavings: estSavingsFamille,
       circles: Array.from({ length: TARGET }, (_, i) => ({ filled: i < current, color: Array.from(uniqueB)[i] || null })),
       getMessage: () => {
-        if (done) return 'Pack Famille Monstre active ! Tu economies ~' + estSavingsFamille.toFixed(1) + ' DT'
+        if (done) return 'Pack Famille Monstre active ! Tu économises ~' + estSavingsFamille.toFixed(1) + ' DT'
         if (current === 2) return 'Plus que 1 Buddy dune autre couleur !'
         if (current === 1) return 'Plus que 2 Buddies de couleurs differentes'
         return 'Ajoute 3 Buddies de couleurs differentes -> -' + famillePct + '%'
@@ -123,7 +123,7 @@ export function getBundleProgress(items, discounts = {}) {
       estSavings: estSavingsAlchimiste,
       circles: Array.from({ length: TARGET }, (_, i) => ({ filled: i < current, color: bicolores[i]?.color || null })),
       getMessage: () => {
-        if (done) return 'Pack Alchimiste active ! Tu economies ~' + estSavingsAlchimiste.toFixed(1) + ' DT'
+        if (done) return 'Pack Alchimiste active ! Tu économises ~' + estSavingsAlchimiste.toFixed(1) + ' DT'
         if (current === 2) return 'Plus que 1 Bicolore !'
         if (current === 1) return 'Plus que 2 Bicolores'
         return 'Ajoute 3 Bicolores -> -' + alchimistePct + '%'
@@ -141,7 +141,7 @@ export function getBundleProgress(items, discounts = {}) {
       estSavings: estSavingsDecouverte,
       circles: Array.from({ length: TARGET }, (_, i) => ({ filled: i < current, color: Array.from(uniqueU)[i] || null })),
       getMessage: () => {
-        if (done) return 'Pack Decouverte active ! Tu economies ~' + estSavingsDecouverte.toFixed(1) + ' DT'
+        if (done) return 'Pack Decouverte active ! Tu économises ~' + estSavingsDecouverte.toFixed(1) + ' DT'
         if (current === 2) return 'Plus que 1 Unicolore dune autre couleur !'
         if (current === 1) return 'Plus que 2 Unicolores de couleurs differentes'
         return 'Ajoute 3 Unicolores differents -> -' + decouvPct + '%'

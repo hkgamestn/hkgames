@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Trash2, ShoppingBag, ArrowRight } from 'lucide-react'
+import { Trash2, ShoppingBag, ArrowRight, X } from 'lucide-react'
 import { useCartStore } from '@/lib/cart/store'
 import { computeBundle, getBundleUpsell } from '@/lib/utils/bundleRules'
 import { formatDT } from '@/lib/utils/formatDT'
@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import styles from './CartContent.module.css'
 
 export default function CartContent() {
-  const { items, removeItem, updateQty } = useCartStore()
+  const { items, removeItem, updateQty, clearCart } = useCartStore()
   const [mounted, setMounted]           = useState(false)
   const [freeThreshold, setFreeThreshold] = useState(50)
   const [shippingPrice, setShippingPrice] = useState(8)
@@ -73,7 +73,17 @@ export default function CartContent() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Mon Panier</h1>
+      <div className={styles.titleRow}>
+        <h1 className={styles.title}>Mon Panier</h1>
+        <button
+          className={styles.clearBtn}
+          onClick={() => { if (confirm('Vider le panier ?')) clearCart() }}
+          type="button"
+        >
+          <X size={14} />
+          Vider le panier
+        </button>
+      </div>
       <div className={styles.layout}>
 
         {/* ── Colonne gauche ── */}

@@ -110,7 +110,7 @@ function BundleCard({ bundle }) {
       )}
       {bundle.done && bundle.estSavings > 0 && (
         <div className={styles.savingsChip}>
-          Tu economies <strong>{bundle.estSavings.toFixed(1)} DT</strong>
+          Tu économises <strong>{bundle.estSavings.toFixed(1)} DT</strong>
         </div>
       )}
     </div>
