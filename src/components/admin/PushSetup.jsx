@@ -104,10 +104,14 @@ export default function PushSetup() {
       )}
 
       {/* Messages état */}
-      {msg === 'success'          && <p className={styles.successMsg}>✅ Notifications activées !</p>}
-      {msg === 'error'            && <p className={styles.errorMsg}>❌ Erreur — réessaie.</p>}
+      {msg === 'success'         && <p className={styles.successMsg}>✅ Notifications activées !</p>}
+      {msg === 'test_ok'         && <p className={styles.successMsg}>✅ Push envoyé ! Vérifie ton téléphone.</p>}
+      {msg === 'test_expired'    && <p className={styles.errorMsg}>⚠️ Subscription expirée — désactive et réactive les notifications.</p>}
+      {msg === 'test_no_sub'     && <p className={styles.errorMsg}>❌ Aucune subscription en DB — clique sur Activer d&apos;abord.</p>}
+      {msg === 'test_fail'       && <p className={styles.errorMsg}>❌ Échec — vérifie les VAPID keys dans Vercel env vars.</p>}
+      {msg === 'error'           && <p className={styles.errorMsg}>❌ Erreur — réessaie.</p>}
       {msg === 'permission_denied'&& <p className={styles.errorMsg}>❌ Permission refusée. Autorise les notifications dans les réglages du navigateur.</p>}
-      {msg === 'not_supported'    && <p className={styles.errorMsg}>❌ Navigateur non supporté.</p>}
+      {msg === 'not_supported'   && <p className={styles.errorMsg}>❌ Navigateur non supporté.</p>}
 
       {/* Actions */}
       <div className={styles.actions}>
@@ -121,13 +125,30 @@ export default function PushSetup() {
             <button
               className={styles.testBtn}
               type="button"
-              onClick={() => {
-                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                  new Notification('HK Games', { body: 'Test OK ✅', icon: '/icons/hk-logo-192.png' })
+              disabled={loading}
+              onClick={async () => {
+                setLoading(true)
+                setMsg(null)
+                try {
+                  const res  = await fetch('/api/admin/test-push', { method: 'POST' })
+                  const data = await res.json()
+                  if (data.sent > 0) {
+                    setMsg('test_ok')
+                  } else if (data.expired_deleted > 0) {
+                    setMsg('test_expired')
+                  } else if (data.subs === 0) {
+                    setMsg('test_no_sub')
+                  } else {
+                    setMsg('test_fail')
+                  }
+                  console.log('[Test Push]', data)
+                } catch (e) {
+                  setMsg('test_fail')
                 }
+                setLoading(false)
               }}
             >
-              Tester
+              {loading ? 'Envoi...' : '🧪 Tester'}
             </button>
             <button className={styles.offBtn} onClick={handleUnsubscribe} disabled={loading} type="button">
               Désactiver
