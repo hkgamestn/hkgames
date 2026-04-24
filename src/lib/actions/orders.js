@@ -132,7 +132,7 @@ export async function confirmOrder(formData, pendingOrderId) {
 
   const upsertData = {
     order_number:     orderNumber,
-    status:           'confirmed',
+    status:           'pending',
     customer_name:    `${firstName} ${lastName}`,
     customer_phone:   phone,
     customer_address: address,
@@ -167,23 +167,8 @@ export async function confirmOrder(formData, pendingOrderId) {
     orderId = data.id
   }
 
-  // Décrémentation stock atomique
-  for (const item of items) {
-    await supabase.rpc('decrement_stock', {
-      p_product_id: item.product_id,
-      p_color: item.color,
-      p_qty: item.qty,
-    })
-    await supabase.from('inventory_logs').insert({
-      product_id: item.product_id,
-      color: item.color,
-      delta: -item.qty,
-      reason: 'order',
-      order_id: orderId,
-    })
-  }
-
-  await sendPushNotification(orderId, 'confirmed')
+  // Notifier l'admin de la nouvelle commande en attente
+  await sendPushNotification(orderId, 'pending')
 
   // CAPI Purchase
   try {
@@ -210,7 +195,7 @@ export async function confirmOrder(formData, pendingOrderId) {
 }
 
 export async function updateOrderStatus(orderId, status, options = {}) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const { reason, adminNote } = options
 
   const updateData = {
@@ -228,10 +213,39 @@ export async function updateOrderStatus(orderId, status, options = {}) {
   if (error) return { error: 'Erreur mise à jour statut.' }
 
   await supabase.from('order_logs').insert({
-    order_id: orderId,
-    action: 'status_change',
+    order_id:  orderId,
+    action:    'status_change',
     new_value: { status, reason, adminNote },
-  })
+  }).catch(() => {})
+
+  // Quand l'admin confirme manuellement une commande pending :
+  // décrémente le stock + envoie le push
+  if (status === 'confirmed') {
+    const { data: order } = await supabase
+      .from('orders')
+      .select('items')
+      .eq('id', orderId)
+      .single()
+
+    if (order?.items) {
+      for (const item of order.items) {
+        await supabase.rpc('decrement_stock', {
+          p_product_id: item.product_id,
+          p_color:      item.color,
+          p_qty:        item.qty || 1,
+        }).catch(() => {})
+        await supabase.from('inventory_logs').insert({
+          product_id: item.product_id,
+          color:      item.color,
+          delta:      -(item.qty || 1),
+          reason:     'order_confirmed',
+          order_id:   orderId,
+        }).catch(() => {})
+      }
+    }
+
+    await sendPushNotification(orderId, 'confirmed')
+  }
 
   return { success: true }
 }

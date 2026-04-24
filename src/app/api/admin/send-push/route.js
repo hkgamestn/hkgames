@@ -30,6 +30,15 @@ function buildPayload(type, orderId, orderData, unseenCount = 1) {
     unseen_count:       unseenCount,
   }
 
+  if (type === 'pending') return {
+    ...base,
+    title:   '🛒 Nouvelle commande !',
+    body:    `${name}${city ? ' · ' + city : ''} · ${Number(total).toFixed(3)} DT`,
+    tag:     'hk-pending-' + orderId,
+    data:    { orderId, url: DOMAIN + '/admin/commandes', phone },
+    actions: [{ action: 'view', title: '👁 Voir' }, { action: 'whatsapp', title: '💬 WhatsApp' }],
+  }
+
   if (type === 'confirmed') return {
     ...base,
     title:   '✅ Commande confirmée !',
