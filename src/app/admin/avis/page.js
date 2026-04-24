@@ -12,15 +12,28 @@ export default function AvisPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    const q = supabase
-      .from('testimonials')
-      .select('id, customer_name, customer_city, rating, review_text, photo_url, is_approved, is_featured, created_at')
-      .order('created_at', { ascending: false })
+    setLoading(true)
 
-    if (tab === 'pending')  q.eq('is_approved', false)
-    if (tab === 'approved') q.eq('is_approved', true)
+    function fetchReviews() {
+      const q = supabase
+        .from('testimonials')
+        .select('id, customer_name, customer_city, rating, review_text, photo_url, is_approved, is_featured, created_at')
+        .order('created_at', { ascending: false })
 
-    q.then(({ data }) => { setReviews(data || []); setLoading(false) })
+      if (tab === 'pending')  q.eq('is_approved', false)
+      if (tab === 'approved') q.eq('is_approved', true)
+
+      q.then(({ data }) => { setReviews(data || []); setLoading(false) })
+    }
+
+    fetchReviews()
+
+    const channel = supabase
+      .channel('admin-avis-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'testimonials' }, fetchReviews)
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [tab])
 
   async function handleToggle(id, field, value) {
