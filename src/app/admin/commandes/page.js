@@ -62,7 +62,7 @@ export default function CommandesPage() {
     const supabase = createClient()
     let q = supabase
       .from('orders')
-      .select('id, order_number, status, customer_name, customer_phone, customer_city, customer_address, customer_notes, items, total_dt, subtotal_dt, discount_dt, shipping_dt, created_at, gift_message, gift_recipient, deleted_at')
+      .select('id, order_number, status, customer_name, customer_phone, customer_city, customer_address, customer_notes, items, total_dt, subtotal_dt, discount_dt, shipping_dt, created_at, gift_message, gift_recipient, deleted_at, navex_tracking')
       .order('created_at', { ascending: false })
 
     if (activeTab === 'deleted') q = q.not('deleted_at', 'is', null)
@@ -166,9 +166,13 @@ export default function CommandesPage() {
     setNavexLoading(order.id)
     try {
       const result = await envoyerNavex(order)
-      setNavexDone((prev) => ({ ...prev, [order.id]: true }))
-      setNavexStatus((prev) => ({ ...prev, [order.id]: result.status_message || 'Envoyé' }))
-      alert('Colis envoyé à Navex avec succès !')
+      const tracking = result.tracking_number || result.colis_id || result.id || null
+      setNavexDone((prev)   => ({ ...prev,   [order.id]: true }))
+      setNavexStatus((prev) => ({ ...prev,   [order.id]: tracking || 'Envoyé' }))
+      // Mettre à jour la commande en local (statut → shipped)
+      setOrders((prev) => prev.map((o) =>
+        o.id === order.id ? { ...o, status: 'shipped', navex_tracking: tracking } : o
+      ))
     } catch (err) {
       alert('Erreur Navex : ' + err.message)
     }
@@ -349,6 +353,19 @@ export default function CommandesPage() {
                     <span className={styles.navexStatusBadge}>
                       ✅ {navexStatus[order.id] || 'Navex'}
                     </span>
+                  )}
+                  {/* Lien impression bon de livraison Navex */}
+                  {(order.navex_tracking || navexDone[order.id]) && (
+                    <a
+                      href={`https://app.navex.tn/impression/${order.navex_tracking || navexStatus[order.id]}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${styles.actionBtn} ${styles.navex}`}
+                      title="Imprimer bon de livraison"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      🖨️
+                    </a>
                   )}
                   {['pending', 'confirmed'].includes(order.status) && (
                     <button className={styles.actionBtn + ' ' + styles.hold} onClick={() => handleAction(order.id, 'on_hold')} title="Injoignable" type="button">
