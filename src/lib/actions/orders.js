@@ -386,3 +386,29 @@ export async function createAdminOrder(data) {
     return { error: 'Erreur inattendue.' }
   }
 }
+
+// ─── Badge commandes non consultées ─────────────────────────────────────────
+
+export async function getUnseenCount() {
+  try {
+    const supabase = createAdminClient()
+    const { count, error } = await supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_seen', false)
+      .is('deleted_at', null)
+    if (error) return 0
+    return count ?? 0
+  } catch { return 0 }
+}
+
+export async function markOrdersSeen() {
+  try {
+    const supabase = createAdminClient()
+    await supabase
+      .from('orders')
+      .update({ is_seen: true })
+      .eq('is_seen', false)
+    return { success: true }
+  } catch { return { success: false } }
+}

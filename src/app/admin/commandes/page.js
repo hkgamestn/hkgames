@@ -4,7 +4,7 @@ import { envoyerNavex } from '@/app/actions/navex'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { updateOrderStatus, softDeleteOrder, restoreOrder, hardDeleteOrders } from '@/lib/actions/orders'
+import { updateOrderStatus, softDeleteOrder, restoreOrder, hardDeleteOrders, getUnseenCount, markOrdersSeen } from '@/lib/actions/orders'
 import { formatDT } from '@/lib/utils/formatDT'
 import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX, Plus } from 'lucide-react'
 import OrderTooltip from '@/components/admin/OrderTooltip'
@@ -40,7 +40,8 @@ const CANCEL_REASONS = [
 ]
 
 export default function CommandesPage() {
-  const [orders, setOrders]           = useState([])
+  const [orders, setOrders]               = useState([])
+  const [unseenCount, setUnseenCount]     = useState(0)
   const [repeatBuyers, setRepeatBuyers] = useState(new Set())
   const [loading, setLoading]         = useState(true)
   const [activeTab, setActiveTab]     = useState(null)
@@ -62,7 +63,7 @@ export default function CommandesPage() {
     const supabase = createClient()
     let q = supabase
       .from('orders')
-      .select('id, order_number, status, customer_name, customer_phone, customer_city, customer_address, customer_notes, items, total_dt, subtotal_dt, discount_dt, shipping_dt, created_at, gift_message, gift_recipient, deleted_at, navex_tracking')
+      .select('id, order_number, status, customer_name, customer_phone, customer_city, customer_address, customer_notes, items, total_dt, subtotal_dt, discount_dt, shipping_dt, created_at, gift_message, gift_recipient, deleted_at, navex_tracking, is_seen')
       .order('created_at', { ascending: false })
 
     if (activeTab === 'deleted') q = q.not('deleted_at', 'is', null)
@@ -87,7 +88,15 @@ export default function CommandesPage() {
     setLoading(false)
   }, [activeTab, search])
 
-  useEffect(() => { fetchOrders() }, [fetchOrders])
+  useEffect(() => {
+    const init = async () => {
+      const count = await getUnseenCount()
+      setUnseenCount(count)
+      await fetchOrders()
+      await markOrdersSeen()
+    }
+    init()
+  }, [fetchOrders])
 
   // Ref stable vers fetchOrders pour le channel realtime
   const fetchOrdersRef = useRef(fetchOrders)
@@ -199,7 +208,12 @@ export default function CommandesPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Commandes</h1>
+        <h1 className={styles.title}>
+          Commandes
+          {unseenCount > 0 && (
+            <span className={styles.unseenBadge}>{unseenCount} nouvelle{unseenCount > 1 ? 's' : ''}</span>
+          )}
+        </h1>
         <button
           className={styles.newOrderBtn}
           onClick={() => setShowCreateModal(true)}
@@ -286,7 +300,7 @@ export default function CommandesPage() {
           {orders.map((order) => {
             const cfg = STATUS_CONFIG[order.status] || {}
             return (
-              <div key={order.id} className={styles.tableRow + (selectedOrders.includes(order.id) ? ' ' + styles.tableRowSelected : '')} onMouseEnter={(e) => setTooltip({ order, pos: { x: e.clientX, y: e.clientY } })} onMouseMove={(e) => setTooltip(t => ({ ...t, pos: { x: e.clientX, y: e.clientY } }))} onMouseLeave={() => setTooltip({ order: null, pos: { x: 0, y: 0 } })}>
+              <div key={order.id} className={[styles.tableRow, selectedOrders.includes(order.id) ? styles.tableRowSelected : '', !order.is_seen ? styles.tableRowUnseen : ''].filter(Boolean).join(' ')} onMouseEnter={(e) => setTooltip({ order, pos: { x: e.clientX, y: e.clientY } })} onMouseMove={(e) => setTooltip(t => ({ ...t, pos: { x: e.clientX, y: e.clientY } }))} onMouseLeave={() => setTooltip({ order: null, pos: { x: 0, y: 0 } })}>
                 <input
                   type="checkbox"
                   checked={selectedOrders.includes(order.id)}
