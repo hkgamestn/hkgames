@@ -84,9 +84,9 @@ export default function ParametresPage() {
     setSoundUploading((p) => ({ ...p, [soundKey]: true }))
     const supabase = createClient()
     const path = `sounds/${soundKey}.mp3`
-    const { error } = await supabase.storage.from('public').upload(path, file, { upsert: true, contentType: 'audio/mpeg' })
+    const { error } = await supabase.storage.from('product-images').upload(path, file, { upsert: true, contentType: 'audio/mpeg' })
     if (!error) {
-      const { data: urlData } = supabase.storage.from('public').getPublicUrl(path)
+      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path)
       await supabase.from('settings').upsert({ key: soundKey, value: urlData.publicUrl }, { onConflict: 'key' })
       setSettings((p) => ({ ...p, [soundKey]: urlData.publicUrl }))
       setSoundUploaded((p) => ({ ...p, [soundKey]: true }))
