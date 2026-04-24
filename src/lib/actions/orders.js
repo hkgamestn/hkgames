@@ -191,7 +191,7 @@ export async function confirmOrder(formData, pendingOrderId) {
     })
   } catch (e) { console.error('[CAPI Purchase]', e) }
 
-  return { success: true, orderId }
+  return { success: true, orderId, eventId: 'purchase-' + orderId }
 }
 
 export async function updateOrderStatus(orderId, status, options = {}) {

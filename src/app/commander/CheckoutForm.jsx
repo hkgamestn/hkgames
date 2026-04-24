@@ -100,7 +100,7 @@ export default function CheckoutForm() {
     )
     if (!isTest && typeof window !== 'undefined' && window.fbq) {
       const total = items.reduce((s, i) => s + i.price_dt * i.qty, 0)
-      window.fbq('track', 'Purchase', { value: total, currency: 'TND', order_id: result.orderId })
+      window.fbq('track', 'Purchase', { value: total, currency: 'TND', order_id: result.orderId }, { eventID: result.eventId })
     }
     // ⚠️ router.push AVANT clearCart — évite la redirection /panier
     router.push(`/merci?id=${result.orderId}`)
