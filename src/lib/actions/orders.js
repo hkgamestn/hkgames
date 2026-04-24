@@ -30,15 +30,16 @@ async function getSettingValue(key) {
 
 async function sendPushNotification(orderId, type) {
   try {
-    await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-push`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ orderId, type }),
+    // Route API Next.js directe — zéro cold start vs Edge Function Supabase
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hap-p-kids.store'
+    await fetch(`${baseUrl}/api/admin/send-push`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ orderId, type }),
     })
-  } catch {}
+  } catch (err) {
+    console.error('[sendPushNotification]', err)
+  }
 }
 
 export async function createPendingOrder({ phone, items, subtotalDt, giftMessage, giftRecipient }) {
