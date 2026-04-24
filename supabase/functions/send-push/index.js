@@ -131,10 +131,7 @@ Deno.serve(async (req) => {
             urgency: 'high',
             TTL: 60,
           })
-          await supabaseAdmin
-            .from('push_subscriptions')
-            .update({ last_used_at: new Date().toISOString() })
-            .eq('id', id)
+          console.log('[send-push] ✅ Envoyé à sub', id)
         } catch (err) {
           console.error('[send-push] Erreur sub', id, ':', err.statusCode, err.message)
           if (err.statusCode === 410 || err.statusCode === 404) {

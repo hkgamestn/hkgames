@@ -14,14 +14,13 @@ export function isPWA() {
   return typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
 }
 
-// Convertit la VAPID key base64url → Uint8Array
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
   const rawData = window.atob(base64)
-  const outputArray = new Uint8Array(rawData.length)
-  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
-  return outputArray
+  const output  = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; i++) output[i] = rawData.charCodeAt(i)
+  return output
 }
 
 export async function subscribeToPush() {
@@ -36,26 +35,39 @@ export async function subscribeToPush() {
 
   const registration = await navigator.serviceWorker.ready
   const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-  if (!vapidKey) return { error: 'VAPID public key manquante.' }
+  if (!vapidKey) return { error: 'VAPID key manquante' }
 
-  // Récupérer ou créer la subscription
+  // Sur Android : forcer une nouvelle subscription (évite les tokens expirés)
   let subscription = await registration.pushManager.getSubscription()
-  if (!subscription) {
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidKey),
-    })
+  if (subscription) {
+    await subscription.unsubscribe()
+    subscription = null
   }
 
-  const subJson = subscription.toJSON()
-  const endpoint  = subJson.endpoint
-  const p256dh    = subJson.keys?.p256dh
-  const auth      = subJson.keys?.auth
-  const userAgent = navigator.userAgent.slice(0, 150)
+  try {
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly:      true,
+      applicationServerKey: urlBase64ToUint8Array(vapidKey),
+    })
+  } catch (err) {
+    console.error('[subscribeToPush] subscribe error:', err)
+    return { error: 'subscription_failed' }
+  }
+
+  const subJson  = subscription.toJSON()
+  const endpoint = subJson.endpoint
+  const p256dh   = subJson.keys?.p256dh
+  const auth     = subJson.keys?.auth
+
+  if (!endpoint || !p256dh || !auth) {
+    return { error: 'invalid_subscription' }
+  }
 
   const supabase = createClient()
 
-  // Upsert sur l'endpoint (évite les doublons, renouvelle si expiré)
+  // Désactiver les anciennes subscriptions de cet appareil (même user agent)
+  const ua = navigator.userAgent.slice(0, 200)
+
   const { error } = await supabase
     .from('push_subscriptions')
     .upsert(
@@ -64,34 +76,37 @@ export async function subscribeToPush() {
         p256dh,
         auth,
         subscription: subJson,
-        device_name: userAgent,
-        is_active: true,
-        updated_at: new Date().toISOString(),
+        device_name:  ua,
+        is_active:    true,
+        updated_at:   new Date().toISOString(),
       },
       { onConflict: 'endpoint', ignoreDuplicates: false }
     )
 
   if (error) {
     console.error('[subscribeToPush] DB error:', error.message)
-    return { error: 'db_error' }
+    return { error: 'db_error: ' + error.message }
   }
 
   return { success: true }
 }
 
 export async function unsubscribeFromPush() {
-  if (!('serviceWorker' in navigator)) return
+  if (!('serviceWorker' in navigator)) return { success: true }
+
   const registration = await navigator.serviceWorker.ready
   const subscription = await registration.pushManager.getSubscription()
-  if (!subscription) return { success: true }
 
-  const supabase = createClient()
-  await supabase
-    .from('push_subscriptions')
-    .update({ is_active: false })
-    .eq('endpoint', subscription.endpoint)
+  if (subscription) {
+    const supabase = createClient()
+    await supabase
+      .from('push_subscriptions')
+      .update({ is_active: false })
+      .eq('endpoint', subscription.endpoint)
 
-  await subscription.unsubscribe()
+    await subscription.unsubscribe()
+  }
+
   return { success: true }
 }
 

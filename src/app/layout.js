@@ -83,7 +83,7 @@ export default function RootLayout({ children }) {
         </div>
 
 
-        {/* Service Worker registration */}
+        {/* Service Worker registration — force update Android */}
         <Script
           id="sw-register"
           strategy="afterInteractive"
@@ -91,7 +91,21 @@ export default function RootLayout({ children }) {
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    // Forcer la vérification de mise à jour du SW
+                    reg.update();
+                    // Écouter les mises à jour
+                    reg.addEventListener('updatefound', function() {
+                      var newWorker = reg.installing;
+                      if (newWorker) {
+                        newWorker.addEventListener('statechange', function() {
+                          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            newWorker.postMessage({ type: 'SKIP_WAITING' });
+                          }
+                        });
+                      }
+                    });
+                  }).catch(function(err) {
                     console.warn('SW registration failed:', err);
                   });
                 });
