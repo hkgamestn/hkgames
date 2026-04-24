@@ -46,6 +46,8 @@ export default function CommandesPage() {
   const [loading, setLoading]         = useState(true)
   const [activeTab, setActiveTab]     = useState(null)
   const [search, setSearch]           = useState('')
+  const [dateFrom, setDateFrom]       = useState('')
+  const [dateTo, setDateTo]           = useState('')
   const [cancelModal, setCancelModal] = useState(null)
   const [cancelReason, setCancelReason] = useState(CANCEL_REASONS[0])
   const [actionLoading, setActionLoading] = useState(null)
@@ -68,7 +70,9 @@ export default function CommandesPage() {
 
     if (activeTab === 'deleted') q = q.not('deleted_at', 'is', null)
     else { q = q.is('deleted_at', null); if (activeTab) q = q.eq('status', activeTab) }
-    if (search)    q = q.or(`customer_name.ilike.%${search}%,customer_phone.ilike.%${search}%,order_number.ilike.%${search}%`)
+    if (search)   q = q.or(`customer_name.ilike.%${search}%,customer_phone.ilike.%${search}%,order_number.ilike.%${search}%`)
+    if (dateFrom) q = q.gte('created_at', new Date(dateFrom).toISOString())
+    if (dateTo)   q = q.lte('created_at', new Date(dateTo + 'T23:59:59').toISOString())
 
       // Charger tous les téléphones pour détecter les repeat buyers
       const { data: allPhones } = await supabase
@@ -86,7 +90,7 @@ export default function CommandesPage() {
     const { data } = await q
     setOrders(data || [])
     setLoading(false)
-  }, [activeTab, search])
+  }, [activeTab, search, dateFrom, dateTo])
 
   useEffect(() => {
     const init = async () => {
@@ -264,6 +268,26 @@ export default function CommandesPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <div className={styles.dateFilters}>
+          <input
+            type="date"
+            className={styles.dateInput}
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            title="Du"
+          />
+          <span className={styles.dateSep}>→</span>
+          <input
+            type="date"
+            className={styles.dateInput}
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            title="Au"
+          />
+          {(dateFrom || dateTo) && (
+            <button className={styles.clearDate} onClick={() => { setDateFrom(''); setDateTo('') }} type="button">✕</button>
+          )}
+        </div>
       </div>
 
       <div className={styles.tabs}>

@@ -339,3 +339,21 @@
   border-left: 3px solid #a855f7;
   background: rgba(168,85,247,0.04);
 }
+
+/* Filtres de date */
+.dateFilters {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.dateInput {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(168,85,247,0.2);
+  color: var(--text-primary); border-radius: 8px; padding: 7px 10px;
+  font-size: 0.82rem; outline: none; cursor: pointer;
+}
+.dateInput:focus { border-color: var(--color-primary); }
+.dateSep { color: var(--text-muted); font-size: 0.8rem; }
+.clearDate {
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
+  color: #ef4444; border-radius: 6px; padding: 5px 9px;
+  font-size: 0.75rem; cursor: pointer;
+}
+.clearDate:hover { background: rgba(239,68,68,0.2); }
