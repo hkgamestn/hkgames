@@ -1,6 +1,13 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminSupabase } from '@supabase/supabase-js'
+
+function createAdminClient() {
+  return createAdminSupabase(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+}
 
 export async function envoyerNavex(order) {
   const NAVEX_URL = 'https://app.navex.tn/api/happkidsgame-VNZLZD2394IEZKLHF23O403IZKLDJAE23583FKDLJLJ34TD/v1/post.php'
@@ -47,7 +54,7 @@ export async function envoyerNavex(order) {
   const trackingValue  = trackingNumber ? String(trackingNumber) : `NAVEX-${Date.now()}`
 
   if (order.id) {
-    const supabase = createClient()
+    const supabase = createAdminClient()
     await supabase
       .from('orders')
       .update({
