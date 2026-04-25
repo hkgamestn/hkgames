@@ -45,13 +45,30 @@ export async function envoyerNavex(order) {
 
   const data = await res.json().catch(() => ({}))
 
+  // Log complet pour voir tous les champs retournés par Navex
+  console.log('[Navex] Réponse complète:', JSON.stringify(data))
+
   if (!res.ok || data.status === 'error') {
     throw new Error(data.status_message || 'Erreur Navex')
   }
 
-  // Sauvegarder en DB même si pas de tracking number (fallback avec timestamp)
-  const trackingNumber = data.tracking_number || data.colis_id || data.id || data.barcode || null
-  const trackingValue  = trackingNumber ? String(trackingNumber) : `NAVEX-${Date.now()}`
+  // Chercher le vrai numéro de colis dans tous les champs possibles
+  const trackingNumber =
+    data.tracking_number ||
+    data.colis_id        ||
+    data.numero_colis    ||
+    data.num_colis       ||
+    data.barcode         ||
+    data.reference       ||
+    data.id              ||
+    data.code            ||
+    null
+
+  console.log('[Navex] Tracking number extrait:', trackingNumber)
+  console.log('[Navex] Tous les champs:', Object.keys(data))
+
+  // Fallback sans préfixe si Navex ne retourne pas de numéro
+  const trackingValue = trackingNumber ? String(trackingNumber) : null
 
   if (order.id) {
     const supabase = createAdminClient()
