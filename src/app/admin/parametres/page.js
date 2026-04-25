@@ -82,18 +82,26 @@ export default function ParametresPage() {
   async function handleSoundUpload(soundKey, file) {
     if (!file) return
     setSoundUploading((p) => ({ ...p, [soundKey]: true }))
-    const supabase = createClient()
-    const path = `sounds/${soundKey}.mp3`
-    const { error } = await supabase.storage.from('notification-sounds').upload(path, file, { upsert: true, contentType: 'audio/mpeg' })
-    if (!error) {
-      const { data: urlData } = supabase.storage.from('notification-sounds').getPublicUrl(path)
-      await supabase.from('settings').upsert({ key: soundKey, value: urlData.publicUrl }, { onConflict: 'key' })
-      setSettings((p) => ({ ...p, [soundKey]: urlData.publicUrl }))
-      setSoundUploaded((p) => ({ ...p, [soundKey]: true }))
-      setTimeout(() => setSoundUploaded((p) => ({ ...p, [soundKey]: false })), 2500)
-    } else {
-      alert('Erreur upload: ' + error.message)
+
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('soundKey', soundKey)
+
+      const res  = await fetch('/api/admin/upload-sound', { method: 'POST', body: fd })
+      const data = await res.json()
+
+      if (data.error) {
+        alert('Erreur upload: ' + data.error)
+      } else {
+        setSettings((p) => ({ ...p, [soundKey]: data.url }))
+        setSoundUploaded((p) => ({ ...p, [soundKey]: true }))
+        setTimeout(() => setSoundUploaded((p) => ({ ...p, [soundKey]: false })), 2500)
+      }
+    } catch (err) {
+      alert('Erreur upload: ' + err.message)
     }
+
     setSoundUploading((p) => ({ ...p, [soundKey]: false }))
   }
 
