@@ -5,15 +5,29 @@ import { createClient } from '@/lib/supabase/client'
 import styles from './OrderNotifier.module.css'
 
 export default function OrderNotifier() {
-  const [toasts, setToasts] = useState([])
-  const audioRef            = useRef(null)
-  const knownIds            = useRef(new Set())
-  const readyRef            = useRef(false)
+  const [toasts, setToasts]     = useState([])
+  const audioRef                = useRef(null)
+  const soundUrlRef             = useRef('/sounds/order-alert.mp3') // fallback
+  const knownIds                = useRef(new Set())
+  const readyRef                = useRef(false)
+
+  // Charger l'URL du son depuis la DB
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.from('settings').select('value').eq('key', 'sound_new_order').maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) {
+          soundUrlRef.current = data.value
+          // Reset l'audio pour forcer le rechargement du nouveau son
+          audioRef.current = null
+        }
+      })
+  }, [])
 
   const playSound = useCallback(() => {
     try {
-      if (!audioRef.current) {
-        audioRef.current = new Audio('/sounds/order-alert.mp3')
+      if (!audioRef.current || audioRef.current.src !== soundUrlRef.current) {
+        audioRef.current = new Audio(soundUrlRef.current)
         audioRef.current.volume = 1.0
       }
       audioRef.current.currentTime = 0
@@ -35,14 +49,12 @@ export default function OrderNotifier() {
   useEffect(() => {
     function unlock() {
       if (!audioRef.current) {
-        audioRef.current = new Audio('/sounds/order-alert.mp3')
+        audioRef.current = new Audio(soundUrlRef.current)
         audioRef.current.volume = 1.0
       }
-      // Jouer silencieusement pour déverrouiller
       audioRef.current.play().then(() => {
         audioRef.current.pause()
         audioRef.current.currentTime = 0
-        console.log('[HK] Audio déverrouillé')
       }).catch(() => {})
       document.removeEventListener('click', unlock)
       document.removeEventListener('keydown', unlock)
