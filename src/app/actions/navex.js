@@ -52,35 +52,24 @@ export async function envoyerNavex(order) {
     throw new Error(data.status_message || 'Erreur Navex')
   }
 
-  // Chercher le vrai numéro de colis dans tous les champs possibles
-  const trackingNumber =
-    data.tracking_number ||
-    data.colis_id        ||
-    data.numero_colis    ||
-    data.num_colis       ||
-    data.barcode         ||
-    data.reference       ||
-    data.id              ||
-    data.code            ||
-    null
+  // Navex retourne: { status: 1, status_message: "122571184711", lien: "https://..." }
+  const trackingNumber = data.status_message || null
+  const printUrl       = data.lien           || null
 
-  console.log('[Navex] Tracking number extrait:', trackingNumber)
-  console.log('[Navex] Tous les champs:', Object.keys(data))
-
-  // Fallback sans préfixe si Navex ne retourne pas de numéro
-  const trackingValue = trackingNumber ? String(trackingNumber) : null
+  console.log('[Navex] Tracking:', trackingNumber, '| Lien:', printUrl)
 
   if (order.id) {
     const supabase = createAdminClient()
     await supabase
       .from('orders')
       .update({
-        navex_tracking: trackingValue,
-        navex_sent_at:  new Date().toISOString(),
-        status:         'shipped',
+        navex_tracking:   trackingNumber,
+        navex_print_url:  printUrl,
+        navex_sent_at:    new Date().toISOString(),
+        status:           'shipped',
       })
       .eq('id', order.id)
   }
 
-  return { ...data, tracking_number: trackingValue }
+  return { ...data, tracking_number: trackingNumber, print_url: printUrl }
 }

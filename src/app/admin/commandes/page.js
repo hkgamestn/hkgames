@@ -106,7 +106,7 @@ export default function CommandesPage() {
     const supabase = createClient()
     let q = supabase
       .from('orders')
-      .select('id, order_number, status, customer_name, customer_phone, customer_city, customer_address, customer_notes, items, total_dt, subtotal_dt, discount_dt, shipping_dt, created_at, gift_message, gift_recipient, deleted_at, navex_tracking, is_seen')
+      .select('id, order_number, status, customer_name, customer_phone, customer_city, customer_address, customer_notes, items, total_dt, subtotal_dt, discount_dt, shipping_dt, created_at, gift_message, gift_recipient, deleted_at, navex_tracking, navex_print_url, is_seen')
       .order('created_at', { ascending: false })
 
     if (activeTab === 'deleted') q = q.not('deleted_at', 'is', null)
@@ -218,13 +218,13 @@ export default function CommandesPage() {
   async function handleNavex(order) {
     setNavexLoading(order.id)
     try {
-      const result = await envoyerNavex(order)
-      const tracking = result.tracking_number || result.colis_id || result.id || null
-      setNavexDone((prev)   => ({ ...prev,   [order.id]: true }))
-      setNavexStatus((prev) => ({ ...prev,   [order.id]: tracking || 'Envoyé' }))
-      // Mettre à jour la commande en local (statut → shipped)
+      const result   = await envoyerNavex(order)
+      const tracking = result.tracking_number || null
+      const printUrl = result.print_url       || null
+      setNavexDone((prev)   => ({ ...prev, [order.id]: true }))
+      setNavexStatus((prev) => ({ ...prev, [order.id]: tracking || 'Expédié' }))
       setOrders((prev) => prev.map((o) =>
-        o.id === order.id ? { ...o, status: 'shipped', navex_tracking: tracking } : o
+        o.id === order.id ? { ...o, status: 'shipped', navex_tracking: tracking, navex_print_url: printUrl } : o
       ))
     } catch (err) {
       alert('Erreur Navex : ' + err.message)
@@ -436,7 +436,7 @@ export default function CommandesPage() {
                   {/* Lien impression */}
                   {(order.navex_tracking || navexDone[order.id]) && (
                     <a
-                      href={`https://app.navex.tn/impression/${order.navex_tracking || navexStatus[order.id]}`}
+                      href={order.navex_print_url || `https://app.navex.tn/print/imprimer.php?code=${order.navex_tracking || navexStatus[order.id]}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`${styles.actionBtn} ${styles.navex}`}
