@@ -45,23 +45,52 @@ async function sendPushNotification(orderId, type) {
 export async function createPendingOrder({ phone, items, subtotalDt, giftMessage, giftRecipient }) {
   const supabase = createAdminClient()
 
+  // Chercher une commande pending existante pour ce téléphone (dernières 24h)
+  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const { data: existing } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('customer_phone', phone)
+    .eq('status', 'pending')
+    .gte('created_at', since24h)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  // Si commande pending existante → mettre à jour au lieu de créer
+  if (existing?.id) {
+    await supabase
+      .from('orders')
+      .update({
+        items,
+        subtotal_dt:   subtotalDt,
+        total_dt:      subtotalDt,
+        gift_message:   giftMessage   ? String(giftMessage).slice(0, 200).trim()   : null,
+        gift_recipient: giftRecipient ? String(giftRecipient).slice(0, 40).trim()  : null,
+        updated_at:    new Date().toISOString(),
+      })
+      .eq('id', existing.id)
+
+    return { orderId: existing.id }
+  }
+
+  // Aucune commande existante → créer une nouvelle
   const { data, error } = await supabase
     .from('orders')
     .insert({
       customer_phone: phone,
-      status: 'pending',
-      items: items,
-      subtotal_dt: subtotalDt,
-      total_dt: subtotalDt,
+      status:         'pending',
+      items,
+      subtotal_dt:    subtotalDt,
+      total_dt:       subtotalDt,
       gift_message:   giftMessage   ? String(giftMessage).slice(0, 200).trim()   : null,
       gift_recipient: giftRecipient ? String(giftRecipient).slice(0, 40).trim()  : null,
     })
     .select('id')
     .single()
 
-  if (error) { console.error('NAVEX INSERT ERROR:', JSON.stringify(error)); return { error: 'Erreur: ' + error.message } }
-
-  // Push uniquement sur 'confirmed' — pas sur pending (évite double notif)
+  if (error) { console.error('[createPendingOrder] error:', JSON.stringify(error)); return { error: 'Erreur: ' + error.message } }
 
   return { orderId: data.id }
 }
