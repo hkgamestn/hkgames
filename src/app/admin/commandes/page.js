@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { updateOrderStatus, softDeleteOrder, restoreOrder, hardDeleteOrders, getUnseenCount, markOrdersSeen } from '@/lib/actions/orders'
 import { formatDT } from '@/lib/utils/formatDT'
-import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX, Plus } from 'lucide-react'
+import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX, Plus, FileDown } from 'lucide-react'
 import OrderTooltip from '@/components/admin/OrderTooltip'
 import OrderEditPanel from '@/components/admin/OrderEditPanel'
 import CreateOrderModal from '@/components/admin/CreateOrderModal'
@@ -57,6 +57,47 @@ export default function CommandesPage() {
   const [tooltip, setTooltip]             = useState({ order: null, pos: { x: 0, y: 0 } })
   const [editOrder, setEditOrder]         = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+
+  function exportCSV() {
+    if (!orders.length) return
+    const headers = [
+      'N° Commande', 'Date', 'Statut',
+      'Nom client', 'Téléphone', 'Gouvernorat', 'Adresse', 'Notes',
+      'Produits', 'Sous-total (DT)', 'Livraison (DT)', 'Remise (DT)', 'Total (DT)',
+      'Tracking Navex',
+    ]
+    const rows = orders.map((o) => {
+      const produits = (o.items || [])
+        .map((i) => `${i.name}${i.color ? ' ' + i.color : ''} x${i.qty || 1}`)
+        .join(' | ')
+      return [
+        o.order_number || '',
+        o.created_at ? new Date(o.created_at).toLocaleString('fr-TN') : '',
+        o.status || '',
+        o.customer_name    || '',
+        o.customer_phone   || '',
+        o.customer_city    || '',
+        o.customer_address || '',
+        o.customer_notes   || '',
+        produits,
+        (o.subtotal_dt  || 0).toFixed(3),
+        (o.shipping_dt  || 0).toFixed(3),
+        (o.discount_dt  || 0).toFixed(3),
+        (o.total_dt     || 0).toFixed(3),
+        o.navex_tracking || '',
+      ].map((v) => `"${String(v).replace(/"/g, '""')}"`)
+    })
+
+    const csv  = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    const date = new Date().toISOString().slice(0, 10)
+    a.href     = url
+    a.download = `commandes-hkgames-${date}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
   const [multiNavexLoading, setMultiNavexLoading] = useState(false)
   const [navexDone, setNavexDone]         = useState({})
   const [navexStatus, setNavexStatus]     = useState({})
@@ -218,13 +259,14 @@ export default function CommandesPage() {
             <span className={styles.unseenBadge}>{unseenCount} nouvelle{unseenCount > 1 ? 's' : ''}</span>
           )}
         </h1>
-        <button
-          className={styles.newOrderBtn}
-          onClick={() => setShowCreateModal(true)}
-          type="button"
-        >
-          <Plus size={16} /> Nouvelle commande
-        </button>
+        <div className={styles.headerActions}>
+          <button className={styles.exportBtn} onClick={exportCSV} type="button" title="Exporter en CSV">
+            <FileDown size={15} /> Export CSV
+          </button>
+          <button className={styles.newOrderBtn} onClick={() => setShowCreateModal(true)} type="button">
+            <Plus size={16} /> Nouvelle commande
+          </button>
+        </div>
         {selectedOrders.length > 0 && (
           <div className={styles.bulkBar}>
             <span className={styles.bulkCount}>{selectedOrders.length} sélectionnée(s)</span>

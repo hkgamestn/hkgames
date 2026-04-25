@@ -357,3 +357,15 @@
   font-size: 0.75rem; cursor: pointer;
 }
 .clearDate:hover { background: rgba(239,68,68,0.2); }
+
+/* Header actions */
+.headerActions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* Bouton export CSV */
+.exportBtn {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3);
+  color: #06b6d4; padding: 9px 16px; border-radius: 10px;
+  font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.exportBtn:hover { background: rgba(6,182,212,0.2); }
