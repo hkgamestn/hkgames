@@ -415,23 +415,25 @@ export default function CommandesPage() {
                       <CheckCircle size={15} />
                     </button>
                   )}
-                  {order.status === 'confirmed' && !navexDone[order.id] && (
+                  {/* Navex — masqué si déjà tracking en DB ou état local */}
+                  {order.status === 'confirmed' && !order.navex_tracking && !navexDone[order.id] && (
                     <button
                       className={styles.actionBtn + ' ' + styles.navex}
                       onClick={() => handleNavex(order)}
                       disabled={navexLoading === order.id}
-                      title="Envoyer a Navex"
+                      title="Envoyer à Navex"
                       type="button"
                     >
                       {navexLoading === order.id ? '...' : '🚚'}
                     </button>
                   )}
-                  {navexDone[order.id] && (
+                  {/* Badge numéro colis — depuis DB (persiste après actualisation) */}
+                  {(order.navex_tracking || navexDone[order.id]) && (
                     <span className={styles.navexStatusBadge}>
-                      ✅ {navexStatus[order.id] || 'Navex'}
+                      📦 {order.navex_tracking || navexStatus[order.id] || 'Expédié'}
                     </span>
                   )}
-                  {/* Lien impression bon de livraison Navex */}
+                  {/* Lien impression */}
                   {(order.navex_tracking || navexDone[order.id]) && (
                     <a
                       href={`https://app.navex.tn/impression/${order.navex_tracking || navexStatus[order.id]}`}
