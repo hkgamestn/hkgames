@@ -415,8 +415,8 @@ export default function CommandesPage() {
                       <CheckCircle size={15} />
                     </button>
                   )}
-                  {/* Navex — masqué si déjà tracking en DB ou état local */}
-                  {order.status === 'confirmed' && !order.navex_tracking && !navexDone[order.id] && (
+                  {/* Navex — masqué si déjà expédié (status shipped) OU tracking en DB OU état local */}
+                  {order.status === 'confirmed' && order.status !== 'shipped' && !order.navex_tracking && !navexDone[order.id] && (
                     <button
                       className={styles.actionBtn + ' ' + styles.navex}
                       onClick={() => handleNavex(order)}

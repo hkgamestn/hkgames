@@ -42,19 +42,21 @@ export async function envoyerNavex(order) {
     throw new Error(data.status_message || 'Erreur Navex')
   }
 
-  // Sauvegarder le numéro de tracking en DB
-  const trackingNumber = data.tracking_number || data.colis_id || data.id || null
-  if (trackingNumber && order.id) {
+  // Sauvegarder en DB même si pas de tracking number (fallback avec timestamp)
+  const trackingNumber = data.tracking_number || data.colis_id || data.id || data.barcode || null
+  const trackingValue  = trackingNumber ? String(trackingNumber) : `NAVEX-${Date.now()}`
+
+  if (order.id) {
     const supabase = createClient()
     await supabase
       .from('orders')
       .update({
-        navex_tracking: String(trackingNumber),
+        navex_tracking: trackingValue,
         navex_sent_at:  new Date().toISOString(),
         status:         'shipped',
       })
       .eq('id', order.id)
   }
 
-  return { ...data, tracking_number: trackingNumber }
+  return { ...data, tracking_number: trackingValue }
 }
