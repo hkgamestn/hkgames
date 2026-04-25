@@ -89,9 +89,11 @@ export default function OrderEditPanel({ order, onClose, onSaved }) {
   }
 
   // Calcul totaux
-  const shipping  = form.status === 'pending' || form.status === 'confirmed' ? 8 : 0
-  const subtotal  = items.reduce((s, i) => s + (parseFloat(i.price_dt) || 0) * (parseInt(i.qty) || 1), 0)
-  const total     = subtotal + shipping
+  // Lire les vraies valeurs depuis la commande originale (ne pas recalculer)
+  const shipping    = parseFloat(order.shipping_dt ?? 8)
+  const discountAmt = parseFloat(order.discount_dt ?? 0)
+  const subtotal    = items.reduce((s, i) => s + (parseFloat(i.price_dt) || 0) * (parseInt(i.qty) || 1), 0)
+  const total       = parseFloat((subtotal + shipping - discountAmt).toFixed(3))
 
   async function handleSave() {
     setSaving(true)
@@ -110,6 +112,7 @@ export default function OrderEditPanel({ order, onClose, onSaved }) {
       items:            cleanItems,
       subtotal_dt:      subtotal,
       shipping_dt:      shipping,
+      discount_dt:      discountAmt,
       total_dt:         total,
     })
     setSaving(false)
@@ -251,6 +254,12 @@ export default function OrderEditPanel({ order, onClose, onSaved }) {
                   <span>Livraison</span>
                   <span>{shipping === 0 ? 'Gratuite' : `${shipping} DT`}</span>
                 </div>
+                {discountAmt > 0 && (
+                  <div className={styles.totalRow}>
+                    <span>Remise bundle</span>
+                    <span style={{ color: '#10b981' }}>−{discountAmt.toFixed(2)} DT</span>
+                  </div>
+                )}
                 <div className={styles.totalRow + ' ' + styles.totalFinal}>
                   <span>Total</span>
                   <span>{total.toFixed(2)} DT</span>
