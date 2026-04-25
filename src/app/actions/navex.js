@@ -18,8 +18,11 @@ export async function envoyerNavex(order) {
 
   const nb_article = (order.items || []).reduce((s, i) => s + (i.qty || 1), 0)
 
+  // total_dt inclut sous-total + livraison — c'est le montant COD à encaisser
+  const totalCOD = parseFloat(order.total_dt || 0).toFixed(3)
+
   const params = new URLSearchParams({
-    prix:            String(order.total_dt || 0),
+    prix:            totalCOD,
     nom:             order.customer_name    || '',
     gouvernerat:     order.customer_city    || 'Tunis',
     ville:           order.customer_city    || '',

@@ -266,14 +266,26 @@ export async function softDeleteOrder(orderId) {
 }
 
 export async function updateOrderItems(orderId, updatedData) {
-  const supabase = await createClient()
-  const subtotal = updatedData.items.reduce((s, i) => s + (i.price_dt || 0) * (i.qty || 1), 0)
+  const supabase = createAdminClient()
+  const subtotal   = updatedData.items.reduce((s, i) => s + (i.price_dt || 0) * (i.qty || 1), 0)
+  const shipping   = parseFloat(updatedData.shipping_dt ?? 8)
+  const discount   = parseFloat(updatedData.discount_dt ?? 0)
+  const total      = parseFloat((subtotal + shipping - discount).toFixed(3))
+
   const { error } = await supabase
     .from('orders')
-    .update({ ...updatedData, subtotal_dt: subtotal, total_dt: subtotal, updated_at: new Date().toISOString() })
+    .update({
+      ...updatedData,
+      subtotal_dt: subtotal,
+      shipping_dt: shipping,
+      discount_dt: discount,
+      total_dt:    total,
+      updated_at:  new Date().toISOString(),
+    })
     .eq('id', orderId)
+
   if (error) return { error: 'Erreur modification commande.' }
-  await supabase.from('order_logs').insert({ order_id: orderId, action: 'field_updated', new_value: updatedData })
+  await supabase.from('order_logs').insert({ order_id: orderId, action: 'field_updated', new_value: { subtotal, shipping, total } }).catch(() => {})
   return { success: true }
 }
 
