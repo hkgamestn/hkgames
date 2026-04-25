@@ -211,9 +211,8 @@ export default function CommandesPage() {
   }
 
   function toggleSelectAll() {
-    const confirmed = orders.filter((o) => o.status === 'confirmed').map((o) => o.id)
-    if (selectedOrders.length === confirmed.length) setSelectedOrders([])
-    else setSelectedOrders(confirmed)
+    if (selectedOrders.length === orders.length) setSelectedOrders([])
+    else setSelectedOrders(orders.map((o) => o.id))
   }
 
   async function handleNavex(order) {
@@ -295,13 +294,12 @@ export default function CommandesPage() {
               </button>
             )}
 
-            {activeTab === 'deleted' && (
-              <button className={`${styles.bulkBtn} ${styles.bulkHardDelete}`}
-                onClick={handleBulkHardDelete} type="button">
-                <ArchiveX size={14} />
-                Suppr. définitive
-              </button>
-            )}
+            {/* Suppression définitive disponible sur TOUS les onglets */}
+            <button className={`${styles.bulkBtn} ${styles.bulkHardDelete}`}
+              onClick={handleBulkHardDelete} type="button">
+              <ArchiveX size={14} />
+              Suppr. définitive
+            </button>
           </div>
         )}
         <input
@@ -356,7 +354,7 @@ export default function CommandesPage() {
               type="checkbox"
               className={styles.checkbox}
               onChange={toggleSelectAll}
-              checked={selectedOrders.length > 0 && selectedOrders.length === orders.filter(o => o.status === 'confirmed').length}
+              checked={selectedOrders.length > 0 && selectedOrders.length === orders.length}
               title="Tout sélectionner"
             />
             <span>#</span><span>Client</span><span>Téléphone</span>
@@ -372,7 +370,6 @@ export default function CommandesPage() {
                   checked={selectedOrders.includes(order.id)}
                   onChange={() => toggleSelect(order.id)}
                   className={styles.checkbox}
-                  disabled={order.status !== 'confirmed'}
                 />
                 <span className={styles.orderNum}>{order.order_number || order.id.slice(0,8)}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
