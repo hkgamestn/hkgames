@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import VideosClient from './VideosClient'
 
 export const metadata = {
@@ -6,10 +6,10 @@ export const metadata = {
   description: 'Regardez nos vidéos de slime satisfaisant, ASMR et unboxing enfants. Partagez et réagissez ! Livraison Tunisie.',
 }
 
-export const revalidate = 60
+export const revalidate = 0
 
 export default async function VideosPage() {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
   const { data: videos } = await supabase
     .from('videos')
     .select(`
