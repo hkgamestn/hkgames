@@ -13,8 +13,8 @@ export default async function sitemap() {
     { url: base + '/shop/unicolore', lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: base + '/shop/bicolore',  lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: base + '/shop/buddies',   lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-    { url: base + '/avis',
-    '/grossiste',        lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
+    { url: base + '/avis',           lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
+    { url: base + '/grossiste',      lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
   ]
 
   // Pages produits dynamiques depuis Supabase
