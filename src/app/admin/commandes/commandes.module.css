@@ -376,3 +376,10 @@
   color: #fbbf24;
 }
 .invoice:hover { background: rgba(251,191,36,.22); }
+
+.bulkInvoiceBtn {
+  background: rgba(251,191,36,.15);
+  border: 1px solid rgba(251,191,36,.4);
+  color: #fbbf24;
+}
+.bulkInvoiceBtn:hover { background: rgba(251,191,36,.25); }

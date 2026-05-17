@@ -10,6 +10,8 @@ import styles from './Navbar.module.css'
 const NAV_LINKS = [
   { href: '/shop',       label: 'Boutique'  },
   { href: '/avis',       label: 'Avis'      },
+  { href: '/blog',       label: 'Blog'      },
+  { href: '/videos',     label: 'Vidéos'    },
   { href: '/grossiste',  label: 'Grossiste' },
 ]
 

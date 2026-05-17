@@ -34,6 +34,20 @@ const SETTINGS_GROUPS = [
     }
   },
   {
+    title: '🧾 Facturation',
+    keys: {
+      invoice_company_name:    { label: 'Raison sociale',              type: 'text'   },
+      invoice_matricule_fiscal:{ label: 'Matricule fiscal',            type: 'text'   },
+      invoice_address:         { label: 'Adresse',                     type: 'text'   },
+      invoice_phone:           { label: 'Téléphone',                   type: 'text'   },
+      invoice_email:           { label: 'Email',                       type: 'text'   },
+      invoice_tva_rate:        { label: 'Taux TVA (%)',                type: 'number' },
+      invoice_dc_rate:         { label: 'Droit de consommation (%)',   type: 'number' },
+      invoice_timbre:          { label: 'Timbre quittance (DT)',       type: 'number' },
+      invoice_footer_note:     { label: 'Note de bas de facture',      type: 'text'   },
+    }
+  },
+  {
     title: '🛍️ Boutique',
     keys: {
       stock_alert_threshold: { label: 'Seuil stock badge orange', type: 'number' },

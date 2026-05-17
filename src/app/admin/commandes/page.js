@@ -11,6 +11,7 @@ import OrderTooltip from '@/components/admin/OrderTooltip'
 import OrderEditPanel from '@/components/admin/OrderEditPanel'
 import CreateOrderModal from '@/components/admin/CreateOrderModal'
 import RetailInvoicePrint from '@/app/admin/grossiste/RetailInvoicePrint'
+import BulkRetailInvoicePrint from '@/app/admin/grossiste/BulkRetailInvoicePrint'
 import styles from './commandes.module.css'
 
 const STATUS_TABS = [
@@ -59,6 +60,8 @@ export default function CommandesPage() {
   const [editOrder, setEditOrder]         = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [retailInvoiceOrder, setRetailInvoiceOrder] = useState(null)
+  const [bulkInvoiceOrders, setBulkInvoiceOrders]     = useState(null)
+  const [invoiceSettings, setInvoiceSettings]         = useState({})
 
   function exportCSV() {
     if (!orders.length) return
@@ -103,6 +106,16 @@ export default function CommandesPage() {
   const [multiNavexLoading, setMultiNavexLoading] = useState(false)
   const [navexDone, setNavexDone]         = useState({})
   const [navexStatus, setNavexStatus]     = useState({})
+
+  const fetchInvoiceSettings = useCallback(async () => {
+    const supabase = createClient()
+    const { data } = await supabase.from('settings')
+      .select('key, value')
+      .like('key', 'invoice_%')
+    const s = {}
+    for (const row of (data || [])) s[row.key] = row.value
+    setInvoiceSettings(s)
+  }, [])
 
   const fetchOrders = useCallback(async () => {
     const supabase = createClient()
@@ -251,6 +264,12 @@ export default function CommandesPage() {
     fetchOrders()
   }
 
+  function handleBulkInvoice() {
+    const sel = orders.filter(o => selectedOrders.includes(o.id))
+    if (!sel.length) return
+    setBulkInvoiceOrders(sel)
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -277,6 +296,14 @@ export default function CommandesPage() {
                 onClick={handleMultiNavex} disabled={multiNavexLoading} type="button">
                 <Send size={14} />
                 {multiNavexLoading ? 'Envoi...' : 'Navex'}
+              </button>
+            )}
+
+            {activeTab !== 'deleted' && (
+              <button className={`${styles.bulkBtn} ${styles.bulkInvoiceBtn}`}
+                onClick={handleBulkInvoice} type="button">
+                <Receipt size={14} />
+                Facturer ({selectedOrders.length})
               </button>
             )}
 

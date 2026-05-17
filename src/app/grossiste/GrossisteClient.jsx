@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
+import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/client'
@@ -55,7 +56,7 @@ function getPricePerUnit(total, tiers) {
   return null
 }
 
-export default function GrossisteClient({ tiers }) {
+export default function GrossisteClient({ tiers, lineImages = {} }) {
   const [quantities, setQuantities] = useState({ unicolore: 0, bicolore: 0, buddies: 0 })
   const [form, setForm] = useState({
     company_name: '', contact_name: '', phone: '', email: '',
