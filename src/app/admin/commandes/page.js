@@ -6,10 +6,11 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { updateOrderStatus, softDeleteOrder, restoreOrder, hardDeleteOrders, getUnseenCount, markOrdersSeen } from '@/lib/actions/orders'
 import { formatDT } from '@/lib/utils/formatDT'
-import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX, Plus, FileDown } from 'lucide-react'
+import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX, Plus, FileDown, Receipt } from 'lucide-react'
 import OrderTooltip from '@/components/admin/OrderTooltip'
 import OrderEditPanel from '@/components/admin/OrderEditPanel'
 import CreateOrderModal from '@/components/admin/CreateOrderModal'
+import RetailInvoicePrint from '@/app/admin/grossiste/RetailInvoicePrint'
 import styles from './commandes.module.css'
 
 const STATUS_TABS = [
@@ -57,6 +58,7 @@ export default function CommandesPage() {
   const [tooltip, setTooltip]             = useState({ order: null, pos: { x: 0, y: 0 } })
   const [editOrder, setEditOrder]         = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [retailInvoiceOrder, setRetailInvoiceOrder] = useState(null)
 
   function exportCSV() {
     if (!orders.length) return
@@ -409,6 +411,9 @@ export default function CommandesPage() {
                 <div className={styles.actions}>
                   <button className={`${styles.actionBtn} ${styles.edit}`} onClick={() => setEditOrder(order)} title="Modifier" type="button">
                     <Pencil size={15} />
+                  </button>
+                  <button className={`${styles.actionBtn} ${styles.invoice}`} onClick={() => setRetailInvoiceOrder(order)} title="Générer facture" type="button">
+                    <Receipt size={15} />
                   </button>
                   {order.status === 'pending' && (
                     <button className={`${styles.actionBtn} ${styles.confirm}`} onClick={() => handleAction(order.id, 'confirm')} disabled={actionLoading === order.id + 'confirm'} title="Confirmer" type="button">

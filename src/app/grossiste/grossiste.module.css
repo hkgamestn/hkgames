@@ -131,3 +131,65 @@
   .tiersGrid { grid-template-columns: 1fr 1fr; }
   .tierCardPop { transform: none; }
 }
+
+/* ── Produits ── */
+.orderSection { padding: var(--space-16) var(--space-6); }
+.productsGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-5); }
+.productCard {
+  background: var(--bg-card); border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md); padding: var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-3);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+.productCardActive {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 20px rgba(168,85,247,.2);
+}
+.productEmoji { font-size: 2.5rem; line-height: 1; }
+.productName { font-weight: 800; font-size: 1.05rem; color: var(--text-primary); }
+.productDesc { font-size: .85rem; color: var(--text-muted); line-height: 1.5; }
+.productColors { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.colorChip { font-size: .75rem; padding: 3px 9px; border-radius: 99px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: var(--text-secondary); }
+.qtyControl { display: flex; align-items: center; gap: var(--space-3); margin-top: auto; }
+.qtyBtn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(168,85,247,.15); border: 1px solid rgba(168,85,247,.3);
+  color: var(--color-primary); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition-fast);
+}
+.qtyBtn:hover { background: rgba(168,85,247,.3); }
+.qtyInput {
+  width: 60px; text-align: center;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--radius-sm); padding: 6px; color: var(--text-primary);
+  font-size: 1rem; font-weight: 700; outline: none;
+}
+
+/* Progress */
+.progressBox { background: var(--bg-card); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: var(--space-5); margin-bottom: var(--space-6); }
+.progressTop { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-3); }
+.progressLabel { font-size: .9rem; color: var(--text-secondary); }
+.progressLabelOk { font-size: .9rem; color: var(--color-success); font-weight: 700; }
+.pricePreview { font-size: .9rem; color: var(--text-secondary); }
+.priceHint { font-size: .8rem; color: var(--text-muted); }
+.progressBar { height: 8px; background: rgba(255,255,255,.08); border-radius: 99px; overflow: hidden; }
+.progressFill { height: 100%; border-radius: 99px; transition: width .4s cubic-bezier(.34,1.56,.64,1), background .3s; }
+
+/* Form card */
+.formCard { background: var(--bg-card); border: 1px solid var(--bg-card-border); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-6); }
+.formRow { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
+.submitBtn {
+  background: var(--color-primary); color: #fff; border: none;
+  border-radius: var(--radius-md); padding: 16px 32px;
+  font-size: 1rem; font-weight: 700; cursor: pointer;
+  transition: background var(--transition-fast), opacity var(--transition-fast);
+  width: 100%;
+}
+.submitBtn:hover:not(:disabled) { background: var(--color-primary-hover); }
+.submitBtn:disabled { opacity: .4; cursor: not-allowed; }
+.submitNote { text-align: center; font-size: .82rem; color: var(--text-muted); margin-top: var(--space-3); }
+
+@media (max-width: 600px) {
+  .formRow { grid-template-columns: 1fr; }
+  .productsGrid { grid-template-columns: 1fr; }
+}

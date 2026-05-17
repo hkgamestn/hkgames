@@ -14,10 +14,12 @@ function adminClient() {
 const TVA_RATE = 19
 
 function calcTotals(items, timbre) {
-  const total_ht = items.reduce((s, i) => s + (parseFloat(i.qty) || 0) * (parseFloat(i.unit_price_ht) || 0), 0)
-  const tva_amount = total_ht * TVA_RATE / 100
-  const total_ttc = total_ht + tva_amount + parseFloat(timbre || 1)
-  return { total_ht, tva_amount, total_ttc }
+  const total_ht   = items.reduce((s, i) => s + (parseFloat(i.qty) || 0) * (parseFloat(i.unit_price_ht) || 0), 0)
+  const dc         = total_ht * 0.01                    // Droit de consommation 1%
+  const tva_base   = total_ht + dc                      // TVA appliquée sur HT+DC
+  const tva_amount = tva_base * TVA_RATE / 100
+  const total_ttc  = total_ht + dc + tva_amount + parseFloat(timbre || 1)
+  return { total_ht, dc, tva_amount, total_ttc }
 }
 
 export default function InvoiceEditor({ invoice, tiers, onClose, onSaved }) {
@@ -43,7 +45,7 @@ export default function InvoiceEditor({ invoice, tiers, onClose, onSaved }) {
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
 
-  const { total_ht, tva_amount, total_ttc } = calcTotals(items, timbre)
+  const { total_ht, dc, tva_amount, total_ttc } = calcTotals(items, timbre)
 
   function addItem() { setItems(i => [...i, { product: '', qty: 1, unit_price_ht: '' }]) }
   function removeItem(idx) { setItems(i => i.filter((_, j) => j !== idx)) }
@@ -81,6 +83,7 @@ export default function InvoiceEditor({ invoice, tiers, onClose, onSaved }) {
         })),
         tva_rate: TVA_RATE,
         total_ht:   Math.round(total_ht * 1000) / 1000,
+        dc_amount:  Math.round(dc * 1000) / 1000,
         tva_amount: Math.round(tva_amount * 1000) / 1000,
         timbre:     parseFloat(timbre),
         total_ttc:  Math.round(total_ttc * 1000) / 1000,
@@ -188,7 +191,8 @@ export default function InvoiceEditor({ invoice, tiers, onClose, onSaved }) {
         {/* Totaux */}
         <div className={styles.totalsBox}>
           <div className={styles.totalRow}><span>Total HT</span><span>{total_ht.toFixed(3)} DT</span></div>
-          <div className={styles.totalRow}><span>TVA {TVA_RATE}%</span><span>{tva_amount.toFixed(3)} DT</span></div>
+          <div className={styles.totalRow}><span>Droit de consommation (1%)</span><span>{dc.toFixed(3)} DT</span></div>
+          <div className={styles.totalRow}><span>TVA {TVA_RATE}% (sur HT+DC)</span><span>{tva_amount.toFixed(3)} DT</span></div>
           <div className={styles.totalRow}>
             <span>Timbre fiscal</span>
             <input className={styles.timbreInput} type="number" step="0.001" min="0"

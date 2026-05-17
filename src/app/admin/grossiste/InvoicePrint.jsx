@@ -103,8 +103,12 @@ export default function InvoicePrint({ invoice, onClose }) {
               <span>{Number(invoice.total_ht).toFixed(3)} DT</span>
             </div>
             <div className={styles.totalLine}>
-              <span>TVA ({TVA_RATE}%)</span>
-              <span>{Number(invoice.tva_amount).toFixed(3)} DT</span>
+              <span>Droit de consommation (1%)</span>
+              <span>{(Number(invoice.total_ht) * 0.01).toFixed(3)} DT</span>
+            </div>
+            <div className={styles.totalLine}>
+              <span>TVA (19% sur HT+DC)</span>
+              <span>{(Number(invoice.total_ht) * 1.01 * 0.19).toFixed(3)} DT</span>
             </div>
             <div className={styles.totalLine}>
               <span>Timbre fiscal</span>

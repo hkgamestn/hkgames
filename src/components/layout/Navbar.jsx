@@ -8,12 +8,9 @@ import { useCartStore } from '@/lib/cart/store'
 import styles from './Navbar.module.css'
 
 const NAV_LINKS = [
-  { href: '/shop',           label: 'Boutique'  },
-  { href: '/shop/unicolore', label: 'Unicolore' },
-  { href: '/shop/bicolore',  label: 'Bicolore'  },
-  { href: '/shop/buddies',   label: 'Buddies'   },
-  { href: '/avis',           label: 'Avis'      },
-  { href: '/grossiste',      label: 'Grossiste' },
+  { href: '/shop',       label: 'Boutique'  },
+  { href: '/avis',       label: 'Avis'      },
+  { href: '/grossiste',  label: 'Grossiste' },
 ]
 
 export default function Navbar() {
