@@ -515,6 +515,12 @@ export default function CommandesPage() {
           </div>
         </div>
       )}
+      {retailInvoiceOrder && (
+        <RetailInvoicePrint order={retailInvoiceOrder} onClose={() => setRetailInvoiceOrder(null)} />
+      )}
+      {bulkInvoiceOrders && (
+        <BulkRetailInvoicePrint orders={bulkInvoiceOrders} settings={invoiceSettings} onClose={() => setBulkInvoiceOrders(null)} />
+      )}
       {giftCardOrder && <GiftCardPrint order={giftCardOrder} onClose={() => setGiftCardOrder(null)} />}
       <OrderTooltip order={tooltip.order} pos={tooltip.pos} />
       <OrderEditPanel order={editOrder} onClose={() => setEditOrder(null)} onSaved={fetchOrders} />

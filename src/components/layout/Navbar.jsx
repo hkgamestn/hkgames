@@ -8,11 +8,11 @@ import { useCartStore } from '@/lib/cart/store'
 import styles from './Navbar.module.css'
 
 const NAV_LINKS = [
-  { href: '/shop',       label: 'Boutique'  },
-  { href: '/avis',       label: 'Avis'      },
-  { href: '/blog',       label: 'Blog'      },
-  { href: '/videos',     label: 'Vidéos'    },
-  { href: '/grossiste',  label: 'Grossiste' },
+  { href: '/shop',       label: 'Boutique'              },
+  { href: '/avis',       label: 'Avis'                  },
+  { href: '/blog',       label: 'Blog'                  },
+  { href: '/videos',     label: 'Vidéos'                },
+  { href: '/grossiste',  label: '🏪 Grossiste', special: true },
 ]
 
 export default function Navbar() {
@@ -40,11 +40,15 @@ export default function Navbar() {
         </div>
 
         <nav className={`${styles.nav} ${menuOpen ? styles.navOpen : ''}`}>
-          {NAV_LINKS.map(({ href, label }) => (
+          {NAV_LINKS.map(({ href, label, special }) => (
             <Link
               key={href}
               href={href}
-              className={`${styles.navLink} ${pathname === href ? styles.navLinkActive : ''}`}
+              className={[
+                styles.navLink,
+                pathname.startsWith(href) && href !== '/' ? styles.navLinkActive : '',
+                special ? styles.navLinkSpecial : '',
+              ].filter(Boolean).join(' ')}
               onClick={() => setMenuOpen(false)}
               prefetch={true}
             >

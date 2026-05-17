@@ -1,72 +1,65 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Trash2, Eye, EyeOff, Upload, MessageCircle, Check, X, ArrowUp, ArrowDown } from 'lucide-react'
+import { Plus, Trash2, Eye, EyeOff, MessageCircle, Check, X, ArrowUp, ArrowDown } from 'lucide-react'
 import styles from './videos.module.css'
 
 export default function AdminVideosPage() {
-  const [videos, setVideos]     = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm]         = useState({ title: '', description: '', tags: '', video_url: '', thumbnail_url: '' })
-  const [saving, setSaving]     = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [comments, setComments] = useState([])
+  const [videos, setVideos]         = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [showForm, setShowForm]     = useState(false)
+  const [form, setForm]             = useState({ title:'', description:'', tags:'', video_url:'', thumbnail_url:'' })
+  const [saving, setSaving]         = useState(false)
+  const [uploading, setUploading]   = useState(false)
+  const [uploadingThumb, setUploadingThumb] = useState(false)
+  const [comments, setComments]     = useState([])
   const [showComments, setShowComments] = useState(null)
+  const [saveError, setSaveError]   = useState(null)
 
   const fetchVideos = useCallback(async () => {
     setLoading(true)
-    const supabase = createClient()
-    const { data } = await supabase.from('videos').select('*').order('sort_order').order('created_at', { ascending: false })
-    setVideos(data || [])
+    const res  = await fetch('/api/admin/videos')
+    const data = await res.json()
+    setVideos(Array.isArray(data) ? data : [])
     setLoading(false)
   }, [])
 
   useEffect(() => { fetchVideos() }, [fetchVideos])
 
   async function uploadVideo(file) {
-    if (!file) return null
+    if (!file) return
     setUploading(true)
     try {
       const supabase = createClient()
-      const ext  = file.name.split('.').pop()
-      const name = `${Date.now()}.${ext}`
-      const { data, error } = await supabase.storage.from('videos').upload(name, file, { contentType: file.type })
+      const name = `${Date.now()}.${file.name.split('.').pop()}`
+      const { error } = await supabase.storage.from('videos').upload(name, file, { contentType: file.type })
       if (error) throw error
       const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(name)
-      return publicUrl
-    } finally { setUploading(false) }
+      setForm(f => ({ ...f, video_url: publicUrl }))
+    } catch(err) { alert('Upload vidéo échoué: ' + err.message) }
+    finally { setUploading(false) }
   }
 
   async function uploadThumb(file) {
-    if (!file) return null
-    const supabase = createClient()
-    const name = `thumb_${Date.now()}.${file.name.split('.').pop()}`
-    const { error } = await supabase.storage.from('video-thumbnails').upload(name, file, { contentType: file.type })
-    if (error) throw error
-    const { data: { publicUrl } } = supabase.storage.from('video-thumbnails').getPublicUrl(name)
-    return publicUrl
-  }
-
-  async function handleVideoFile(e) {
-    const file = e.target.files?.[0]
     if (!file) return
-    const url = await uploadVideo(file)
-    if (url) setForm(f => ({ ...f, video_url: url }))
-  }
-
-  async function handleThumbFile(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const url = await uploadThumb(file)
-    if (url) setForm(f => ({ ...f, thumbnail_url: url }))
+    setUploadingThumb(true)
+    try {
+      const supabase = createClient()
+      const name = `thumb_${Date.now()}.${file.name.split('.').pop()}`
+      const { error } = await supabase.storage.from('video-thumbnails').upload(name, file, { contentType: file.type })
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage.from('video-thumbnails').getPublicUrl(name)
+      setForm(f => ({ ...f, thumbnail_url: publicUrl }))
+    } catch(err) { alert('Upload thumbnail échoué: ' + err.message) }
+    finally { setUploadingThumb(false) }
   }
 
   async function saveVideo() {
-    if (!form.title.trim() || !form.video_url.trim()) { alert('Titre et vidéo requis'); return }
+    setSaveError(null)
+    if (!form.title.trim())     { setSaveError('Titre requis'); return }
+    if (!form.video_url.trim()) { setSaveError('Uploadez une vidéo ou collez une URL'); return }
     setSaving(true)
     try {
-      const supabase = createClient()
       const payload = {
         title:         form.title.trim(),
         description:   form.description.trim() || null,
@@ -76,25 +69,36 @@ export default function AdminVideosPage() {
         published:     false,
         sort_order:    videos.length,
       }
-      const { error } = await supabase.from('videos').insert([payload])
-      if (error) throw error
+      const res = await fetch('/api/admin/videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const result = await res.json()
+      if (result.error) throw new Error(result.error)
       setShowForm(false)
       setForm({ title:'', description:'', tags:'', video_url:'', thumbnail_url:'' })
-      fetchVideos()
-    } catch(err) { alert('Erreur: ' + err.message) }
+      await fetchVideos()
+    } catch(err) { setSaveError('Erreur: ' + err.message) }
     finally { setSaving(false) }
   }
 
   async function togglePublish(v) {
-    const supabase = createClient()
-    await supabase.from('videos').update({ published: !v.published }).eq('id', v.id)
+    await fetch('/api/admin/videos', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: v.id, published: !v.published }),
+    })
     fetchVideos()
   }
 
   async function deleteVideo(id) {
     if (!confirm('Supprimer cette vidéo ?')) return
-    const supabase = createClient()
-    await supabase.from('videos').delete().eq('id', id)
+    await fetch('/api/admin/videos', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
     setVideos(vs => vs.filter(v => v.id !== id))
   }
 
@@ -102,10 +106,11 @@ export default function AdminVideosPage() {
     const idx = videos.findIndex(v => v.id === id)
     const swapIdx = dir === 'up' ? idx - 1 : idx + 1
     if (swapIdx < 0 || swapIdx >= videos.length) return
-    const supabase = createClient()
     const a = videos[idx], b = videos[swapIdx]
-    await supabase.from('videos').update({ sort_order: b.sort_order }).eq('id', a.id)
-    await supabase.from('videos').update({ sort_order: a.sort_order }).eq('id', b.id)
+    await Promise.all([
+      fetch('/api/admin/videos', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: a.id, sort_order: b.sort_order }) }),
+      fetch('/api/admin/videos', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: b.id, sort_order: a.sort_order }) }),
+    ])
     fetchVideos()
   }
 
@@ -135,22 +140,22 @@ export default function AdminVideosPage() {
           <h1 className={styles.title}>Vidéos</h1>
           <p className={styles.sub}>{videos.length} vidéo(s)</p>
         </div>
-        <button className={styles.newBtn} onClick={() => setShowForm(s=>!s)}>
+        <button className={styles.newBtn} onClick={() => { setShowForm(s=>!s); setSaveError(null) }}>
           <Plus size={16} /> Ajouter vidéo
         </button>
       </div>
 
-      {/* Form ajout */}
       {showForm && (
         <div className={styles.addForm}>
           <h3 className={styles.formTitle}>Nouvelle vidéo</h3>
+          {saveError && <div className={styles.formError}>{saveError}</div>}
           <div className={styles.formGrid}>
             <div className={styles.field}>
               <label className={styles.label}>Titre *</label>
               <input className={styles.input} value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="Slime ASMR 🔥" maxLength={100}/>
             </div>
             <div className={styles.field}>
-              <label className={styles.label}>Tags</label>
+              <label className={styles.label}>Tags <span style={{fontWeight:400,color:'var(--text-muted)'}}>(séparés par virgule)</span></label>
               <input className={styles.input} value={form.tags} onChange={e=>setForm(f=>({...f,tags:e.target.value}))} placeholder="asmr, slime, tunisie" />
             </div>
             <div className={styles.field} style={{gridColumn:'1/-1'}}>
@@ -159,28 +164,36 @@ export default function AdminVideosPage() {
             </div>
             <div className={styles.field}>
               <label className={styles.label}>Fichier vidéo *</label>
-              <input type="file" accept="video/*" onChange={handleVideoFile} className={styles.fileInput}/>
-              {uploading && <span className={styles.hint}>⏳ Upload en cours…</span>}
-              {form.video_url && <span className={styles.hint}>✅ Vidéo uploadée</span>}
-              <input className={styles.input} value={form.video_url} onChange={e=>setForm(f=>({...f,video_url:e.target.value}))} placeholder="Ou coller URL directe" style={{marginTop:4}}/>
+              <input type="file" accept="video/mp4,video/webm,video/mov" onChange={e=>uploadVideo(e.target.files?.[0])} className={styles.fileInput}/>
+              {uploading && <div className={styles.uploadStatus}>⏳ Upload vidéo en cours…</div>}
+              {!uploading && form.video_url && <div className={styles.uploadOk}>✅ Vidéo prête</div>}
+              <div style={{marginTop:6,fontSize:'.8rem',color:'var(--text-muted)'}}>Ou coller une URL directe :</div>
+              <input className={styles.input} value={form.video_url} onChange={e=>setForm(f=>({...f,video_url:e.target.value}))} placeholder="https://…" style={{marginTop:4}}/>
             </div>
             <div className={styles.field}>
               <label className={styles.label}>Miniature (thumbnail)</label>
-              <input type="file" accept="image/*" onChange={handleThumbFile} className={styles.fileInput}/>
-              {form.thumbnail_url && <img src={form.thumbnail_url} alt="" className={styles.thumbPreview}/>}
+              <input type="file" accept="image/*" onChange={e=>uploadThumb(e.target.files?.[0])} className={styles.fileInput}/>
+              {uploadingThumb && <div className={styles.uploadStatus}>⏳ Upload thumbnail…</div>}
+              {form.thumbnail_url && !uploadingThumb && (
+                <img src={form.thumbnail_url} alt="aperçu" className={styles.thumbPreview}/>
+              )}
             </div>
           </div>
           <div className={styles.formActions}>
-            <button className={`${styles.actionBtn} ${styles.actionGhost}`} onClick={()=>setShowForm(false)}>Annuler</button>
-            <button className={`${styles.actionBtn} ${styles.actionGreen}`} onClick={saveVideo} disabled={saving||uploading}>
+            <button className={`${styles.actionBtn} ${styles.actionGhost}`} onClick={()=>{setShowForm(false);setSaveError(null)}}>Annuler</button>
+            <button className={`${styles.actionBtn} ${styles.actionGreen}`}
+              onClick={saveVideo} disabled={saving || uploading || uploadingThumb}>
               {saving ? 'Sauvegarde…' : 'Enregistrer'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Liste vidéos */}
-      {loading ? <div className={styles.loading}>Chargement…</div> : (
+      {loading ? (
+        <div className={styles.loading}>Chargement…</div>
+      ) : videos.length === 0 ? (
+        <div className={styles.loading}>Aucune vidéo. Ajoutez-en une !</div>
+      ) : (
         <div className={styles.list}>
           {videos.map((v, i) => (
             <div key={v.id} className={styles.row}>
@@ -189,22 +202,26 @@ export default function AdminVideosPage() {
                 <span className={styles.orderNum}>{i+1}</span>
                 <button className={styles.orderBtn} onClick={()=>moveOrder(v.id,'down')} disabled={i===videos.length-1}><ArrowDown size={12}/></button>
               </div>
-              {v.thumbnail_url && <img src={v.thumbnail_url} alt="" className={styles.rowThumb}/>}
+              {v.thumbnail_url
+                ? <img src={v.thumbnail_url} alt="" className={styles.rowThumb}/>
+                : <div className={styles.rowThumbPlaceholder}>▶</div>}
               <div className={styles.rowInfo}>
                 <div className={styles.rowTitle}>{v.title}</div>
                 <div className={styles.rowMeta}>
                   <span className={`${styles.statusDot} ${v.published?styles.statusDotGreen:styles.statusDotGray}`}/>
-                  {v.published ? 'Publiée' : 'Masquée'}
+                  {v.published ? '🟢 Publiée' : '⚫ Masquée — cliquez 👁 pour publier'}
                   {v.views > 0 && ` · 👁 ${v.views}`}
                   {v.tags?.length > 0 && ` · ${v.tags.join(', ')}`}
                 </div>
               </div>
               <div className={styles.rowActions}>
-                <button className={`${styles.actionBtn} ${styles.actionBlue}`} onClick={()=>loadComments(v.id)}>
+                <button className={`${styles.actionBtn} ${styles.actionBlue}`} onClick={()=>loadComments(v.id)} title="Commentaires">
                   <MessageCircle size={14}/>
                 </button>
-                <button className={`${styles.actionBtn} ${v.published?styles.actionYellow:styles.actionGreen}`} onClick={()=>togglePublish(v)}>
+                <button className={`${styles.actionBtn} ${v.published?styles.actionYellow:styles.actionGreen}`}
+                  onClick={()=>togglePublish(v)} title={v.published?'Masquer':'Publier'}>
                   {v.published ? <EyeOff size={14}/> : <Eye size={14}/>}
+                  <span style={{fontSize:'.78rem'}}>{v.published ? 'Masquer' : 'Publier'}</span>
                 </button>
                 <button className={`${styles.actionBtn} ${styles.actionRed}`} onClick={()=>deleteVideo(v.id)}><Trash2 size={14}/></button>
               </div>
@@ -213,7 +230,6 @@ export default function AdminVideosPage() {
         </div>
       )}
 
-      {/* Modération commentaires */}
       {showComments && (
         <div className={styles.commentsModal}>
           <div className={styles.commentsModalInner}>
@@ -224,7 +240,10 @@ export default function AdminVideosPage() {
             {comments.length === 0 && <p style={{color:'var(--text-muted)',padding:'16px',textAlign:'center'}}>Aucun commentaire</p>}
             {comments.map(c => (
               <div key={c.id} className={`${styles.comment} ${c.approved?styles.commentApproved:''}`}>
-                <div className={styles.commentMeta}><strong>{c.author}</strong> · {new Date(c.created_at).toLocaleDateString('fr-TN')}</div>
+                <div className={styles.commentMeta}>
+                  <strong>{c.author}</strong> · {new Date(c.created_at).toLocaleDateString('fr-TN')}
+                  {!c.approved && <span style={{color:'#fbbf24',marginLeft:8}}>En attente</span>}
+                </div>
                 <div className={styles.commentText}>{c.content}</div>
                 <div className={styles.commentActions}>
                   {!c.approved && (
