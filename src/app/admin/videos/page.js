@@ -1,12 +1,8 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 import { Plus, Trash2, Eye, EyeOff, Upload, MessageCircle, Check, X, ArrowUp, ArrowDown } from 'lucide-react'
 import styles from './videos.module.css'
-
-function adminClient() {
-  return createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-}
 
 export default function AdminVideosPage() {
   const [videos, setVideos]     = useState([])
@@ -20,7 +16,7 @@ export default function AdminVideosPage() {
 
   const fetchVideos = useCallback(async () => {
     setLoading(true)
-    const supabase = adminClient()
+    const supabase = createClient()
     const { data } = await supabase.from('videos').select('*').order('sort_order').order('created_at', { ascending: false })
     setVideos(data || [])
     setLoading(false)
@@ -32,7 +28,7 @@ export default function AdminVideosPage() {
     if (!file) return null
     setUploading(true)
     try {
-      const supabase = adminClient()
+      const supabase = createClient()
       const ext  = file.name.split('.').pop()
       const name = `${Date.now()}.${ext}`
       const { data, error } = await supabase.storage.from('videos').upload(name, file, { contentType: file.type })
@@ -44,7 +40,7 @@ export default function AdminVideosPage() {
 
   async function uploadThumb(file) {
     if (!file) return null
-    const supabase = adminClient()
+    const supabase = createClient()
     const name = `thumb_${Date.now()}.${file.name.split('.').pop()}`
     const { error } = await supabase.storage.from('video-thumbnails').upload(name, file, { contentType: file.type })
     if (error) throw error
@@ -70,7 +66,7 @@ export default function AdminVideosPage() {
     if (!form.title.trim() || !form.video_url.trim()) { alert('Titre et vidéo requis'); return }
     setSaving(true)
     try {
-      const supabase = adminClient()
+      const supabase = createClient()
       const payload = {
         title:         form.title.trim(),
         description:   form.description.trim() || null,
@@ -90,14 +86,14 @@ export default function AdminVideosPage() {
   }
 
   async function togglePublish(v) {
-    const supabase = adminClient()
+    const supabase = createClient()
     await supabase.from('videos').update({ published: !v.published }).eq('id', v.id)
     fetchVideos()
   }
 
   async function deleteVideo(id) {
     if (!confirm('Supprimer cette vidéo ?')) return
-    const supabase = adminClient()
+    const supabase = createClient()
     await supabase.from('videos').delete().eq('id', id)
     setVideos(vs => vs.filter(v => v.id !== id))
   }
@@ -106,7 +102,7 @@ export default function AdminVideosPage() {
     const idx = videos.findIndex(v => v.id === id)
     const swapIdx = dir === 'up' ? idx - 1 : idx + 1
     if (swapIdx < 0 || swapIdx >= videos.length) return
-    const supabase = adminClient()
+    const supabase = createClient()
     const a = videos[idx], b = videos[swapIdx]
     await supabase.from('videos').update({ sort_order: b.sort_order }).eq('id', a.id)
     await supabase.from('videos').update({ sort_order: a.sort_order }).eq('id', b.id)
@@ -114,20 +110,20 @@ export default function AdminVideosPage() {
   }
 
   async function loadComments(videoId) {
-    const supabase = adminClient()
+    const supabase = createClient()
     const { data } = await supabase.from('video_comments').select('*').eq('video_id', videoId).order('created_at', { ascending: false })
     setComments(data || [])
     setShowComments(videoId)
   }
 
   async function approveComment(id) {
-    const supabase = adminClient()
+    const supabase = createClient()
     await supabase.from('video_comments').update({ approved: true }).eq('id', id)
     setComments(c => c.map(x => x.id === id ? { ...x, approved: true } : x))
   }
 
   async function deleteComment(id) {
-    const supabase = adminClient()
+    const supabase = createClient()
     await supabase.from('video_comments').delete().eq('id', id)
     setComments(c => c.filter(x => x.id !== id))
   }

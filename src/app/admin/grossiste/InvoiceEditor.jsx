@@ -1,15 +1,8 @@
 'use client'
 import { useState } from 'react'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 import { Plus, Trash2, Save, X } from 'lucide-react'
 import styles from './grossiste.module.css'
-
-function adminClient() {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
-}
 
 const TVA_RATE = 19
 
@@ -72,7 +65,7 @@ export default function InvoiceEditor({ invoice, tiers, onClose, onSaved }) {
     if (Object.keys(errs).length) { setErrors(errs); return }
     setSaving(true)
     try {
-      const supabase = adminClient()
+      const supabase = createClient()
       const payload = {
         ...client,
         items: items.map(it => ({

@@ -1,17 +1,10 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 import { CheckCircle, XCircle, Phone, Building2, FileText, Plus, Printer, Eye, Trash2, DollarSign, Edit3 } from 'lucide-react'
 import InvoiceEditor from './InvoiceEditor'
 import InvoicePrint from './InvoicePrint'
 import styles from './grossiste.module.css'
-
-function adminClient() {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
-}
 
 const STATUS_TABS = [
   { id: null,        label: 'Toutes' },
@@ -48,7 +41,7 @@ export default function AdminGrossistePage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true)
-    const supabase = adminClient()
+    const supabase = createClient()
     const reqQuery = supabase.from('wholesale_requests').select('*').order('created_at', { ascending: false })
     if (tab) reqQuery.eq('status', tab)
     const [{ data: reqs }, { data: invs }, { data: t }] = await Promise.all([
@@ -66,7 +59,7 @@ export default function AdminGrossistePage() {
 
   async function updateRequestStatus(id, status) {
     setActionLoading(id)
-    const supabase = adminClient()
+    const supabase = createClient()
     await supabase.from('wholesale_requests').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
     await fetchData()
     setActionLoading(null)
@@ -74,7 +67,7 @@ export default function AdminGrossistePage() {
 
   async function updateInvoiceStatus(id, status) {
     setActionLoading(id)
-    const supabase = adminClient()
+    const supabase = createClient()
     await supabase.from('wholesale_invoices').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
     await fetchData()
     setActionLoading(null)
@@ -82,7 +75,7 @@ export default function AdminGrossistePage() {
 
   async function deleteRequest(id) {
     if (!confirm('Supprimer cette demande ?')) return
-    const supabase = adminClient()
+    const supabase = createClient()
     await supabase.from('wholesale_requests').delete().eq('id', id)
     setRequests(r => r.filter(x => x.id !== id))
   }
