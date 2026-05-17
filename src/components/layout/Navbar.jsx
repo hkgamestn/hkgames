@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: '/shop/bicolore',  label: 'Bicolore'  },
   { href: '/shop/buddies',   label: 'Buddies'   },
   { href: '/avis',           label: 'Avis'      },
+  { href: '/grossiste',      label: 'Grossiste' },
 ]
 
 export default function Navbar() {

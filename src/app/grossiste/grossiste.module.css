@@ -1,0 +1,133 @@
+.main { min-height: 100vh; background: var(--bg-base); padding-top: 80px; }
+
+/* Hero */
+.hero {
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, rgba(168,85,247,.18) 0%, transparent 70%);
+  padding: var(--space-16) var(--space-6);
+  text-align: center;
+  border-bottom: 1px solid var(--bg-card-border);
+}
+.heroInner { max-width: 680px; margin: 0 auto; }
+.heroChip {
+  display: inline-block; padding: 6px 16px;
+  background: rgba(168,85,247,.15); border: 1px solid rgba(168,85,247,.35);
+  border-radius: 99px; font-size: .8rem; color: var(--color-primary);
+  letter-spacing: .06em; text-transform: uppercase; margin-bottom: var(--space-5);
+}
+.heroTitle {
+  font-family: var(--font-title); font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 900; color: var(--text-primary); line-height: 1.15; margin-bottom: var(--space-4);
+}
+.heroSub { font-size: 1.05rem; color: var(--text-secondary); margin-bottom: var(--space-8); line-height: 1.65; }
+.heroCta {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--color-primary); color: #fff;
+  padding: 14px 32px; border-radius: var(--radius-md);
+  font-weight: 700; font-size: 1rem; text-decoration: none;
+  transition: background var(--transition-fast);
+}
+.heroCta:hover { background: var(--color-primary-hover); }
+
+/* Layout */
+.container { max-width: 960px; margin: 0 auto; padding: 0 var(--space-6); }
+.sectionTitle {
+  font-family: var(--font-title); font-size: 1.75rem; font-weight: 800;
+  color: var(--text-primary); text-align: center; margin-bottom: var(--space-3);
+}
+.sectionSub { text-align: center; color: var(--text-muted); margin-bottom: var(--space-8); }
+
+/* Avantages */
+.avantages { padding: var(--space-16) var(--space-6); }
+.avantagesGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-5); }
+.avantageCard {
+  background: var(--bg-card); border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md); padding: var(--space-6);
+  transition: transform var(--transition-base);
+}
+.avantageCard:hover { transform: translateY(-3px); }
+.avantageIcon {
+  width: 48px; height: 48px; border-radius: var(--radius-sm);
+  background: rgba(168,85,247,.15); display: flex; align-items: center; justify-content: center;
+  color: var(--color-primary); margin-bottom: var(--space-4);
+}
+.avantageTitle { font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-2); }
+.avantageDesc { font-size: .9rem; color: var(--text-muted); line-height: 1.6; }
+
+/* Paliers */
+.tiers { padding: var(--space-12) var(--space-6); background: var(--bg-surface); }
+.tiersGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-4); }
+.tierCard {
+  position: relative; background: var(--bg-card);
+  border: 1px solid var(--bg-card-border); border-radius: var(--radius-md);
+  padding: var(--space-6); text-align: center;
+  transition: transform var(--transition-base);
+}
+.tierCardPop {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 24px rgba(168,85,247,.3);
+  transform: translateY(-4px);
+}
+.tierLabel { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: var(--space-2); }
+.tierQty { font-size: .95rem; color: var(--text-secondary); margin-bottom: var(--space-3); }
+.tierPrice { font-family: var(--font-title); font-size: 1.8rem; font-weight: 900; color: var(--text-primary); }
+.tierUnit { font-size: .8rem; font-weight: 400; color: var(--text-muted); }
+.tierBadge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--color-primary); color: #fff;
+  font-size: .72rem; font-weight: 700; padding: 3px 12px; border-radius: 99px;
+  white-space: nowrap;
+}
+.tiersNote { text-align: center; font-size: .82rem; color: var(--text-muted); }
+
+/* Formulaire */
+.formSection { padding: var(--space-16) var(--space-6); }
+.form { background: var(--bg-card); border: 1px solid var(--bg-card-border); border-radius: var(--radius-lg); padding: var(--space-8); display: flex; flex-direction: column; gap: var(--space-8); }
+.formSection2 { display: flex; flex-direction: column; gap: var(--space-5); }
+.formGroupTitle {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: 1rem; font-weight: 700; color: var(--color-primary);
+  padding-bottom: var(--space-3); border-bottom: 1px solid var(--bg-card-border);
+}
+.formRow { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: .85rem; font-weight: 600; color: var(--text-secondary); }
+.optional { font-weight: 400; color: var(--text-muted); }
+.input {
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  color: var(--text-primary); font-size: .95rem; font-family: var(--font-body);
+  transition: border-color var(--transition-fast); outline: none; width: 100%;
+}
+.input:focus { border-color: var(--color-primary); }
+.inputError { border-color: var(--color-danger) !important; }
+.textarea { resize: vertical; min-height: 80px; }
+.error { font-size: .8rem; color: var(--color-danger); }
+.globalError {
+  background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+  border-radius: var(--radius-sm); padding: var(--space-4); color: var(--color-danger);
+  font-size: .9rem;
+}
+.submitBtn {
+  background: var(--color-primary); color: #fff; border: none;
+  border-radius: var(--radius-md); padding: 16px 32px;
+  font-size: 1rem; font-weight: 700; cursor: pointer;
+  transition: background var(--transition-fast), opacity var(--transition-fast);
+  align-self: flex-start;
+}
+.submitBtn:hover:not(:disabled) { background: var(--color-primary-hover); }
+.submitBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Succès */
+.successBox {
+  text-align: center; padding: var(--space-16);
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-4);
+}
+.successBox h3 { font-family: var(--font-title); font-size: 1.5rem; font-weight: 800; color: var(--text-primary); }
+.successBox p { color: var(--text-secondary); max-width: 400px; }
+
+@media (max-width: 600px) {
+  .formRow { grid-template-columns: 1fr; }
+  .form { padding: var(--space-5); }
+  .tiersGrid { grid-template-columns: 1fr 1fr; }
+  .tierCardPop { transform: none; }
+}
