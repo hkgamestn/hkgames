@@ -312,8 +312,10 @@ function AddVideoForm({ onClose, onSaved, sortOrder }) {
             onChange={async e => {
               const file = e.target.files?.[0]; if (!file) return
               setUploading(true); setError(null)
-              try { setForm(f => ({...f, video_url: await uploadFile(file,'videos')})) }
-              catch (err) { setError('Upload: '+err.message) }
+              try {
+                const url = await uploadFile(file, 'videos')
+                setForm(f => ({...f, video_url: url}))
+              } catch (err) { setError('Upload: '+err.message) }
               finally { setUploading(false) }
             }}/>
           {uploading && <span className={styles.uploadStatus}>⏳ Upload…</span>}
@@ -327,8 +329,10 @@ function AddVideoForm({ onClose, onSaved, sortOrder }) {
             onChange={async e => {
               const file = e.target.files?.[0]; if (!file) return
               setUpThumb(true)
-              try { setForm(f => ({...f, thumbnail_url: await uploadFile(file,'video-thumbnails')})) }
-              catch {}
+              try {
+                const url = await uploadFile(file, 'video-thumbnails')
+                setForm(f => ({...f, thumbnail_url: url}))
+              } catch {}
               finally { setUpThumb(false) }
             }}/>
           {upThumb && <span className={styles.uploadStatus}>⏳ Upload…</span>}
