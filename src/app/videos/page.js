@@ -10,7 +10,8 @@ export const revalidate = 0
 
 export default async function VideosPage() {
   const supabase = await createAdminClient()
-  const { data: videos } = await supabase
+  const [{ data: videos }, { data: products }] = await Promise.all([
+    supabase
     .from('videos')
     .select(`
       id, title, description, video_url, thumbnail_url, tags, views, created_at,
@@ -18,7 +19,13 @@ export default async function VideosPage() {
     `)
     .eq('published', true)
     .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }),
+    supabase
+      .from('products')
+      .select('id, slug, name, line, price_dt, images')
+      .eq('is_active', true)
+      .order('position', { ascending: true }),
+  ])
 
-  return <VideosClient initialVideos={videos || []} />
+  return <VideosClient initialVideos={videos || []} products={products || []} />
 }

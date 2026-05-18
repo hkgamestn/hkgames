@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Plus, Trash2, Eye, EyeOff, MessageCircle,
-  Check, X, ArrowUp, ArrowDown, Pencil, Save
+  X, ArrowUp, ArrowDown, Pencil, Save
 } from 'lucide-react'
 import styles from './videos.module.css'
 
@@ -155,15 +155,6 @@ function CommentsModal({ videoId, onClose }) {
 
   useEffect(() => { load() }, [load])
 
-  async function approve(id) {
-    await fetch('/api/admin/video-comments', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, approved: true }),
-    })
-    setComments(c => c.map(x => x.id === id ? { ...x, approved: true } : x))
-  }
-
   async function remove(id) {
     await fetch('/api/admin/video-comments', {
       method: 'DELETE',
@@ -173,8 +164,7 @@ function CommentsModal({ videoId, onClose }) {
     setComments(c => c.filter(x => x.id !== id))
   }
 
-  const pending  = comments.filter(c => !c.approved)
-  const approved = comments.filter(c =>  c.approved)
+  const topComments = comments.filter(c => !c.reply_to)
 
   return (
     <div className={styles.modalOverlay}>
@@ -205,11 +195,8 @@ function CommentsModal({ videoId, onClose }) {
                     <span className={styles.commentDate}>{new Date(c.created_at).toLocaleDateString('fr-TN')}</span>
                   </div>
                   <div className={styles.commentActions}>
-                    <button className={`${styles.actionBtn} ${styles.actionGreen}`} onClick={() => approve(c.id)}>
-                      <Check size={13}/> Approuver
-                    </button>
                     <button className={`${styles.actionBtn} ${styles.actionRed}`} onClick={() => remove(c.id)}>
-                      <Trash2 size={13}/>
+                      <Trash2 size={13}/> Supprimer
                     </button>
                   </div>
                 </div>

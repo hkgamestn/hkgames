@@ -1,156 +1,290 @@
 'use client'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
-import { Heart, Flame, Star, Laugh, Sparkles, MessageCircle, Share2, X, Send, Volume2, VolumeX, ArrowLeft } from 'lucide-react'
+import {
+  Heart, Flame, Star, Laugh, Sparkles,
+  MessageCircle, Share2, X, Send,
+  Volume2, VolumeX, ArrowLeft, ShoppingBag,
+  ThumbsUp, Reply, ChevronRight
+} from 'lucide-react'
 import styles from './videos.module.css'
 
-const EMOJIS = [
-  { key: '❤️', icon: Heart,    label: 'Like'  },
-  { key: '🔥', icon: Flame,    label: 'Feu'   },
-  { key: '😍', icon: Star,     label: 'Wow'   },
-  { key: '😂', icon: Laugh,    label: 'Lol'   },
-  { key: '🤩', icon: Sparkles, label: 'Super' },
-]
+const RX_EMOJIS   = ['❤️','🔥','😍','😂','🤩']
+const RX_ICONS    = [Heart, Flame, Star, Laugh, Sparkles]
+const CMT_RX      = ['👍','❤️','😂','🔥']
 
 function getSid() {
   if (typeof window === 'undefined') return ''
   let s = sessionStorage.getItem('hk_sid')
-  if (!s) { s = Math.random().toString(36).slice(2) + Date.now(); sessionStorage.setItem('hk_sid', s) }
+  if (!s) { s = Math.random().toString(36).slice(2)+Date.now(); sessionStorage.setItem('hk_sid', s) }
   return s
+}
+
+/* ─── Product Panel ─── */
+function ProductPanel({ products, onClose }) {
+  return (
+    <div className={styles.productPanel}>
+      <div className={styles.ppHead}>
+        <span className={styles.ppTitle}><ShoppingBag size={16}/> Nos Slimes</span>
+        <button className={styles.ppClose} onClick={onClose}><X size={18}/></button>
+      </div>
+      <div className={styles.ppList}>
+        {products.map(p => (
+          <Link key={p.id} href={`/produit/${p.slug}`} className={styles.ppItem} target="_blank">
+            <div className={styles.ppImg}>
+              {p.images?.[0]
+                ? <Image src={p.images[0]} alt={p.name} fill sizes="64px" style={{objectFit:'cover'}}/>
+                : <div className={styles.ppImgPlaceholder}>🧪</div>}
+            </div>
+            <div className={styles.ppInfo}>
+              <div className={styles.ppName}>{p.name}</div>
+              <div className={styles.ppPrice}>{Number(p.price_dt).toFixed(3)} DT</div>
+            </div>
+            <ChevronRight size={14} className={styles.ppArrow}/>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ─── Comment Item (with replies + reactions) ─── */
+function CommentItem({ comment, allComments, onReply, sid }) {
+  const [rxCounts, setRxCounts]   = useState({})
+  const [myRx,     setMyRx]       = useState(new Set())
+  const [showReply,setShowReply]  = useState(false)
+  const [replyText,setReplyText]  = useState('')
+  const [replySent,setReplySent]  = useState(false)
+  const replies = allComments.filter(c => c.reply_to === comment.id)
+
+  useEffect(() => {
+    createClient()
+      .from('comment_reactions').select('emoji,session_id')
+      .eq('comment_id', comment.id)
+      .then(({ data }) => {
+        const c = {}; CMT_RX.forEach(e => c[e]=0)
+        ;(data||[]).forEach(r => { c[r.emoji]=(c[r.emoji]||0)+1; if (r.session_id===sid) setMyRx(s=>new Set([...s,r.emoji])) })
+        setRxCounts(c)
+      })
+  }, [comment.id, sid])
+
+  async function reactComment(emoji) {
+    const has = myRx.has(emoji)
+    try {
+      if (has) {
+        await createClient().from('comment_reactions').delete().match({ comment_id: comment.id, session_id: sid, emoji })
+        setMyRx(s => { const n=new Set(s); n.delete(emoji); return n })
+        setRxCounts(c => ({...c,[emoji]:Math.max(0,(c[emoji]||1)-1)}))
+      } else {
+        await createClient().from('comment_reactions').insert([{ comment_id: comment.id, emoji, session_id: sid }])
+        setMyRx(s => new Set([...s, emoji]))
+        setRxCounts(c => ({...c,[emoji]:(c[emoji]||0)+1}))
+      }
+    } catch {}
+  }
+
+  async function submitReply(e) {
+    e.preventDefault()
+    if (!replyText.trim()) return
+    await createClient().from('video_comments').insert([{
+      video_id: comment.video_id,
+      author:   'Visiteur',
+      content:  replyText.trim().slice(0,300),
+      reply_to: comment.id,
+      approved: true,
+    }])
+    setReplySent(true)
+    setReplyText('')
+  }
+
+  return (
+    <div className={styles.cmtItem}>
+      <div className={styles.cmtHeader}>
+        <span className={styles.cmtAuthor}>{comment.author}</span>
+        <span className={styles.cmtTime}>{new Date(comment.created_at).toLocaleDateString('fr-TN')}</span>
+      </div>
+      <div className={styles.cmtContent}>{comment.content}</div>
+
+      {/* Reactions row */}
+      <div className={styles.cmtRxRow}>
+        {CMT_RX.map(e => (
+          <button key={e} className={`${styles.cmtRxBtn} ${myRx.has(e)?styles.cmtRxActive:''}`}
+            onPointerUp={() => reactComment(e)}>
+            <span>{e}</span>
+            {rxCounts[e]>0 && <span className={styles.cmtRxCount}>{rxCounts[e]}</span>}
+          </button>
+        ))}
+        <button className={styles.cmtReplyBtn} onPointerUp={()=>setShowReply(v=>!v)}>
+          <Reply size={13}/> Répondre
+        </button>
+      </div>
+
+      {/* Replies */}
+      {replies.length>0 && (
+        <div className={styles.repliesList}>
+          {replies.map(r => (
+            <div key={r.id} className={styles.replyItem}>
+              <span className={styles.replyAuthor}>{r.author}</span>
+              <span className={styles.replyContent}>{r.content}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Reply form */}
+      {showReply && !replySent && (
+        <form className={styles.replyForm} onSubmit={submitReply}>
+          <input className={styles.replyInput} placeholder="Votre réponse…"
+            value={replyText} onChange={e=>setReplyText(e.target.value)} maxLength={300}/>
+          <button type="submit" className={styles.replySend}><Send size={13}/></button>
+        </form>
+      )}
+      {replySent && <p className={styles.replySent}>✅ Réponse envoyée</p>}
+    </div>
+  )
 }
 
 /* ─── Comments Panel ─── */
 function CommentsPanel({ videoId, isMobile, onClose }) {
-  const [list,    setList]    = useState([])
-  const [loading, setLoading] = useState(true)
-  const [form,    setForm]    = useState({ author: '', content: '' })
-  const [sent,    setSent]    = useState(false)
+  const [comments, setComments] = useState([])
+  const [loading,  setLoading]  = useState(true)
+  const [form,     setForm]     = useState({ author:'', content:'' })
+  const [sent,     setSent]     = useState(false)
+  const sid = getSid()
+
+  const topComments = comments.filter(c => !c.reply_to)
 
   useEffect(() => {
     if (!videoId) return
-    setList([]); setSent(false); setLoading(true)
+    setLoading(true); setSent(false)
     createClient()
-      .from('video_comments').select('id,author,content,created_at')
-      .eq('video_id', videoId).eq('approved', true)
+      .from('video_comments').select('*')
+      .eq('video_id', videoId)
       .order('created_at', { ascending: false })
-      .then(({ data }) => { setList(data || []); setLoading(false) })
+      .then(({ data }) => { setComments(data||[]); setLoading(false) })
   }, [videoId])
 
   async function submit(e) {
     e.preventDefault()
     if (!form.author.trim() || !form.content.trim()) return
-    await createClient().from('video_comments').insert([{
+    const { data } = await createClient().from('video_comments').insert([{
       video_id: videoId,
-      author:   form.author.trim().slice(0, 50),
-      content:  form.content.trim().slice(0, 500),
-    }])
+      author:   form.author.trim().slice(0,50),
+      content:  form.content.trim().slice(0,500),
+      approved: true,
+    }]).select().single()
+    if (data) setComments(c => [data, ...c])
     setSent(true)
+    setTimeout(() => setSent(false), 2000)
+    setForm({ author:'', content:'' })
   }
 
   return (
     <div className={isMobile ? styles.cpMobile : styles.cpDesktop}>
       <div className={styles.cpHead}>
-        <span className={styles.cpTitle}>Commentaires</span>
-        <button className={styles.cpClose} onClick={onClose}><X size={20} /></button>
+        <span className={styles.cpTitle}>
+          Commentaires
+          {topComments.length > 0 && <span className={styles.cpBadge}>{topComments.length}</span>}
+        </span>
+        <button className={styles.cpClose} onClick={onClose}><X size={20}/></button>
       </div>
+
       <div className={styles.cpList}>
         {loading && <p className={styles.cpEmpty}>Chargement…</p>}
-        {!loading && list.length === 0 && <p className={styles.cpEmpty}>Soyez le premier à commenter 💬</p>}
-        {list.map(c => (
-          <div key={c.id} className={styles.cpItem}>
-            <span className={styles.cpAuthor}>{c.author}</span>
-            <span className={styles.cpContent}>{c.content}</span>
-          </div>
+        {!loading && topComments.length===0 && <p className={styles.cpEmpty}>Soyez le premier 💬</p>}
+        {topComments.map(c => (
+          <CommentItem key={c.id} comment={c} allComments={comments} sid={sid}
+            onReply={() => {}} />
         ))}
       </div>
+
       <div className={styles.cpForm}>
-        {!sent ? (
-          <form onSubmit={submit}>
-            <input className={styles.cpInput} placeholder="Votre prénom"
-              value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} maxLength={50} />
-            <div className={styles.cpRow}>
-              <input className={styles.cpInput} placeholder="Votre commentaire…"
-                value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))} maxLength={300} />
-              <button type="submit" className={styles.cpSend}><Send size={15} /></button>
-            </div>
-          </form>
-        ) : (
-          <p className={styles.cpSent}>✅ Envoyé — en attente d'approbation</p>
-        )}
+        {sent && <p className={styles.cpSent}>✅ Commentaire publié !</p>}
+        <form onSubmit={submit}>
+          <input className={styles.cpInput} placeholder="Votre prénom"
+            value={form.author} onChange={e=>setForm(f=>({...f,author:e.target.value}))} maxLength={50}/>
+          <div className={styles.cpRow}>
+            <input className={styles.cpInput} placeholder="Votre commentaire…"
+              value={form.content} onChange={e=>setForm(f=>({...f,content:e.target.value}))} maxLength={300}/>
+            <button type="submit" className={styles.cpSend}><Send size={15}/></button>
+          </div>
+        </form>
       </div>
     </div>
   )
 }
 
 /* ─── Main ─── */
-export default function VideosClient({ initialVideos }) {
-  const [videos]      = useState(initialVideos)
-  const [activeIdx,   setActiveIdx]   = useState(0)
-  const [playing,     setPlaying]     = useState(true)
-  const [muted,       setMuted]       = useState(true)
-  const [showComments,setShowComments] = useState(false)
-  const [isMobile,    setIsMobile]    = useState(false)
-  const [reactions,   setReactions]   = useState(() => {
+export default function VideosClient({ initialVideos, products = [] }) {
+  const [videos]     = useState(initialVideos)
+  const [activeIdx,  setActiveIdx]   = useState(0)
+  const [playing,    setPlaying]     = useState(true)
+  const [muted,      setMuted]       = useState(true)
+  const [showCmt,    setShowCmt]     = useState(false)
+  const [showShop,   setShowShop]    = useState(false)
+  const [isMobile,   setIsMobile]    = useState(false)
+  const [reactions,  setReactions]   = useState(() => {
     const m = {}
     initialVideos.forEach(v => {
-      const c = {}
-      EMOJIS.forEach(e => { c[e.key] = 0 })
-      ;(v.video_reactions || []).forEach(r => { c[r.emoji] = (c[r.emoji] || 0) + 1 })
+      const c = {}; RX_EMOJIS.forEach(e => { c[e]=0 })
+      ;(v.video_reactions||[]).forEach(r => { c[r.emoji]=(c[r.emoji]||0)+1 })
       m[v.id] = c
     })
     return m
   })
-  // my reactions per video: { videoId: Set<emoji> }
-  const [myRx, setMyRx] = useState({})
+  const [myRx,       setMyRx]        = useState({})
+  const [cmtCounts,  setCmtCounts]   = useState({})
 
-  const feedRef    = useRef(null)
-  const slideRefs  = useRef([])
-  const videoRefs  = useRef([])
-  const lastTap    = useRef(0)
+  const feedRef   = useRef(null)
+  const slideRefs = useRef([])
+  const videoRefs = useRef([])
+  const lastTap   = useRef(0)
 
   const active = videos[activeIdx]
 
-  /* Detect mobile */
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 700)
-    check()
-    window.addEventListener('resize', check)
+    check(); window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  /* IntersectionObserver — which slide is centered */
+  /* Load comment counts for all videos */
   useEffect(() => {
     if (!videos.length) return
-    const opts = { root: feedRef.current, threshold: 0.6 }
+    const supabase = createClient()
+    videos.forEach(v => {
+      supabase.from('video_comments').select('id', { count: 'exact', head: true })
+        .eq('video_id', v.id).eq('reply_to', null)
+        .then(({ count }) => setCmtCounts(c => ({...c,[v.id]: count||0})))
+    })
+  }, [videos])
+
+  /* IntersectionObserver */
+  useEffect(() => {
+    if (!videos.length) return
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (e.isIntersecting) {
           const idx = slideRefs.current.indexOf(e.target)
-          if (idx !== -1) {
-            setActiveIdx(idx)
-            setPlaying(true)
-            setShowComments(false)
-          }
+          if (idx !== -1) { setActiveIdx(idx); setPlaying(true); setShowCmt(false); setShowShop(false) }
         }
       })
-    }, opts)
+    }, { root: feedRef.current, threshold: 0.6 })
     slideRefs.current.forEach(el => el && obs.observe(el))
     return () => obs.disconnect()
   }, [videos])
 
-  /* Sync video play/pause */
+  /* Play/pause */
   useEffect(() => {
     videoRefs.current.forEach((el, i) => {
       if (!el) return
+      el.muted = muted
       if (i === activeIdx) {
-        el.muted = muted
-        if (playing) el.play().catch(() => {})
+        if (playing) el.play().catch(()=>{})
         else el.pause()
-      } else {
-        el.pause()
-        el.currentTime = 0
-      }
+      } else { el.pause(); el.currentTime = 0 }
     })
   }, [activeIdx, playing])
 
@@ -159,168 +293,133 @@ export default function VideosClient({ initialVideos }) {
     if (el) el.muted = muted
   }, [muted, activeIdx])
 
-  /* Toggle play/pause on video click */
-  const handleVideoClick = useCallback((e) => {
-    // Double tap detection (two-finger or double-click = like)
+  const handleVideoClick = useCallback(() => {
     const now = Date.now()
-    const delta = now - lastTap.current
+    if (now - lastTap.current < 300) { handleReact('❤️'); return }
     lastTap.current = now
-    if (delta < 300) {
-      // Double tap = ❤️
-      handleReact('❤️')
-      return
-    }
     setPlaying(p => !p)
   }, [])
 
-  /* Reactions: toggle (add or remove) */
   async function handleReact(emoji) {
     if (!active) return
     const vid  = active.id
     const mine = myRx[vid]?.has(emoji)
-
     if (mine) {
-      // Remove reaction (local only — can't delete from DB without auth, so just remove locally)
-      setMyRx(r => {
-        const s = new Set(r[vid] || [])
-        s.delete(emoji)
-        return { ...r, [vid]: s }
-      })
-      setReactions(rc => ({
-        ...rc,
-        [vid]: { ...rc[vid], [emoji]: Math.max(0, (rc[vid]?.[emoji] || 1) - 1) }
-      }))
+      setMyRx(r => { const s=new Set(r[vid]||[]); s.delete(emoji); return {...r,[vid]:s} })
+      setReactions(rc => ({...rc,[vid]:{...rc[vid],[emoji]:Math.max(0,(rc[vid]?.[emoji]||1)-1)}}))
     } else {
-      // Add reaction
-      try {
-        await createClient().from('video_reactions').insert([{
-          video_id: vid, emoji, session_id: getSid(),
-        }])
-      } catch {}
-      setMyRx(r => ({ ...r, [vid]: new Set([...(r[vid] || []), emoji]) }))
-      setReactions(rc => ({
-        ...rc,
-        [vid]: { ...rc[vid], [emoji]: (rc[vid]?.[emoji] || 0) + 1 }
-      }))
-    }
-  }
-
-  function handleShare() {
-    if (!active) return
-    const url  = window.location.href
-    const text = `🔥 ${active.title} — HK Games Slime Tunisie`
-    if (navigator.share) {
-      navigator.share({ title: active.title, text, url }).catch(() => {})
-    } else {
-      window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
+      try { await createClient().from('video_reactions').insert([{video_id:vid,emoji,session_id:getSid()}]) } catch {}
+      setMyRx(r => ({...r,[vid]:new Set([...(r[vid]||[]),emoji])}))
+      setReactions(rc => ({...rc,[vid]:{...rc[vid],[emoji]:(rc[vid]?.[emoji]||0)+1}}))
     }
   }
 
   if (!videos.length) return (
     <div className={styles.emptyPage}>
-      <Link href="/" className={styles.backBtnFixed}><ArrowLeft size={16} /> Accueil</Link>
+      <Link href="/" className={styles.backBtnFixed}><ArrowLeft size={16}/> Accueil</Link>
       <div className={styles.emptyInner}>
-        <span style={{ fontSize: '3rem' }}>🎬</span>
+        <span style={{fontSize:'3rem'}}>🎬</span>
         <h2>Vidéos bientôt disponibles</h2>
-        <p>Nos vidéos ASMR et unboxing de slime arrivent très prochainement.</p>
+        <p>Nos vidéos ASMR de slime arrivent très prochainement.</p>
         <Link href="/shop" className={styles.shopLink}>Voir la boutique →</Link>
       </div>
     </div>
   )
 
-  const activeRx = reactions[active?.id] || {}
+  const activeRx  = reactions[active?.id] || {}
+  const cmtCount  = cmtCounts[active?.id] || 0
 
   return (
     <div className={styles.root}>
-
-      {/* Fixed controls */}
-      <Link href="/" className={styles.backBtnFixed}><ArrowLeft size={16} /> Accueil</Link>
-      <button className={styles.muteBtnFixed} onClick={() => setMuted(m => !m)}>
-        {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+      <Link href="/" className={styles.backBtnFixed}><ArrowLeft size={16}/> Accueil</Link>
+      <button className={styles.muteBtnFixed} onClick={() => setMuted(m=>!m)}>
+        {muted ? <VolumeX size={18}/> : <Volume2 size={18}/>}
       </button>
 
-      {/* Main layout: feed always stays, comments slide in */}
       <div className={styles.wrapper}>
+        {/* LEFT: Products panel */}
+        {showShop && (
+          <ProductPanel products={products} onClose={() => setShowShop(false)}/>
+        )}
 
-        {/* FEED */}
+        {/* CENTER: Feed */}
         <div className={styles.feed} ref={feedRef}>
           {videos.map((video, i) => {
-            const rc = reactions[video.id] || {}
             const isActive = i === activeIdx
+            const rx = reactions[video.id] || {}
             return (
-              <div
-                key={video.id}
-                ref={el => slideRefs.current[i] = el}
-                className={styles.slide}
-              >
-                {/* 9:16 container */}
+              <div key={video.id} ref={el => slideRefs.current[i]=el} className={styles.slide}>
                 <div className={styles.videoBox}>
-                  {/* Thumbnail shown for 200ms before video plays */}
+                  {/* Thumbnail fade overlay */}
                   {video.thumbnail_url && (
-                    <img
-                      src={video.thumbnail_url}
-                      alt=""
-                      className={`${styles.thumbOverlay} ${isActive ? styles.thumbFade : ''}`}
-                    />
+                    <img src={video.thumbnail_url} alt="" className={`${styles.thumbOverlay} ${isActive?styles.thumbFade:''}`}/>
                   )}
+
+                  {/* VIDEO */}
                   <video
-                    ref={el => videoRefs.current[i] = el}
+                    ref={el => videoRefs.current[i]=el}
                     className={styles.videoEl}
                     src={video.video_url}
-                    loop playsInline preload="auto"
+                    loop playsInline
+                    preload={isActive ? 'auto' : 'metadata'}
                     onClick={handleVideoClick}
                   />
 
-                  {/* Overlay gradient */}
-                  <div className={styles.grad} />
+                  <div className={styles.grad}/>
 
                   {/* Paused indicator */}
-                  {isActive && !playing && (
-                    <div className={styles.pausedIcon}>▶</div>
-                  )}
+                  {isActive && !playing && <div className={styles.pausedIcon}>▶</div>}
 
-                  {/* Info bottom-left */}
+                  {/* Info */}
                   <div className={styles.info}>
                     <div className={styles.infoTitle}>{video.title}</div>
                     {video.description && <div className={styles.infoDesc}>{video.description}</div>}
-                    {video.tags?.length > 0 && (
+                    {video.tags?.length>0 && (
                       <div className={styles.infoTags}>
-                        {video.tags.map(t => <span key={t} className={styles.infoTag}>#{t}</span>)}
+                        {video.tags.map(t=><span key={t} className={styles.infoTag}>#{t}</span>)}
                       </div>
                     )}
                   </div>
 
-                  {/* Actions right side */}
+                  {/* SHOP icon — left side */}
+                  {isActive && products.length > 0 && (
+                    <button
+                      className={`${styles.shopIconBtn} ${showShop?styles.shopIconActive:''}`}
+                      onPointerUp={() => { setShowShop(v=>!v); setShowCmt(false) }}
+                      title="Voir nos produits">
+                      <ShoppingBag size={22}/>
+                      <span className={styles.shopIconLabel}>Produits</span>
+                    </button>
+                  )}
+
+                  {/* Actions — right side */}
                   {isActive && (
                     <div className={styles.actions}>
-                      {EMOJIS.map(({ key, icon: Icon }) => {
+                      {RX_EMOJIS.map((key, idx) => {
+                        const Icon    = RX_ICONS[idx]
                         const reacted = myRx[video.id]?.has(key)
-                        const count   = rc[key] || 0
+                        const count   = rx[key]||0
                         return (
-                          <button
-                            key={key}
-                            className={`${styles.rxBtn} ${reacted ? styles.rxActive : ''}`}
-                            onPointerUp={() => handleReact(key)}
-                          >
-                            <Icon
-                              size={26}
-                              fill={reacted ? 'currentColor' : 'none'}
-                              strokeWidth={reacted ? 0 : 1.8}
-                            />
-                            {count > 0 && <span className={styles.rxCount}>{count}</span>}
+                          <button key={key}
+                            className={`${styles.rxBtn} ${reacted?styles.rxActive:''}`}
+                            onPointerUp={() => handleReact(key)}>
+                            <Icon size={24} fill={reacted?'currentColor':'none'} strokeWidth={reacted?0:1.8}/>
+                            {count>0 && <span className={styles.rxCount}>{count}</span>}
                           </button>
                         )
                       })}
-
                       <button
-                        className={`${styles.rxBtn} ${showComments ? styles.rxActive : ''}`}
-                        onPointerUp={() => setShowComments(v => !v)}
-                      >
-                        <MessageCircle size={26} fill={showComments ? 'currentColor' : 'none'} strokeWidth={showComments ? 0 : 1.8} />
+                        className={`${styles.rxBtn} ${showCmt?styles.rxActive:''}`}
+                        onPointerUp={() => { setShowCmt(v=>!v); setShowShop(false) }}>
+                        <MessageCircle size={24} fill={showCmt?'currentColor':'none'} strokeWidth={showCmt?0:1.8}/>
+                        {cmtCount>0 && <span className={styles.rxCount}>{cmtCount}</span>}
                       </button>
-
-                      <button className={styles.rxBtn} onPointerUp={handleShare}>
-                        <Share2 size={26} />
+                      <button className={styles.rxBtn}
+                        onPointerUp={() => {
+                          if (navigator.share) navigator.share({ title: video.title, url: window.location.href }).catch(()=>{})
+                          else window.open(`https://wa.me/?text=${encodeURIComponent(video.title+' '+window.location.href)}`, '_blank')
+                        }}>
+                        <Share2 size={24}/>
                       </button>
                     </div>
                   )}
@@ -330,23 +429,15 @@ export default function VideosClient({ initialVideos }) {
           })}
         </div>
 
-        {/* Desktop side panel — stays fixed, no layout shift */}
-        {showComments && !isMobile && (
-          <CommentsPanel
-            videoId={active?.id}
-            isMobile={false}
-            onClose={() => setShowComments(false)}
-          />
+        {/* RIGHT: Comments panel desktop */}
+        {showCmt && !isMobile && (
+          <CommentsPanel videoId={active?.id} isMobile={false} onClose={()=>setShowCmt(false)}/>
         )}
       </div>
 
-      {/* Mobile bottom sheet — fixed overlay */}
-      {showComments && isMobile && (
-        <CommentsPanel
-          videoId={active?.id}
-          isMobile={true}
-          onClose={() => setShowComments(false)}
-        />
+      {/* BOTTOM: Comments mobile */}
+      {showCmt && isMobile && (
+        <CommentsPanel videoId={active?.id} isMobile={true} onClose={()=>setShowCmt(false)}/>
       )}
     </div>
   )
