@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   Heart, Flame, Star, Laugh, Sparkles,
@@ -32,7 +33,7 @@ function ProductPanel({ products, onClose }) {
       </div>
       <div className={styles.ppList}>
         {products.map(p => (
-          <Link key={p.id} href={`/produit/${p.slug}`} className={styles.ppItem} target="_blank">
+          <a key={p.id} href={`/produit/${p.slug}`} className={styles.ppItem}>
             <div className={styles.ppImg}>
               {p.images?.[0]
                 ? <Image src={p.images[0]} alt={p.name} fill sizes="64px" style={{objectFit:'cover'}}/>
@@ -43,7 +44,7 @@ function ProductPanel({ products, onClose }) {
               <div className={styles.ppPrice}>{Number(p.price_dt).toFixed(3)} DT</div>
             </div>
             <ChevronRight size={14} className={styles.ppArrow}/>
-          </Link>
+          </a>
         ))}
       </div>
     </div>
@@ -52,12 +53,12 @@ function ProductPanel({ products, onClose }) {
 
 /* ─── Comment Item (with replies + reactions) ─── */
 function CommentItem({ comment, allComments, onReply, sid }) {
-  const [rxCounts, setRxCounts]   = useState({})
-  const [myRx,     setMyRx]       = useState(new Set())
-  const [showReply,setShowReply]  = useState(false)
-  const [replyText,setReplyText]  = useState('')
-  const [replySent,setReplySent]  = useState(false)
-  const replies = allComments.filter(c => c.reply_to === comment.id)
+  const [rxCounts,    setRxCounts]    = useState({})
+  const [myRx,        setMyRx]        = useState(new Set())
+  const [showReply,   setShowReply]   = useState(false)
+  const [replyText,   setReplyText]   = useState('')
+  const [localReplies,setLocalReplies]= useState([])
+  const replies = [...allComments.filter(c => c.reply_to === comment.id), ...localReplies]
 
   useEffect(() => {
     createClient()
@@ -88,14 +89,17 @@ function CommentItem({ comment, allComments, onReply, sid }) {
   async function submitReply(e) {
     e.preventDefault()
     if (!replyText.trim()) return
-    await createClient().from('video_comments').insert([{
+    const { data } = await createClient().from('video_comments').insert([{
       video_id: comment.video_id,
       author:   'Visiteur',
       content:  replyText.trim().slice(0,300),
       reply_to: comment.id,
       approved: true,
-    }])
-    setReplySent(true)
+    }]).select().single()
+    if (data) {
+      setLocalReplies(r => [...r, data])
+      setShowReply(false)
+    }
     setReplyText('')
   }
 
@@ -141,13 +145,13 @@ function CommentItem({ comment, allComments, onReply, sid }) {
           <button type="submit" className={styles.replySend}><Send size={13}/></button>
         </form>
       )}
-      {replySent && <p className={styles.replySent}>✅ Réponse envoyée</p>}
+
     </div>
   )
 }
 
 /* ─── Comments Panel ─── */
-function CommentsPanel({ videoId, isMobile, onClose }) {
+function CommentsPanel({ videoId, onClose }) {
   const [comments, setComments] = useState([])
   const [loading,  setLoading]  = useState(true)
   const [form,     setForm]     = useState({ author:'', content:'' })
@@ -182,7 +186,7 @@ function CommentsPanel({ videoId, isMobile, onClose }) {
   }
 
   return (
-    <div className={isMobile ? styles.cpMobile : styles.cpDesktop}>
+    <div className={styles.cpBottom}>
       <div className={styles.cpHead}>
         <span className={styles.cpTitle}>
           Commentaires
@@ -429,15 +433,11 @@ export default function VideosClient({ initialVideos, products = [] }) {
           })}
         </div>
 
-        {/* RIGHT: Comments panel desktop */}
-        {showCmt && !isMobile && (
-          <CommentsPanel videoId={active?.id} isMobile={false} onClose={()=>setShowCmt(false)}/>
-        )}
       </div>
 
-      {/* BOTTOM: Comments mobile */}
-      {showCmt && isMobile && (
-        <CommentsPanel videoId={active?.id} isMobile={true} onClose={()=>setShowCmt(false)}/>
+      {/* Comments — always bottom sheet */}
+      {showCmt && (
+        <CommentsPanel videoId={active?.id} onClose={()=>setShowCmt(false)}/>
       )}
     </div>
   )
