@@ -1,154 +1,258 @@
-/* ── Root layout ── */
+/* ─────────────────────────────────────────────
+   ROOT — full screen, black bg
+───────────────────────────────────────────── */
 .root {
   position: fixed; inset: 0;
   background: #000;
   overflow: hidden;
+  z-index: 0;
 }
 
-/* ── Feed — vertical scroll snap ── */
-.feed {
-  width: 100%; height: 100%;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+/* Back button */
+.backBtn {
+  position: fixed; top: 16px; left: 16px; z-index: 200;
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(0,0,0,.55); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.15); border-radius: 99px;
+  padding: 8px 14px; color: #fff; text-decoration: none;
+  font-size: .82rem; font-weight: 700;
+  transition: background .15s;
 }
-.feed::-webkit-scrollbar { display: none; }
+.backBtn:hover { background: rgba(168,85,247,.5); }
 
-/* ── Each slide ── */
-.slideWrap {
-  width: 100%; height: 100dvh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  position: relative;
-  overflow: hidden;
-  background: #000;
-}
-
-.slide {
-  position: relative;
-  width: 100%; height: 100%;
-}
-
-/* ── Video ── */
-.video {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  position: absolute; inset: 0;
-  cursor: pointer;
-}
-
-/* ── Gradient overlay ── */
-.overlay {
-  position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(
-    to top,
-    rgba(0,0,0,.85) 0%,
-    rgba(0,0,0,.3)  35%,
-    transparent     60%,
-    rgba(0,0,0,.3) 100%
-  );
-}
-
-/* ── Info — bas gauche ── */
-.info {
-  position: absolute; bottom: 100px; left: 16px; right: 80px;
-  z-index: 10; display: flex; flex-direction: column; gap: 6px;
-}
-.infoTitle { font-family: var(--font-title); font-size: 1.1rem; font-weight: 800; color: #fff;
-  text-shadow: 0 1px 4px rgba(0,0,0,.6); line-height: 1.3; }
-.infoDesc  { font-size: .85rem; color: rgba(255,255,255,.85); line-height: 1.5;
-  text-shadow: 0 1px 3px rgba(0,0,0,.5); }
-.infoTags  { display: flex; flex-wrap: wrap; gap: 5px; }
-.infoTag   { font-size: .75rem; color: rgba(255,255,255,.7); font-weight: 600; }
-
-/* ── Actions — droite ── */
-.actions {
-  position: absolute; right: 12px; bottom: 100px;
-  z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 18px;
-}
-.actionBtn {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  background: none; border: none; color: #fff; cursor: pointer;
-  transition: transform .15s; padding: 4px;
-}
-.actionBtn:hover { transform: scale(1.18); }
-.actionActive { color: #ff4d6d; }
-.actionLabel  { font-size: .7rem; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
-.actionCount  { font-size: .78rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,.6); min-height: 16px; }
-
-/* ── Comments panel ── */
-.commentsPanel {
-  position: absolute; inset-x: 0; bottom: 0; z-index: 20;
-  background: rgba(10,5,20,.95); backdrop-filter: blur(16px);
-  border-radius: 20px 20px 0 0; padding: 16px;
-  max-height: 65vh; display: flex; flex-direction: column; gap: 12px;
-  border-top: 1px solid rgba(168,85,247,.3);
-}
-.commentsPanelHeader { display: flex; justify-content: space-between; align-items: center;
-  font-weight: 700; font-size: .95rem; color: #fff; }
-.commentsPanelHeader button { background: none; border: none; color: rgba(255,255,255,.6); cursor: pointer; }
-.commentsList { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-.noComments   { text-align: center; color: rgba(255,255,255,.4); font-size: .88rem; padding: 12px; }
-.comment { display: flex; flex-direction: column; gap: 2px; }
-.commentAuthor { font-size: .78rem; font-weight: 700; color: #a855f7; }
-.commentContent{ font-size: .88rem; color: rgba(255,255,255,.85); }
-.commentForm { display: flex; flex-direction: column; gap: 8px; }
-.commentRow  { display: flex; gap: 8px; }
-.commentInput {
-  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
-  border-radius: 10px; padding: 9px 12px; color: #fff; font-size: .9rem;
-  outline: none; width: 100%;
-}
-.commentInput:focus { border-color: #a855f7; }
-.commentSend {
-  background: #a855f7; border: none; border-radius: 10px; padding: 9px 14px;
-  color: #fff; cursor: pointer; flex-shrink: 0;
-}
-.commentSuccess { text-align: center; color: #10b981; font-size: .88rem; }
-
-/* ── Navigation arrows (desktop) ── */
-.navArrows {
-  position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
-  z-index: 50; display: flex; flex-direction: column; align-items: center; gap: 8px;
-}
-.navArrow {
-  background: rgba(255,255,255,.1); backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,.2); border-radius: 50%;
+/* Mute button */
+.muteBtn {
+  position: fixed; top: 16px; right: 16px; z-index: 200;
+  background: rgba(0,0,0,.55); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.15); border-radius: 50%;
   width: 40px; height: 40px; color: #fff; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: background .15s;
 }
-.navArrow:hover:not(:disabled) { background: rgba(168,85,247,.4); }
-.navArrow:disabled { opacity: .3; cursor: not-allowed; }
-.navCounter { font-size: .72rem; color: rgba(255,255,255,.6); font-weight: 700; }
+.muteBtn:hover { background: rgba(168,85,247,.5); }
 
-/* ── Dots ── */
-.dots {
-  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
-  z-index: 50; display: flex; gap: 6px;
-}
-.dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: rgba(255,255,255,.35); border: none; cursor: pointer;
-  transition: all .2s;
-}
-.dotActive {
-  width: 18px; border-radius: 4px; background: #a855f7;
+/* ─────────────────────────────────────────────
+   LAYOUT — feed + optional side panel
+───────────────────────────────────────────── */
+.layout {
+  width: 100%; height: 100%;
+  display: flex;
+  transition: none;
 }
 
-/* ── Empty state ── */
-.empty {
+/* DESKTOP: when panel open, feed shrinks left */
+@media (min-width: 700px) {
+  .layoutWithPanel .feed {
+    /* feed stays 9:16 ratio centered */
+    flex: 0 0 auto;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   FEED
+───────────────────────────────────────────── */
+.feed {
+  flex: 1;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  height: 100%;
+  /* Desktop: constrain to 9:16 */
+  display: flex;
+  flex-direction: column;
+}
+.feed::-webkit-scrollbar { display: none; }
+
+/* ─────────────────────────────────────────────
+   SLIDE — one video per screen
+───────────────────────────────────────────── */
+.slide {
+  position: relative;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  background: #000;
+  overflow: hidden;
+  /* fill full viewport height */
+  height: 100dvh;
+  flex-shrink: 0;
+  /* Desktop: 9:16 centered */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Desktop: constrain to 9:16 */
+@media (min-width: 700px) {
+  .feed {
+    align-items: center;
+  }
+  .slide {
+    width: calc(100dvh * 9 / 16);
+    min-width: 320px;
+    max-width: 440px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 0 80px rgba(168,85,247,.15);
+    margin: 0 auto;
+    /* keep 9:16 ratio */
+    aspect-ratio: 9/16;
+    height: auto;
+    max-height: 100dvh;
+  }
+  /* center feed horizontally when no panel */
+  .layout:not(.layoutWithPanel) .feed {
+    justify-content: center;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   VIDEO
+───────────────────────────────────────────── */
+.video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+  display: block;
+}
+
+/* ─────────────────────────────────────────────
+   OVERLAY
+───────────────────────────────────────────── */
+.overlay {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,.8) 0%,
+    rgba(0,0,0,.2) 40%,
+    transparent 60%,
+    rgba(0,0,0,.3) 100%
+  );
+}
+
+/* ─────────────────────────────────────────────
+   INFO — bottom left
+───────────────────────────────────────────── */
+.info {
+  position: absolute; bottom: 90px; left: 14px; right: 70px;
+  z-index: 10; display: flex; flex-direction: column; gap: 5px;
+}
+.infoTitle {
+  font-size: 1rem; font-weight: 800; color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.7); line-height: 1.3;
+}
+.infoDesc {
+  font-size: .82rem; color: rgba(255,255,255,.8);
+  text-shadow: 0 1px 3px rgba(0,0,0,.6); line-height: 1.5;
+}
+.infoTags { display: flex; flex-wrap: wrap; gap: 4px; }
+.infoTag  { font-size: .72rem; color: rgba(255,255,255,.65); font-weight: 600; }
+
+/* ─────────────────────────────────────────────
+   ACTIONS — right side
+───────────────────────────────────────────── */
+.actions {
+  position: absolute; right: 10px; bottom: 90px;
+  z-index: 20;
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+.actionBtn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: none; border: none; color: #fff; cursor: pointer;
+  /* IMPORTANT: use pointer-events + touch-action for mobile */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  padding: 6px;
+  transition: transform .12s;
+  user-select: none;
+}
+.actionBtn:active { transform: scale(0.85); }
+.actionActive { color: #ff4d6d; }
+.actionCount  {
+  font-size: .72rem; font-weight: 800; color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.8);
+  min-height: 14px;
+}
+
+/* ─────────────────────────────────────────────
+   COMMENTS PANEL — desktop (right side)
+───────────────────────────────────────────── */
+.commentsPanelDesktop {
+  width: 340px; flex-shrink: 0;
+  background: rgba(10,5,25,.96); backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(168,85,247,.25);
+  display: flex; flex-direction: column;
+  height: 100%;
+  z-index: 50;
+}
+
+/* ─────────────────────────────────────────────
+   COMMENTS PANEL — mobile (bottom sheet)
+───────────────────────────────────────────── */
+.commentsPanelMobile {
+  position: fixed; inset-x: 0; bottom: 0; z-index: 300;
+  background: rgba(10,5,25,.97); backdrop-filter: blur(20px);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid rgba(168,85,247,.3);
+  height: 60dvh;
+  display: flex; flex-direction: column;
+}
+
+/* Shared panel styles */
+.cpHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  flex-shrink: 0;
+}
+.cpTitle  { font-weight: 800; font-size: .95rem; color: #fff; }
+.cpClose  { background: none; border: none; color: rgba(255,255,255,.5); cursor: pointer; display: flex; }
+.cpClose:hover { color: #fff; }
+
+.cpList {
+  flex: 1; overflow-y: auto; padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.cpEmpty   { color: rgba(255,255,255,.35); font-size: .85rem; text-align: center; padding: 24px 0; }
+.cpComment { display: flex; flex-direction: column; gap: 3px; }
+.cpAuthor  { font-size: .75rem; font-weight: 800; color: #a855f7; }
+.cpContent { font-size: .88rem; color: rgba(255,255,255,.82); line-height: 1.5; }
+
+.cpForm {
+  padding: 12px 16px 20px; border-top: 1px solid rgba(255,255,255,.07); flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.cpRow   { display: flex; gap: 8px; }
+.cpInput {
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px; padding: 9px 12px; color: #fff; font-size: .88rem;
+  outline: none; width: 100%; font-family: inherit;
+}
+.cpInput:focus { border-color: #a855f7; }
+.cpSend {
+  background: #a855f7; border: none; border-radius: 10px;
+  padding: 9px 14px; color: #fff; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center;
+}
+.cpSend:hover { background: #9333ea; }
+.cpSent { color: #10b981; font-size: .85rem; text-align: center; padding: 8px; }
+
+/* ─────────────────────────────────────────────
+   EMPTY PAGE
+───────────────────────────────────────────── */
+.emptyPage {
   position: fixed; inset: 0; background: #000;
+}
+.emptyInner {
+  position: absolute; inset: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 12px; text-align: center; color: #fff;
+  gap: 12px; color: #fff; text-align: center; padding: 24px;
 }
-.empty h2 { font-size: 1.4rem; font-weight: 800; }
-.empty p  { color: rgba(255,255,255,.5); }
+.emptyInner h2 { font-size: 1.4rem; font-weight: 800; }
+.emptyInner p  { color: rgba(255,255,255,.45); }
 
-/* ── Mobile — hide nav arrows ── */
-@media (max-width: 600px) {
-  .navArrows { display: none; }
-  .info { bottom: 90px; }
-  .actions { bottom: 90px; }
-}
+/* ─────────────────────────────────────────────
+   HIDE desktop arrows + dots (supprimés)
+───────────────────────────────────────────── */

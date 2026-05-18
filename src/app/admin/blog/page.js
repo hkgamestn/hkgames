@@ -1,6 +1,5 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Plus, Pencil, Trash2, Eye, EyeOff, Globe } from 'lucide-react'
 import BlogEditor from './BlogEditor'
 import styles from './blog.module.css'
@@ -8,31 +7,39 @@ import styles from './blog.module.css'
 export default function AdminBlogPage() {
   const [posts, setPosts]     = useState([])
   const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(null) // null | 'new' | post obj
+  const [editing, setEditing] = useState(null)
 
   const fetchPosts = useCallback(async () => {
     setLoading(true)
-    const supabase = createClient()
-    const { data } = await supabase.from('blog_posts').select('*').order('created_at', { ascending: false })
-    setPosts(data || [])
+    const res  = await fetch('/api/admin/blog')
+    const data = await res.json()
+    setPosts(Array.isArray(data) ? data : [])
     setLoading(false)
   }, [])
 
   useEffect(() => { fetchPosts() }, [fetchPosts])
 
   async function togglePublish(post) {
-    const supabase = createClient()
-    await supabase.from('blog_posts').update({
-      published: !post.published,
-      published_at: !post.published ? new Date().toISOString() : null,
-    }).eq('id', post.id)
+    await fetch('/api/admin/blog', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id:           post.id,
+        published:    !post.published,
+        published_at: !post.published ? new Date().toISOString() : null,
+        updated_at:   new Date().toISOString(),
+      }),
+    })
     fetchPosts()
   }
 
   async function deletePost(id) {
     if (!confirm('Supprimer cet article ?')) return
-    const supabase = createClient()
-    await supabase.from('blog_posts').delete().eq('id', id)
+    await fetch('/api/admin/blog', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
     setPosts(p => p.filter(x => x.id !== id))
   }
 
@@ -59,7 +66,7 @@ export default function AdminBlogPage() {
       {loading ? (
         <div className={styles.loading}>Chargement…</div>
       ) : posts.length === 0 ? (
-        <div className={styles.empty}>Aucun article. Créez le premier ! 📝</div>
+        <div className={styles.empty}>Aucun article. Créez le premier ! 📝<br/><small style={{color:'var(--text-muted)'}}>Pensez à exécuter le SQL des 10 articles dans Supabase.</small></div>
       ) : (
         <div className={styles.list}>
           {posts.map(post => (
@@ -90,15 +97,14 @@ export default function AdminBlogPage() {
                   </a>
                 )}
                 <button className={`${styles.actionBtn} ${post.published ? styles.actionYellow : styles.actionGreen}`}
-                  onClick={() => togglePublish(post)} title={post.published ? 'Dépublier' : 'Publier'}>
+                  onClick={() => togglePublish(post)}>
                   {post.published ? <EyeOff size={14} /> : <Eye size={14} />}
+                  <span>{post.published ? 'Masquer' : 'Publier'}</span>
                 </button>
-                <button className={`${styles.actionBtn} ${styles.actionPurple}`}
-                  onClick={() => setEditing(post)}>
+                <button className={`${styles.actionBtn} ${styles.actionPurple}`} onClick={() => setEditing(post)}>
                   <Pencil size={14} />
                 </button>
-                <button className={`${styles.actionBtn} ${styles.actionRed}`}
-                  onClick={() => deletePost(post.id)}>
+                <button className={`${styles.actionBtn} ${styles.actionRed}`} onClick={() => deletePost(post.id)}>
                   <Trash2 size={14} />
                 </button>
               </div>
