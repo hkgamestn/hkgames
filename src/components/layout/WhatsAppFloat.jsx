@@ -1,8 +1,11 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import styles from './WhatsAppFloat.module.css'
 
 export default function WhatsAppFloat() {
+  const pathname = usePathname()
+  if (pathname !== '/') return null
   const phone = '21621660303'
   const message = 'Bonjour HK Games ! Je veux commander un Slime.'
   const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message)

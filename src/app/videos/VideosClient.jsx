@@ -255,12 +255,19 @@ export default function VideosClient({ initialVideos }) {
               >
                 {/* 9:16 container */}
                 <div className={styles.videoBox}>
+                  {/* Thumbnail shown for 200ms before video plays */}
+                  {video.thumbnail_url && (
+                    <img
+                      src={video.thumbnail_url}
+                      alt=""
+                      className={`${styles.thumbOverlay} ${isActive ? styles.thumbFade : ''}`}
+                    />
+                  )}
                   <video
                     ref={el => videoRefs.current[i] = el}
                     className={styles.videoEl}
                     src={video.video_url}
                     loop playsInline preload="auto"
-                    poster={video.thumbnail_url || undefined}
                     onClick={handleVideoClick}
                   />
 
