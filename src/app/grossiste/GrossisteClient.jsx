@@ -1,10 +1,14 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/client'
-import { Building2, Phone, MapPin, Package, CheckCircle, ChevronRight, Truck, ShieldCheck, TrendingUp, Minus, Plus } from 'lucide-react'
+import {
+  Building2, Phone, MapPin, Package, CheckCircle,
+  ChevronRight, Truck, ShieldCheck, TrendingUp,
+  Minus, Plus, X, Info
+} from 'lucide-react'
 import styles from './grossiste.module.css'
 
 const CITIES = [
@@ -15,10 +19,34 @@ const CITIES = [
 ]
 
 const AVANTAGES = [
-  { icon: TrendingUp,  title: 'Marges attractives', desc: 'Prix dégressifs dès 60 unités — plus vous commandez, plus vous gagnez.' },
+  { icon: TrendingUp,  title: 'Marges attractives', desc: 'Prix dégressifs dès 19 unités — plus vous commandez, plus vous gagnez.' },
   { icon: Truck,       title: 'Livraison Navex',    desc: 'Livraison rapide partout en Tunisie via notre partenaire Navex.' },
   { icon: ShieldCheck, title: 'Produit certifié',   desc: 'Slime 170g sans danger, certifié pour enfants dès 3 ans.' },
   { icon: Package,     title: 'Stock disponible',   desc: 'Stocks gérés en temps réel. Jamais de rupture sans préavis.' },
+]
+
+const UNICOLORE_COLORS = [
+  { id: 'rose',    name: 'Rose',    hex: '#ec4899' },
+  { id: 'violet',  name: 'Violet',  hex: '#7c3aed' },
+  { id: 'orange',  name: 'Orangé',  hex: '#f97316' },
+  { id: 'bleu',    name: 'Bleu',    hex: '#3b82f6' },
+  { id: 'jaune',   name: 'Jaune',   hex: '#eab308' },
+  { id: 'vert',    name: 'Vert',    hex: '#22c55e' },
+]
+
+const BICOLORE_COLORS = [
+  { id: 'bleu-rose',   name: 'Bleu / Rose',   hex1: '#3b82f6', hex2: '#ec4899' },
+  { id: 'bleu-jaune',  name: 'Bleu / Jaune',  hex1: '#3b82f6', hex2: '#eab308' },
+  { id: 'rose-jaune',  name: 'Rose / Jaune',  hex1: '#ec4899', hex2: '#eab308' },
+]
+
+const BUDDIES_COLORS = [
+  { id: 'rose',    name: 'Rose + yeux',    hex: '#ec4899', eyes: true },
+  { id: 'violet',  name: 'Violet + yeux',  hex: '#7c3aed', eyes: true },
+  { id: 'orange',  name: 'Orangé + yeux',  hex: '#f97316', eyes: true },
+  { id: 'bleu',    name: 'Bleu + yeux',    hex: '#3b82f6', eyes: true },
+  { id: 'jaune',   name: 'Jaune + yeux',   hex: '#eab308', eyes: true },
+  { id: 'vert',    name: 'Vert + yeux',    hex: '#22c55e', eyes: true },
 ]
 
 const PRODUCTS = [
@@ -30,80 +58,88 @@ const PRODUCTS = [
     emoji: '🟣',
     badge: '⭐ Best-seller',
     badgeColor: '#a855f7',
-    texture: 'Lisse & brillante',
-    age: 'Dès 3 ans',
-    usage: 'Jeu sensoriel, anti-stress, découverte',
-    public: 'Enfants & adultes',
-    colors: [
-      { name: 'Violet', hex: '#7c3aed' },
-      { name: 'Rose',   hex: '#ec4899' },
-      { name: 'Bleu',   hex: '#3b82f6' },
-      { name: 'Vert',   hex: '#22c55e' },
-      { name: 'Rouge',  hex: '#ef4444' },
-      { name: 'Jaune',  hex: '#eab308' },
-      { name: 'Orange', hex: '#f97316' },
-      { name: 'Blanc',  hex: '#e2e8f0' },
-    ],
-    highlights: [
-      'Texture veloutée qui ne colle pas aux mains',
-      'Coloration profonde et uniforme',
-      'Conserve sa texture 4-6 semaines',
-      'Parfait pour l\'ASMR et le jeu créatif',
-    ],
+    colors: UNICOLORE_COLORS,
+    details: {
+      poids: '170g',
+      texture: 'Lisse, veloutée, brillante',
+      age: 'Dès 3 ans',
+      duree: '4 à 6 semaines bien conservé',
+      usage: 'Jeu sensoriel, anti-stress, ASMR, découverte',
+      public: 'Enfants & adultes',
+      ingredients: 'Polymère non toxique, colorants alimentaires, sans borax',
+      certificat: 'Conforme normes sécurité enfants CE',
+      highlights: [
+        'Texture veloutée qui ne colle pas aux mains',
+        'Coloration profonde et uniforme',
+        'Brillant naturel sans additif chimique',
+        'Conserve son élasticité des semaines',
+        'Idéal pour l\'ASMR et le jeu créatif',
+        '6 coloris disponibles pour varier les commandes',
+      ],
+    },
   },
   {
     id: 'bicolore',
     name: 'Slime Bicolore',
     tagline: "L'effet marbré unique",
-    desc: '170g — Deux couleurs mélangées, motifs uniques.',
+    desc: '170g — Deux couleurs, effet marbré unique.',
     emoji: '🌈',
     badge: '🎨 Créatif',
     badgeColor: '#0ea5e9',
-    texture: 'Marbré & extensible',
-    age: 'Dès 4 ans',
-    usage: 'Art sensoriel, personnalisation, collection',
-    public: 'Enfants créatifs',
-    colors: [
-      { name: 'Violet/Rose',  hex1: '#7c3aed', hex2: '#ec4899' },
-      { name: 'Bleu/Vert',    hex1: '#3b82f6', hex2: '#22c55e' },
-      { name: 'Orange/Jaune', hex1: '#f97316', hex2: '#eab308' },
-      { name: 'Rose/Blanc',   hex1: '#ec4899', hex2: '#e2e8f0' },
-    ],
-    highlights: [
-      'Chaque pot a un motif marbré unique',
-      'L\'enfant peut mélanger à sa guise',
-      'Deux expériences en une : 2 couleurs',
-      'Très populaire pour les collections',
-    ],
+    colors: BICOLORE_COLORS,
+    details: {
+      poids: '170g',
+      texture: 'Marbré, extensible, souple',
+      age: 'Dès 4 ans',
+      duree: '4 à 6 semaines bien conservé',
+      usage: 'Art sensoriel, personnalisation, collection',
+      public: 'Enfants créatifs 4-12 ans',
+      ingredients: 'Polymère non toxique, deux pigments distincts, sans borax',
+      certificat: 'Conforme normes sécurité enfants CE',
+      highlights: [
+        'Chaque pot a un motif marbré 100% unique',
+        'Deux couleurs qui se mélangent à la demande',
+        'L\'enfant peut créer ses propres motifs',
+        'Très populaire pour les collections',
+        '3 combinaisons de couleurs disponibles',
+        'Idéal pour les kiosques et points de vente créatifs',
+      ],
+    },
   },
   {
     id: 'buddies',
     name: 'Slime Buddy',
     tagline: 'La surprise incluse',
-    desc: '170g — Avec personnage jouet inclus dans le pot.',
+    desc: '170g — Slime + yeux mobiles inclus.',
     emoji: '🧸',
     badge: '🎁 Idéal cadeau',
     badgeColor: '#10b981',
-    texture: 'Ferme & pétillante',
-    age: 'Dès 4 ans',
-    usage: 'Cadeau, anniversaire, jeu narratif',
-    public: 'Enfants 4-10 ans',
-    colors: [
-      { name: 'Assortis surprise', hex: '#a855f7' },
-    ],
-    highlights: [
-      'Personnage jouet caché dans la masse',
-      'Chaque pot est une surprise différente',
-      'Couleur du slime assortie au personnage',
-      'Idéal comme cadeau ou prix de tombola',
-    ],
+    colors: BUDDIES_COLORS,
+    details: {
+      poids: '170g',
+      texture: 'Ferme, dense, légèrement pétillante',
+      age: 'Dès 4 ans',
+      duree: '4 à 6 semaines bien conservé',
+      usage: 'Cadeau, anniversaire, jeu narratif, surprise',
+      public: 'Enfants 4-10 ans',
+      ingredients: 'Polymère non toxique, colorants, yeux mobiles plastique sécurisé, sans borax',
+      certificat: 'Conforme normes sécurité enfants CE',
+      highlights: [
+        'Yeux mobiles inclus dans la masse du slime',
+        'Chaque pot est une découverte pour l\'enfant',
+        'Couleur du slime assortie au personnage',
+        'Idéal comme cadeau ou prix de tombola',
+        '6 coloris disponibles avec yeux mobiles',
+        'Le produit HK Games avec le meilleur taux de réachat',
+      ],
+    },
   },
 ]
 
-const MIN_TOTAL = 60
+const MIN_TOTAL = 19
 
 function getPricePerUnit(total, tiers) {
-  if (!tiers || !tiers.length) return null
+  if (!tiers?.length) return null
   const sorted = [...tiers].sort((a, b) => b.min_qty - a.min_qty)
   for (const t of sorted) {
     if (total >= t.min_qty) return { price: Number(t.price_ht), label: t.label }
@@ -111,30 +147,200 @@ function getPricePerUnit(total, tiers) {
   return null
 }
 
+/* ─── Floating product detail modal ─── */
+function ProductModal({ product, lineImages, onClose }) {
+  const ref = useRef(null)
+
+  // Close on outside click
+  useEffect(() => {
+    function handler(e) {
+      if (ref.current && !ref.current.contains(e.target)) onClose()
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [onClose])
+
+  // Close on Escape
+  useEffect(() => {
+    function handler(e) { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  const d = product.details
+
+  return (
+    <div className={styles.modalBackdrop}>
+      <div ref={ref} className={styles.modal}>
+        {/* Header */}
+        <div className={styles.modalHeader}>
+          <div className={styles.modalHeaderLeft}>
+            <span className={styles.modalBadge}
+              style={{ background: product.badgeColor+'22', color: product.badgeColor, borderColor: product.badgeColor+'55' }}>
+              {product.badge}
+            </span>
+            <h2 className={styles.modalTitle}>{product.name}</h2>
+            <p className={styles.modalTagline}>{product.tagline}</p>
+          </div>
+          <button className={styles.modalClose} onClick={onClose}><X size={20}/></button>
+        </div>
+
+        <div className={styles.modalBody}>
+          {/* Left: image + specs */}
+          <div className={styles.modalLeft}>
+            <div className={styles.modalImg}>
+              {lineImages[product.id]
+                ? <Image src={lineImages[product.id]} alt={product.name} fill sizes="280px" style={{objectFit:'cover'}}/>
+                : <span style={{fontSize:'4rem'}}>{product.emoji}</span>
+              }
+            </div>
+
+            {/* Specs grid */}
+            <div className={styles.specsGrid}>
+              {[
+                ['⚖️', 'Poids', d.poids],
+                ['🎭', 'Texture', d.texture],
+                ['👶', 'Âge min.', d.age],
+                ['📅', 'Durée', d.duree],
+                ['✅', 'Certificat', d.certificat],
+              ].map(([icon, label, val]) => (
+                <div key={label} className={styles.specItem}>
+                  <span className={styles.specIcon}>{icon}</span>
+                  <div>
+                    <div className={styles.specLabel}>{label}</div>
+                    <div className={styles.specVal}>{val}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: details */}
+          <div className={styles.modalRight}>
+            {/* Highlights */}
+            <div className={styles.modalSection}>
+              <div className={styles.modalSectionTitle}>✨ Points forts</div>
+              <ul className={styles.highlightsList}>
+                {d.highlights.map((h, i) => (
+                  <li key={i} className={styles.highlightItem}>{h}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Usage */}
+            <div className={styles.modalSection}>
+              <div className={styles.modalSectionTitle}>🎯 Usage & public cible</div>
+              <p className={styles.modalText}>{d.usage}</p>
+              <p className={styles.modalTextMuted}>Public : {d.public}</p>
+            </div>
+
+            {/* Ingredients */}
+            <div className={styles.modalSection}>
+              <div className={styles.modalSectionTitle}>🧪 Composition</div>
+              <p className={styles.modalText}>{d.ingredients}</p>
+            </div>
+
+            {/* Colors */}
+            <div className={styles.modalSection}>
+              <div className={styles.modalSectionTitle}>🎨 Couleurs disponibles</div>
+              <div className={styles.modalColors}>
+                {product.colors.map(col => (
+                  <div key={col.id} className={styles.modalColorItem}>
+                    {col.hex1
+                      ? <div className={styles.modalSwatchDuo}
+                          style={{ background: `linear-gradient(135deg, ${col.hex1} 50%, ${col.hex2} 50%)` }}/>
+                      : <div className={styles.modalSwatch}
+                          style={{ background: col.hex }}/>
+                    }
+                    <span className={styles.modalColorName}>
+                      {col.name}
+                      {col.eyes && <span className={styles.eyesBadge}>👁 yeux</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className={styles.modalFooter}>
+          <p className={styles.modalFooterNote}>
+            💡 Précisez vos couleurs souhaitées dans les notes de commande
+          </p>
+          <button className={styles.modalCloseBtn} onClick={onClose}>
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Color picker for a product ─── */
+function ColorPicker({ product, selectedColors, onChange }) {
+  return (
+    <div className={styles.colorPicker}>
+      <div className={styles.colorPickerLabel}>
+        Couleurs souhaitées <span className={styles.colorOptional}>(optionnel)</span>
+      </div>
+      <div className={styles.colorPickerRow}>
+        {product.colors.map(col => {
+          const selected = selectedColors.includes(col.id)
+          return (
+            <button
+              key={col.id}
+              type="button"
+              title={col.name}
+              className={`${styles.colorPickerSwatch} ${selected ? styles.colorPickerSwatchActive : ''}`}
+              onClick={() => {
+                if (selected) onChange(selectedColors.filter(x => x !== col.id))
+                else onChange([...selectedColors, col.id])
+              }}
+            >
+              {col.hex1
+                ? <span className={styles.cpSwatchInner}
+                    style={{ background: `linear-gradient(135deg, ${col.hex1} 50%, ${col.hex2} 50%)` }}/>
+                : <span className={styles.cpSwatchInner}
+                    style={{ background: col.hex }}/>
+              }
+              {selected && <span className={styles.cpCheck}>✓</span>}
+            </button>
+          )
+        })}
+      </div>
+      {selectedColors.length > 0 && (
+        <div className={styles.colorSelected}>
+          {product.colors.filter(c => selectedColors.includes(c.id)).map(c => c.name).join(', ')}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function GrossisteClient({ tiers, lineImages = {} }) {
-  const [quantities, setQuantities] = useState({ unicolore: 0, bicolore: 0, buddies: 0 })
-  const [hoveredProduct, setHoveredProduct] = useState(null)
-  const [popupPos, setPopupPos] = useState({ top: 0, left: 0 })
+  const [quantities,     setQuantities]     = useState({ unicolore: 0, bicolore: 0, buddies: 0 })
+  const [selectedColors, setSelectedColors] = useState({ unicolore: [], bicolore: [], buddies: [] })
+  const [modalProduct,   setModalProduct]   = useState(null)
   const [form, setForm] = useState({
     company_name: '', contact_name: '', phone: '', email: '',
     city: '', address: '', matricule_fiscal: '', notes: '',
   })
-  const [errors, setErrors]   = useState({})
+  const [errors,  setErrors]  = useState({})
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  const totalQty = quantities.unicolore + quantities.bicolore + quantities.buddies
-  const tierInfo = getPricePerUnit(totalQty, tiers)
-  const totalHT  = tierInfo ? totalQty * tierInfo.price : null
+  const totalQty  = quantities.unicolore + quantities.bicolore + quantities.buddies
+  const tierInfo  = getPricePerUnit(totalQty, tiers)
+  const totalHT   = tierInfo ? totalQty * tierInfo.price : null
+  const qtyReached = totalQty >= MIN_TOTAL
 
   function setQty(id, val) {
-    const n = Math.max(0, parseInt(val, 10) || 0)
-    setQuantities(q => ({ ...q, [id]: n }))
+    setQuantities(q => ({ ...q, [id]: Math.max(0, parseInt(val, 10) || 0) }))
   }
   function incQty(id, delta) {
     setQuantities(q => ({ ...q, [id]: Math.max(0, q[id] + delta) }))
   }
-
   function set(field, val) {
     setForm(f => ({ ...f, [field]: val }))
     if (errors[field]) setErrors(e => ({ ...e, [field]: null }))
@@ -142,14 +348,14 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
 
   function validate() {
     const e = {}
-    if (totalQty < MIN_TOTAL) e._qty = `Quantité minimale : ${MIN_TOTAL} pièces. Il vous manque ${MIN_TOTAL - totalQty} pièce(s).`
-    if (!form.company_name.trim())     e.company_name     = 'Requis'
-    if (!form.contact_name.trim())     e.contact_name     = 'Requis'
+    if (totalQty < MIN_TOTAL)              e._qty             = `Minimum ${MIN_TOTAL} pièces. Il manque ${MIN_TOTAL - totalQty} pièce(s).`
+    if (!form.company_name.trim())         e.company_name     = 'Requis'
+    if (!form.contact_name.trim())         e.contact_name     = 'Requis'
     if (!/^((\+216|00216|0)(2[0-9]|[3-9][0-9])[0-9]{6})$/.test(form.phone.trim()))
-                                       e.phone            = 'Numéro tunisien invalide'
-    if (!form.city)                    e.city             = 'Requis'
-    if (!form.address.trim())          e.address          = 'Requis'
-    if (!form.matricule_fiscal.trim()) e.matricule_fiscal = 'Requis'
+                                           e.phone            = 'Numéro tunisien invalide'
+    if (!form.city)                        e.city             = 'Requis'
+    if (!form.address.trim())              e.address          = 'Requis'
+    if (!form.matricule_fiscal.trim())     e.matricule_fiscal = 'Requis'
     return e
   }
 
@@ -159,11 +365,18 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
     if (Object.keys(errs).length) { setErrors(errs); return }
     setLoading(true)
     try {
-      const supabase = createClient()
       const items = PRODUCTS
         .filter(p => quantities[p.id] > 0)
-        .map(p => ({ product: p.name, qty: quantities[p.id], unit: '170g' }))
+        .map(p => ({
+          product: p.name,
+          qty: quantities[p.id],
+          colors: selectedColors[p.id].length
+            ? p.colors.filter(c => selectedColors[p.id].includes(c.id)).map(c => c.name).join(', ')
+            : 'Assortis',
+        }))
 
+      const colorNote = items.map(i => `${i.product} x${i.qty} (${i.colors})`).join(' | ')
+      const supabase = createClient()
       const { error } = await supabase.from('wholesale_requests').insert([{
         company_name:     form.company_name.trim(),
         contact_name:     form.contact_name.trim(),
@@ -173,13 +386,12 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
         address:          form.address.trim(),
         matricule_fiscal: form.matricule_fiscal.trim().toUpperCase(),
         estimated_qty:    totalQty,
-        products_wanted:  items.map(i => `${i.product} x${i.qty}`).join(', '),
+        products_wanted:  colorNote,
         notes:            form.notes.trim() || null,
       }])
       if (error) throw error
       setSuccess(true)
     } catch (err) {
-      console.error('wholesale submit', err)
       setErrors({ _global: 'Erreur réseau — veuillez réessayer.' })
     } finally {
       setLoading(false)
@@ -187,7 +399,6 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
   }
 
   const qtyBarPct = Math.min(100, (totalQty / MIN_TOTAL) * 100)
-  const qtyReached = totalQty >= MIN_TOTAL
 
   return (
     <>
@@ -200,11 +411,11 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
             <span className={styles.heroChip}>🏪 Vente en Gros</span>
             <h1 className={styles.heroTitle}>Revendez HK Games<br/>dans votre boutique</h1>
             <p className={styles.heroSub}>
-              Commandez notre slime en gros dès 60 pièces. Mélangez librement
+              Commandez dès <strong>19 pièces</strong>. Mélangez librement
               Unicolore, Bicolore et Buddy. Prix dégressifs, livraison nationale.
             </p>
             <a href="#commande" className={styles.heroCta}>
-              Commander en gros <ChevronRight size={18} />
+              Commander en gros <ChevronRight size={18}/>
             </a>
           </div>
         </section>
@@ -215,7 +426,7 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
             <div className={styles.avantagesGrid}>
               {AVANTAGES.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className={styles.avantageCard}>
-                  <div className={styles.avantageIcon}><Icon size={22} /></div>
+                  <div className={styles.avantageIcon}><Icon size={22}/></div>
                   <h3 className={styles.avantageTitle}>{title}</h3>
                   <p className={styles.avantageDesc}>{desc}</p>
                 </div>
@@ -244,15 +455,15 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
           </section>
         )}
 
-        {/* Sélection produits + formulaire */}
+        {/* Commande */}
         <section className={styles.orderSection} id="commande">
           <div className={styles.container}>
             <h2 className={styles.sectionTitle}>Passer une commande en gros</h2>
-            <p className={styles.sectionSub}>Minimum 60 pièces — mélange libre entre les 3 gammes</p>
+            <p className={styles.sectionSub}>Minimum {MIN_TOTAL} pièces — mélange libre entre les 3 gammes</p>
 
             {success ? (
               <div className={styles.successBox}>
-                <CheckCircle size={48} color="var(--color-success)" />
+                <CheckCircle size={48} color="var(--color-success)"/>
                 <h3>Commande reçue !</h3>
                 <p>Notre équipe vous contacte dans les 24h pour confirmer et établir la facture.</p>
               </div>
@@ -264,79 +475,54 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
                 <div className={styles.productsGrid}>
                   {PRODUCTS.map(p => (
                     <div key={p.id}
-                      className={`${styles.productCard} ${quantities[p.id] > 0 ? styles.productCardActive : ''} ${hoveredProduct === p.id ? styles.productCardHovered : ''}`}
-                      onMouseEnter={() => setHoveredProduct(p.id)}
-                      onMouseLeave={() => setHoveredProduct(null)}>
+                      className={`${styles.productCard} ${quantities[p.id] > 0 ? styles.productCardActive : ''}`}>
 
                       {/* Badge */}
-                      <div className={styles.productBadge} style={{background: p.badgeColor + '22', color: p.badgeColor, borderColor: p.badgeColor + '55'}}>
+                      <div className={styles.productBadge}
+                        style={{ background: p.badgeColor+'22', color: p.badgeColor, borderColor: p.badgeColor+'55' }}>
                         {p.badge}
                       </div>
+
+                      {/* Info button */}
+                      <button type="button" className={styles.infoBtn}
+                        onClick={() => setModalProduct(p)}
+                        title="Plus d'informations">
+                        <Info size={15}/>
+                      </button>
 
                       {/* Image */}
                       <div className={styles.productImageWrap}>
                         {lineImages[p.id]
-                          ? <Image src={lineImages[p.id]} alt={p.name} fill sizes="300px" style={{objectFit:'cover'}} priority={true}/>
+                          ? <Image src={lineImages[p.id]} alt={p.name} fill sizes="300px" style={{objectFit:'cover'}} priority/>
                           : <span className={styles.productEmojiPlaceholder}>{p.emoji}</span>
                         }
-                        {/* Hover overlay info */}
-                        <div className={`${styles.imageOverlay} ${hoveredProduct === p.id ? styles.imageOverlayVisible : ''}`}>
-                          <div className={styles.overlayTagline}>{p.tagline}</div>
-                          <div className={styles.overlayMeta}>
-                            <span>🎯 {p.usage}</span>
-                            <span>👶 {p.age}</span>
-                            <span>📐 {p.texture}</span>
-                          </div>
-                          <ul className={styles.overlayHighlights}>
-                            {p.highlights.map((h,i) => <li key={i}>{h}</li>)}
-                          </ul>
-                          {/* Color swatches */}
-                          <div className={styles.overlayColors}>
-                            {p.colors.slice(0,6).map((col, i) => (
-                              col.hex1
-                                ? <div key={i} className={styles.swatchDuo} title={col.name}
-                                    style={{background:`linear-gradient(135deg, ${col.hex1} 50%, ${col.hex2} 50%)`}} />
-                                : <div key={i} className={styles.swatch} title={col.name}
-                                    style={{background: col.hex}} />
-                            ))}
-                          </div>
-                          <div className={styles.overlayPublic}>👥 {p.public}</div>
-                        </div>
                       </div>
 
+                      {/* Info */}
                       <div className={styles.productInfo}>
                         <div className={styles.productName}>{p.name}</div>
                         <div className={styles.productDesc}>{p.desc}</div>
-                        {/* Inline color chips */}
-                        <div className={styles.productColors}>
-                          {p.colors.slice(0, 4).map((col, i) => (
-                            <span key={i} className={styles.colorChipNew}>
-                              {col.hex1
-                                ? <span className={styles.swatchMini} style={{background:`linear-gradient(135deg, ${col.hex1} 50%, ${col.hex2} 50%)`}}/>
-                                : <span className={styles.swatchMini} style={{background: col.hex}}/>
-                              }
-                              {col.name}
-                            </span>
-                          ))}
-                          {p.colors.length > 4 && <span className={styles.colorMore}>+{p.colors.length-4}</span>}
-                        </div>
                       </div>
 
+                      {/* Color picker */}
+                      <ColorPicker
+                        product={p}
+                        selectedColors={selectedColors[p.id]}
+                        onChange={cols => setSelectedColors(s => ({ ...s, [p.id]: cols }))}
+                      />
+
+                      {/* Qty */}
                       <div className={styles.qtyControl}>
-                        <button type="button" className={styles.qtyBtn} onClick={() => incQty(p.id, -1)}><Minus size={14} /></button>
-                        <input
-                          className={styles.qtyInput}
-                          type="number" min="0"
-                          value={quantities[p.id]}
-                          onChange={e => setQty(p.id, e.target.value)}
-                        />
-                        <button type="button" className={styles.qtyBtn} onClick={() => incQty(p.id, 1)}><Plus size={14} /></button>
+                        <button type="button" className={styles.qtyBtn} onClick={() => incQty(p.id, -1)}><Minus size={14}/></button>
+                        <input className={styles.qtyInput} type="number" min="0"
+                          value={quantities[p.id]} onChange={e => setQty(p.id, e.target.value)}/>
+                        <button type="button" className={styles.qtyBtn} onClick={() => incQty(p.id, 1)}><Plus size={14}/></button>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Barre progression */}
+                {/* Progress */}
                 <div className={styles.progressBox}>
                   <div className={styles.progressTop}>
                     <span className={qtyReached ? styles.progressLabelOk : styles.progressLabel}>
@@ -347,78 +533,78 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
                     {tierInfo && (
                       <span className={styles.pricePreview}>
                         Palier <strong>{tierInfo.label}</strong> —&nbsp;
-                        <strong>{(totalHT).toFixed(3)} DT HT</strong>
-                        <span className={styles.priceHint}> ({(totalHT * 1.20).toFixed(3)} DT TTC)</span>
+                        <strong>{totalHT.toFixed(3)} DT HT</strong>
+                        <span className={styles.priceHint}> ({(totalHT*1.20).toFixed(3)} DT TTC)</span>
                       </span>
                     )}
                   </div>
                   <div className={styles.progressBar}>
-                    <div className={styles.progressFill} style={{ width: `${qtyBarPct}%`, background: qtyReached ? 'var(--color-success)' : 'var(--color-primary)' }} />
+                    <div className={styles.progressFill}
+                      style={{ width: `${qtyBarPct}%`, background: qtyReached ? 'var(--color-success)' : 'var(--color-primary)' }}/>
                   </div>
                   {errors._qty && <div className={styles.error}>{errors._qty}</div>}
                 </div>
 
-                {/* Infos fiscales */}
+                {/* Form fiscal */}
                 <div className={styles.formCard}>
-                  <h3 className={styles.formGroupTitle}><Building2 size={17} /> Informations entreprise & fiscales</h3>
+                  <h3 className={styles.formGroupTitle}><Building2 size={17}/> Informations entreprise & fiscales</h3>
                   <div className={styles.formRow}>
                     <div className={styles.field}>
                       <label className={styles.label}>Raison sociale *</label>
-                      <input className={`${styles.input} ${errors.company_name ? styles.inputError : ''}`}
-                        value={form.company_name} onChange={e => set('company_name', e.target.value)} maxLength={100} placeholder="Nom boutique / entreprise" />
+                      <input className={`${styles.input} ${errors.company_name?styles.inputError:''}`}
+                        value={form.company_name} onChange={e=>set('company_name',e.target.value)} maxLength={100} placeholder="Nom boutique / entreprise"/>
                       {errors.company_name && <span className={styles.error}>{errors.company_name}</span>}
                     </div>
                     <div className={styles.field}>
                       <label className={styles.label}>Matricule fiscal *</label>
-                      <input className={`${styles.input} ${errors.matricule_fiscal ? styles.inputError : ''}`}
-                        value={form.matricule_fiscal} onChange={e => set('matricule_fiscal', e.target.value)} maxLength={30} placeholder="1234567A/P/M/000" />
+                      <input className={`${styles.input} ${errors.matricule_fiscal?styles.inputError:''}`}
+                        value={form.matricule_fiscal} onChange={e=>set('matricule_fiscal',e.target.value)} maxLength={30} placeholder="1234567A/P/M/000"/>
                       {errors.matricule_fiscal && <span className={styles.error}>{errors.matricule_fiscal}</span>}
                     </div>
                   </div>
-
-                  <h3 className={styles.formGroupTitle} style={{marginTop:'var(--space-5)'}}><Phone size={17} /> Contact</h3>
+                  <h3 className={styles.formGroupTitle} style={{marginTop:'var(--space-5)'}}><Phone size={17}/> Contact</h3>
                   <div className={styles.formRow}>
                     <div className={styles.field}>
                       <label className={styles.label}>Responsable *</label>
-                      <input className={`${styles.input} ${errors.contact_name ? styles.inputError : ''}`}
-                        value={form.contact_name} onChange={e => set('contact_name', e.target.value)} maxLength={80} placeholder="Prénom Nom" />
+                      <input className={`${styles.input} ${errors.contact_name?styles.inputError:''}`}
+                        value={form.contact_name} onChange={e=>set('contact_name',e.target.value)} maxLength={80} placeholder="Prénom Nom"/>
                       {errors.contact_name && <span className={styles.error}>{errors.contact_name}</span>}
                     </div>
                     <div className={styles.field}>
                       <label className={styles.label}>Téléphone *</label>
-                      <input className={`${styles.input} ${errors.phone ? styles.inputError : ''}`}
-                        value={form.phone} onChange={e => set('phone', e.target.value)} maxLength={15} placeholder="25123456" />
+                      <input className={`${styles.input} ${errors.phone?styles.inputError:''}`}
+                        value={form.phone} onChange={e=>set('phone',e.target.value)} maxLength={15} placeholder="25123456"/>
                       {errors.phone && <span className={styles.error}>{errors.phone}</span>}
                     </div>
                   </div>
                   <div className={styles.field}>
                     <label className={styles.label}>Email <span className={styles.optional}>(optionnel)</span></label>
                     <input className={styles.input} type="email"
-                      value={form.email} onChange={e => set('email', e.target.value)} maxLength={120} placeholder="contact@boutique.tn" />
+                      value={form.email} onChange={e=>set('email',e.target.value)} maxLength={120} placeholder="contact@boutique.tn"/>
                   </div>
-
-                  <h3 className={styles.formGroupTitle} style={{marginTop:'var(--space-5)'}}><MapPin size={17} /> Adresse de livraison</h3>
+                  <h3 className={styles.formGroupTitle} style={{marginTop:'var(--space-5)'}}><MapPin size={17}/> Adresse de livraison</h3>
                   <div className={styles.formRow}>
                     <div className={styles.field}>
                       <label className={styles.label}>Gouvernorat *</label>
-                      <select className={`${styles.input} ${errors.city ? styles.inputError : ''}`}
-                        value={form.city} onChange={e => set('city', e.target.value)}>
+                      <select className={`${styles.input} ${errors.city?styles.inputError:''}`}
+                        value={form.city} onChange={e=>set('city',e.target.value)}>
                         <option value="">— Sélectionner —</option>
-                        {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        {CITIES.map(c=><option key={c} value={c}>{c}</option>)}
                       </select>
                       {errors.city && <span className={styles.error}>{errors.city}</span>}
                     </div>
                     <div className={styles.field}>
                       <label className={styles.label}>Adresse *</label>
-                      <input className={`${styles.input} ${errors.address ? styles.inputError : ''}`}
-                        value={form.address} onChange={e => set('address', e.target.value)} maxLength={200} placeholder="Rue, numéro, ville" />
+                      <input className={`${styles.input} ${errors.address?styles.inputError:''}`}
+                        value={form.address} onChange={e=>set('address',e.target.value)} maxLength={200} placeholder="Rue, numéro, ville"/>
                       {errors.address && <span className={styles.error}>{errors.address}</span>}
                     </div>
                   </div>
                   <div className={styles.field}>
                     <label className={styles.label}>Notes <span className={styles.optional}>(optionnel)</span></label>
                     <textarea className={`${styles.input} ${styles.textarea}`}
-                      value={form.notes} onChange={e => set('notes', e.target.value)} rows={3} maxLength={500} placeholder="Couleurs préférées, délai souhaité…" />
+                      value={form.notes} onChange={e=>set('notes',e.target.value)} rows={3} maxLength={500}
+                      placeholder="Couleurs supplémentaires, délai souhaité, instructions…"/>
                   </div>
                 </div>
 
@@ -430,9 +616,17 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
             )}
           </div>
         </section>
-
       </main>
-      <Footer />
+      <Footer/>
+
+      {/* Floating product modal */}
+      {modalProduct && (
+        <ProductModal
+          product={modalProduct}
+          lineImages={lineImages}
+          onClose={() => setModalProduct(null)}
+        />
+      )}
     </>
   )
 }
