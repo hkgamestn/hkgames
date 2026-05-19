@@ -1,5 +1,6 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
+import Image from 'next/image'
 import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
@@ -207,7 +208,12 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
                 <div className={styles.productsGrid}>
                   {PRODUCTS.map(p => (
                     <div key={p.id} className={`${styles.productCard} ${quantities[p.id] > 0 ? styles.productCardActive : ''}`}>
-                      <div className={styles.productEmoji}>{p.emoji}</div>
+                      <div className={styles.productImageWrap}>
+                        {lineImages[p.id]
+                          ? <Image src={lineImages[p.id]} alt={p.name} fill sizes="300px" style={{objectFit:'cover'}} priority={true}/>
+                          : <span className={styles.productEmojiPlaceholder}>{p.emoji}</span>
+                        }
+                      </div>
                       <div className={styles.productInfo}>
                         <div className={styles.productName}>{p.name}</div>
                         <div className={styles.productDesc}>{p.desc}</div>
