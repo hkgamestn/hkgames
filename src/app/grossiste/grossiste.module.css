@@ -565,3 +565,15 @@
   background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);
   border-radius: var(--radius-sm); padding: var(--space-3);
 }
+
+/* ─── Mix bar enhancements ─── */
+.mixBarTrack { position: relative; }
+.mixBarLimit {
+  position: absolute; top: -3px; bottom: -3px;
+  width: 3px; background: rgba(255,255,255,.7);
+  border-radius: 99px; transform: translateX(-50%);
+  box-shadow: 0 0 6px rgba(255,255,255,.5);
+  pointer-events: none;
+}
+.mixBarHint { font-size: .72rem; color: rgba(255,255,255,.4); margin-top: 2px; }
+.mixBarHintRow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 3px; }

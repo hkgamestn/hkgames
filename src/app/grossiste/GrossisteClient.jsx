@@ -246,36 +246,77 @@ function TierProgress({ totalQty, quantities, tiers, errors }) {
         <div className={styles.mixRule}>
           <div className={styles.mixRuleTitle}>📦 Répartition obligatoire de votre commande</div>
           <div className={styles.mixBars}>
-            {[
-              { id:'unicolore', label:'Unicolore', target:0.50, color:'#a855f7', count: quantities.unicolore },
-              { id:'bicolore',  label:'Bicolore',  target:0.25, color:'#0ea5e9', count: quantities.bicolore  },
-              { id:'buddies',   label:'Buddy',     target:0.25, color:'#10b981', count: quantities.buddies   },
-            ].map(({ id, label, target, color, count }) => {
-              const pct     = totalQty > 0 ? count / totalQty : 0
-              const ok      = pct >= (target - 0.05)
-              const targetQty = Math.round(totalQty * target)
+            {/* Rule: unicolore <= bicolore + buddies */}
+            {(() => {
+              const u = quantities.unicolore
+              const b = quantities.bicolore
+              const d = quantities.buddies
+              const combo = b + d
+              const uniOk = u > 0 && u <= combo
+              const biOk  = b > 0
+              const budOk = d > 0
+              const maxBar = Math.max(u, combo, 1)
+
               return (
-                <div key={id} className={styles.mixBarItem}>
-                  <div className={styles.mixBarLabelRow}>
-                    <span className={styles.mixBarLabel} style={{color: ok ? color : '#ef4444'}}>
-                      {ok ? '✓' : '⚠'} {label}
-                    </span>
-                    <span className={styles.mixBarCount}>
-                      {count} / {targetQty} requis ({Math.round(target*100)}%)
-                    </span>
+                <>
+                  {/* Unicolore bar — must not exceed combo */}
+                  <div className={styles.mixBarItem}>
+                    <div className={styles.mixBarLabelRow}>
+                      <span className={styles.mixBarLabel} style={{color: uniOk ? '#a855f7' : '#ef4444'}}>
+                        {uniOk ? '✓' : '⚠'} Unicolore
+                      </span>
+                      <span className={styles.mixBarCount}>
+                        {u} pièce{u!==1?'s':''} — max autorisé : {combo || '—'}
+                      </span>
+                    </div>
+                    <div className={styles.mixBarTrack}>
+                      <div className={styles.mixBarFill} style={{
+                        width: `${Math.min(100, (u / maxBar) * 100)}%`,
+                        background: uniOk ? '#a855f7' : '#ef4444',
+                      }}/>
+                      {combo > 0 && (
+                        <div className={styles.mixBarLimit} style={{left:`${Math.min(100,(combo/maxBar)*100)}%`}}/>
+                      )}
+                    </div>
+                    <div className={styles.mixBarHint} style={{color: uniOk ? 'rgba(255,255,255,.4)' : '#ef4444'}}>
+                      {u > combo && combo > 0 ? `Dépassement de ${u - combo} — réduire ou augmenter Bicolore/Buddy` : 'Unicolore ≤ Bicolore + Buddy'}
+                    </div>
                   </div>
-                  <div className={styles.mixBarTrack}>
-                    <div className={styles.mixBarFill}
-                      style={{
-                        width: `${Math.min(100, (count / Math.max(targetQty, 1)) * 100)}%`,
-                        background: ok ? color : '#ef4444',
-                      }}
-                    />
-                    <div className={styles.mixBarTarget} style={{left:`100%`}}/>
+
+                  {/* Bicolore + Buddies combined bar */}
+                  <div className={styles.mixBarItem}>
+                    <div className={styles.mixBarLabelRow}>
+                      <span className={styles.mixBarLabel} style={{color: (biOk && budOk) ? '#10b981' : '#ef4444'}}>
+                        {(biOk && budOk) ? '✓' : '⚠'} Bicolore + Buddy
+                      </span>
+                      <span className={styles.mixBarCount}>
+                        {b} Bicolore + {d} Buddy = {combo} pièces
+                      </span>
+                    </div>
+                    <div className={styles.mixBarTrack}>
+                      {/* Bicolore portion */}
+                      <div className={styles.mixBarFill} style={{
+                        width: `${Math.min(100,(b/maxBar)*100)}%`,
+                        background: '#0ea5e9', borderRadius:'99px 0 0 99px',
+                        position:'absolute', left:0, height:'100%',
+                      }}/>
+                      {/* Buddies portion */}
+                      <div className={styles.mixBarFill} style={{
+                        width: `${Math.min(100,(d/maxBar)*100)}%`,
+                        background: '#10b981', borderRadius:'0 99px 99px 0',
+                        position:'absolute', left:`${Math.min(100,(b/maxBar)*100)}%`, height:'100%',
+                      }}/>
+                    </div>
+                    <div className={styles.mixBarHintRow}>
+                      <span style={{color:'#0ea5e9', fontSize:'.72rem'}}>■ {b} Bicolore</span>
+                      <span style={{color:'#10b981', fontSize:'.72rem'}}>■ {d} Buddy</span>
+                      {!biOk && <span style={{color:'#ef4444', fontSize:'.72rem'}}>⚠ Bicolore requis</span>}
+                      {!budOk && <span style={{color:'#ef4444', fontSize:'.72rem'}}>⚠ Buddy requis</span>}
+                    </div>
                   </div>
-                </div>
+                </>
               )
-            })}
+            })()}
           </div>
           {errors?._mix && <div className={styles.mixError}>{errors._mix}</div>}
         </div>
@@ -474,9 +515,7 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
   const qtyReached = totalQty >= MIN_TOTAL
   const mixValid = qtyReached &&
     quantities.unicolore > 0 && quantities.bicolore > 0 && quantities.buddies > 0 &&
-    quantities.unicolore / totalQty >= 0.45 &&
-    quantities.bicolore  / totalQty >= 0.20 &&
-    quantities.buddies   / totalQty >= 0.20
+    quantities.unicolore <= quantities.bicolore + quantities.buddies
 
   function setQty(id, val) {
     setQuantities(q => ({ ...q, [id]: Math.max(0, parseInt(val, 10) || 0) }))
@@ -495,17 +534,12 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
     if (totalQty < MIN_TOTAL) {
       e._qty = `Minimum ${MIN_TOTAL} pièces. Il manque ${MIN_TOTAL - totalQty} pièce(s).`
     } else {
-      const pctUni = quantities.unicolore / totalQty
-      const pctBi  = quantities.bicolore  / totalQty
-      const pctBud = quantities.buddies   / totalQty
       if (quantities.unicolore === 0 || quantities.bicolore === 0 || quantities.buddies === 0) {
-        e._mix = 'Les 3 types sont obligatoires dans chaque commande grossiste.'
-      } else if (pctUni < 0.45) {
-        e._mix = `Unicolore insuffisant — minimum 50% de la commande (actuellement ${Math.round(pctUni*100)}%). Ajoutez ${Math.ceil(totalQty * 0.50) - quantities.unicolore} Unicolore.`
-      } else if (pctBi < 0.20) {
-        e._mix = `Bicolore insuffisant — minimum 25% (actuellement ${Math.round(pctBi*100)}%). Ajoutez ${Math.ceil(totalQty * 0.25) - quantities.bicolore} Bicolore.`
-      } else if (pctBud < 0.20) {
-        e._mix = `Buddy insuffisant — minimum 25% (actuellement ${Math.round(pctBud*100)}%). Ajoutez ${Math.ceil(totalQty * 0.25) - quantities.buddies} Buddy.`
+        e._mix = 'Les 3 types sont obligatoires dans chaque commande.'
+      } else if (quantities.unicolore > quantities.bicolore + quantities.buddies) {
+        const max = quantities.bicolore + quantities.buddies
+        const excess = quantities.unicolore - max
+        e._mix = `Unicolore ne peut pas dépasser Bicolore + Buddy combinés. Réduisez l'Unicolore de ${excess} pièce(s), ou ajoutez ${excess} pièce(s) en Bicolore/Buddy.`
       }
     }
     if (!form.company_name.trim())         e.company_name     = 'Requis'
@@ -683,7 +717,7 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
 
                 {/* Mix rule note */}
                 <div className={styles.mixNote}>
-                  <strong>📦 Répartition obligatoire :</strong> 50% Unicolore · 25% Bicolore · 25% Buddy — les 3 types requis
+                  <strong>📦 Répartition :</strong> Les 3 types requis · Unicolore ≤ Bicolore + Buddy · Bicolore/Buddy peuvent dépasser l'Unicolore
                 </div>
 
                 {/* Progress — tier aware */}
