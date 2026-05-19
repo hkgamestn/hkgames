@@ -147,6 +147,105 @@ function getPricePerUnit(total, tiers) {
   return null
 }
 
+/* ─── Tier Progress Bar ─── */
+function TierProgress({ totalQty, tiers, errors }) {
+  const sorted = [...(tiers || [])].filter(t => t.active !== false).sort((a,b) => a.min_qty - b.min_qty)
+
+  // Current tier
+  const currentTier = [...sorted].reverse().find(t => totalQty >= t.min_qty) || null
+  // Next tier
+  const nextTierIdx = currentTier ? sorted.findIndex(t => t.id === currentTier.id) + 1 : 0
+  const nextTier = sorted[nextTierIdx] || null
+
+  // Progress within current segment
+  const segStart = currentTier ? currentTier.min_qty : 0
+  const segEnd   = nextTier    ? nextTier.min_qty     : (currentTier ? currentTier.min_qty + 50 : MIN_TOTAL)
+  const pct      = Math.min(100, Math.max(0, ((totalQty - segStart) / (segEnd - segStart)) * 100))
+  const toNext   = nextTier ? nextTier.min_qty - totalQty : 0
+
+  const pricePerUnit = currentTier ? Number(currentTier.price_ht) : null
+  const ttcPerUnit   = pricePerUnit ? (pricePerUnit * 1.20) : null
+  const totalTTC     = ttcPerUnit && totalQty > 0 ? (ttcPerUnit * totalQty) : null
+  const savings      = currentTier && sorted[0]
+    ? (Number(sorted[0].price_ht) - Number(currentTier.price_ht)) * totalQty
+    : 0
+
+  return (
+    <div className={styles.tierProgress}>
+      {/* Tier pills */}
+      <div className={styles.tierPills}>
+        {sorted.map((t, i) => {
+          const isActive  = currentTier?.id === t.id
+          const isPast    = currentTier && sorted.indexOf(t) < sorted.indexOf(currentTier)
+          const isReached = totalQty >= t.min_qty
+          return (
+            <div key={t.id} className={`${styles.tierPill} ${isActive ? styles.tierPillActive : ''} ${isReached && !isActive ? styles.tierPillDone : ''}`}>
+              <span className={styles.tierPillName}>{t.label}</span>
+              <span className={styles.tierPillQty}>dès {t.min_qty} u</span>
+              <span className={styles.tierPillPrice}>{Number(t.price_ht).toFixed(3)} DT</span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Progress bar */}
+      <div className={styles.tpBarWrap}>
+        <div className={styles.tpBar}>
+          <div
+            className={styles.tpFill}
+            style={{
+              width: `${pct}%`,
+              background: currentTier
+                ? 'linear-gradient(90deg, #7c3aed, #a855f7)'
+                : 'rgba(168,85,247,.35)',
+            }}
+          />
+        </div>
+        <div className={styles.tpLabel}>
+          {totalQty === 0 && (
+            <span className={styles.tpHint}>Ajoutez au moins {MIN_TOTAL} pièces pour commencer</span>
+          )}
+          {totalQty > 0 && totalQty < MIN_TOTAL && (
+            <span className={styles.tpHint}>⚠️ Minimum {MIN_TOTAL} pièces requis — il manque {MIN_TOTAL - totalQty}</span>
+          )}
+          {totalQty >= MIN_TOTAL && !nextTier && (
+            <span className={styles.tpOk}>🏆 Meilleur palier atteint — {totalQty} pièces</span>
+          )}
+          {totalQty >= MIN_TOTAL && nextTier && (
+            <span className={styles.tpNext}>
+              ➕ {toNext} pièce{toNext > 1 ? "s" : ""} de plus pour passer au palier <strong>{nextTier.label}</strong> ({Number(nextTier.price_ht).toFixed(3)} DT/u)
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Current pricing summary */}
+      {currentTier && totalQty > 0 && (
+        <div className={styles.tpSummary}>
+          <div className={styles.tpSummaryItem}>
+            <span className={styles.tpSummaryLabel}>Palier actuel</span>
+            <span className={styles.tpSummaryVal}>{currentTier.label}</span>
+          </div>
+          <div className={styles.tpSummaryItem}>
+            <span className={styles.tpSummaryLabel}>Prix unitaire HT</span>
+            <span className={styles.tpSummaryVal}>{Number(currentTier.price_ht).toFixed(3)} DT</span>
+          </div>
+          <div className={styles.tpSummaryItem}>
+            <span className={styles.tpSummaryLabel}>Total TTC estimé</span>
+            <span className={`${styles.tpSummaryVal} ${styles.tpSummaryHighlight}`}>{totalTTC?.toFixed(3)} DT</span>
+          </div>
+          {savings > 0 && (
+            <div className={styles.tpSavings}>
+              🎉 Vous économisez déjà <strong>{savings.toFixed(3)} DT</strong> par rapport au tarif de base
+            </div>
+          )}
+        </div>
+      )}
+      {errors?._qty && <div className={styles.error} style={{marginTop:8}}>{errors._qty}</div>}
+    </div>
+  )
+}
+
 /* ─── Floating product detail modal ─── */
 function ProductModal({ product, lineImages, onClose }) {
   const ref = useRef(null)
@@ -522,28 +621,8 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
                   ))}
                 </div>
 
-                {/* Progress */}
-                <div className={styles.progressBox}>
-                  <div className={styles.progressTop}>
-                    <span className={qtyReached ? styles.progressLabelOk : styles.progressLabel}>
-                      {qtyReached
-                        ? `✅ ${totalQty} pièces sélectionnées`
-                        : `${totalQty} / ${MIN_TOTAL} pièces minimum`}
-                    </span>
-                    {tierInfo && (
-                      <span className={styles.pricePreview}>
-                        Palier <strong>{tierInfo.label}</strong> —&nbsp;
-                        <strong>{totalHT.toFixed(3)} DT HT</strong>
-                        <span className={styles.priceHint}> ({(totalHT*1.20).toFixed(3)} DT TTC)</span>
-                      </span>
-                    )}
-                  </div>
-                  <div className={styles.progressBar}>
-                    <div className={styles.progressFill}
-                      style={{ width: `${qtyBarPct}%`, background: qtyReached ? 'var(--color-success)' : 'var(--color-primary)' }}/>
-                  </div>
-                  {errors._qty && <div className={styles.error}>{errors._qty}</div>}
-                </div>
+                {/* Progress — tier aware */}
+                <TierProgress totalQty={totalQty} tiers={tiers} errors={errors} />
 
                 {/* Form fiscal */}
                 <div className={styles.formCard}>
