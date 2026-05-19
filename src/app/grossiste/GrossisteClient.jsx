@@ -25,23 +25,78 @@ const PRODUCTS = [
   {
     id: 'unicolore',
     name: 'Slime Unicolore',
-    desc: '170g — Texture lisse, couleur unie. Le classique.',
+    tagline: 'Le classique premium',
+    desc: '170g — Texture lisse, couleur unie.',
     emoji: '🟣',
-    colors: ['Violet', 'Rose', 'Bleu', 'Vert', 'Rouge', 'Jaune'],
+    badge: '⭐ Best-seller',
+    badgeColor: '#a855f7',
+    texture: 'Lisse & brillante',
+    age: 'Dès 3 ans',
+    usage: 'Jeu sensoriel, anti-stress, découverte',
+    public: 'Enfants & adultes',
+    colors: [
+      { name: 'Violet', hex: '#7c3aed' },
+      { name: 'Rose',   hex: '#ec4899' },
+      { name: 'Bleu',   hex: '#3b82f6' },
+      { name: 'Vert',   hex: '#22c55e' },
+      { name: 'Rouge',  hex: '#ef4444' },
+      { name: 'Jaune',  hex: '#eab308' },
+      { name: 'Orange', hex: '#f97316' },
+      { name: 'Blanc',  hex: '#e2e8f0' },
+    ],
+    highlights: [
+      'Texture veloutée qui ne colle pas aux mains',
+      'Coloration profonde et uniforme',
+      'Conserve sa texture 4-6 semaines',
+      'Parfait pour l'ASMR et le jeu créatif',
+    ],
   },
   {
     id: 'bicolore',
     name: 'Slime Bicolore',
-    desc: '170g — Deux couleurs mélangées, effet marbré unique.',
+    tagline: 'L'effet marbré unique',
+    desc: '170g — Deux couleurs mélangées, motifs uniques.',
     emoji: '🌈',
-    colors: ['Violet/Rose', 'Bleu/Vert', 'Orange/Jaune', 'Rose/Blanc'],
+    badge: '🎨 Créatif',
+    badgeColor: '#0ea5e9',
+    texture: 'Marbré & extensible',
+    age: 'Dès 4 ans',
+    usage: 'Art sensoriel, personnalisation, collection',
+    public: 'Enfants créatifs',
+    colors: [
+      { name: 'Violet/Rose',  hex1: '#7c3aed', hex2: '#ec4899' },
+      { name: 'Bleu/Vert',    hex1: '#3b82f6', hex2: '#22c55e' },
+      { name: 'Orange/Jaune', hex1: '#f97316', hex2: '#eab308' },
+      { name: 'Rose/Blanc',   hex1: '#ec4899', hex2: '#e2e8f0' },
+    ],
+    highlights: [
+      'Chaque pot a un motif marbré unique',
+      'L'enfant peut mélanger à sa guise',
+      'Deux expériences en une : 2 couleurs',
+      'Très populaire pour les collections',
+    ],
   },
   {
     id: 'buddies',
     name: 'Slime Buddy',
-    desc: '170g — Avec personnage inclus. Idéal cadeau enfant.',
+    tagline: 'La surprise incluse',
+    desc: '170g — Avec personnage jouet inclus dans le pot.',
     emoji: '🧸',
-    colors: ['Modèle aléatoire (assortis)'],
+    badge: '🎁 Idéal cadeau',
+    badgeColor: '#10b981',
+    texture: 'Ferme & pétillante',
+    age: 'Dès 4 ans',
+    usage: 'Cadeau, anniversaire, jeu narratif',
+    public: 'Enfants 4-10 ans',
+    colors: [
+      { name: 'Assortis surprise', hex: '#a855f7' },
+    ],
+    highlights: [
+      'Personnage jouet caché dans la masse',
+      'Chaque pot est une surprise différente',
+      'Couleur du slime assortie au personnage',
+      'Idéal comme cadeau ou prix de tombola',
+    ],
   },
 ]
 
@@ -58,6 +113,8 @@ function getPricePerUnit(total, tiers) {
 
 export default function GrossisteClient({ tiers, lineImages = {} }) {
   const [quantities, setQuantities] = useState({ unicolore: 0, bicolore: 0, buddies: 0 })
+  const [hoveredProduct, setHoveredProduct] = useState(null)
+  const [popupPos, setPopupPos] = useState({ top: 0, left: 0 })
   const [form, setForm] = useState({
     company_name: '', contact_name: '', phone: '', email: '',
     city: '', address: '', matricule_fiscal: '', notes: '',
@@ -206,20 +263,65 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
                 {/* Produits */}
                 <div className={styles.productsGrid}>
                   {PRODUCTS.map(p => (
-                    <div key={p.id} className={`${styles.productCard} ${quantities[p.id] > 0 ? styles.productCardActive : ''}`}>
+                    <div key={p.id}
+                      className={`${styles.productCard} ${quantities[p.id] > 0 ? styles.productCardActive : ''} ${hoveredProduct === p.id ? styles.productCardHovered : ''}`}
+                      onMouseEnter={() => setHoveredProduct(p.id)}
+                      onMouseLeave={() => setHoveredProduct(null)}>
+
+                      {/* Badge */}
+                      <div className={styles.productBadge} style={{background: p.badgeColor + '22', color: p.badgeColor, borderColor: p.badgeColor + '55'}}>
+                        {p.badge}
+                      </div>
+
+                      {/* Image */}
                       <div className={styles.productImageWrap}>
                         {lineImages[p.id]
                           ? <Image src={lineImages[p.id]} alt={p.name} fill sizes="300px" style={{objectFit:'cover'}} priority={true}/>
                           : <span className={styles.productEmojiPlaceholder}>{p.emoji}</span>
                         }
+                        {/* Hover overlay info */}
+                        <div className={`${styles.imageOverlay} ${hoveredProduct === p.id ? styles.imageOverlayVisible : ''}`}>
+                          <div className={styles.overlayTagline}>{p.tagline}</div>
+                          <div className={styles.overlayMeta}>
+                            <span>🎯 {p.usage}</span>
+                            <span>👶 {p.age}</span>
+                            <span>📐 {p.texture}</span>
+                          </div>
+                          <ul className={styles.overlayHighlights}>
+                            {p.highlights.map((h,i) => <li key={i}>{h}</li>)}
+                          </ul>
+                          {/* Color swatches */}
+                          <div className={styles.overlayColors}>
+                            {p.colors.slice(0,6).map((col, i) => (
+                              col.hex1
+                                ? <div key={i} className={styles.swatchDuo} title={col.name}
+                                    style={{background:`linear-gradient(135deg, ${col.hex1} 50%, ${col.hex2} 50%)`}} />
+                                : <div key={i} className={styles.swatch} title={col.name}
+                                    style={{background: col.hex}} />
+                            ))}
+                          </div>
+                          <div className={styles.overlayPublic}>👥 {p.public}</div>
+                        </div>
                       </div>
+
                       <div className={styles.productInfo}>
                         <div className={styles.productName}>{p.name}</div>
                         <div className={styles.productDesc}>{p.desc}</div>
+                        {/* Inline color chips */}
                         <div className={styles.productColors}>
-                          {p.colors.map(c => <span key={c} className={styles.colorChip}>{c}</span>)}
+                          {p.colors.slice(0, 4).map((col, i) => (
+                            <span key={i} className={styles.colorChipNew}>
+                              {col.hex1
+                                ? <span className={styles.swatchMini} style={{background:`linear-gradient(135deg, ${col.hex1} 50%, ${col.hex2} 50%)`}}/>
+                                : <span className={styles.swatchMini} style={{background: col.hex}}/>
+                              }
+                              {col.name}
+                            </span>
+                          ))}
+                          {p.colors.length > 4 && <span className={styles.colorMore}>+{p.colors.length-4}</span>}
                         </div>
                       </div>
+
                       <div className={styles.qtyControl}>
                         <button type="button" className={styles.qtyBtn} onClick={() => incQty(p.id, -1)}><Minus size={14} /></button>
                         <input
