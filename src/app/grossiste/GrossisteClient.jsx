@@ -148,7 +148,7 @@ function getPricePerUnit(total, tiers) {
 }
 
 /* ─── Tier Progress Bar ─── */
-function TierProgress({ totalQty, tiers, errors }) {
+function TierProgress({ totalQty, quantities, tiers, errors }) {
   const sorted = [...(tiers || [])].filter(t => t.active !== false).sort((a,b) => a.min_qty - b.min_qty)
 
   // Current tier
@@ -239,6 +239,45 @@ function TierProgress({ totalQty, tiers, errors }) {
               🎉 Vous économisez déjà <strong>{savings.toFixed(3)} DT</strong> par rapport au tarif de base
             </div>
           )}
+        </div>
+      )}
+      {/* Mix rule display */}
+      {totalQty >= MIN_TOTAL && (
+        <div className={styles.mixRule}>
+          <div className={styles.mixRuleTitle}>📦 Répartition obligatoire de votre commande</div>
+          <div className={styles.mixBars}>
+            {[
+              { id:'unicolore', label:'Unicolore', target:0.50, color:'#a855f7', count: quantities.unicolore },
+              { id:'bicolore',  label:'Bicolore',  target:0.25, color:'#0ea5e9', count: quantities.bicolore  },
+              { id:'buddies',   label:'Buddy',     target:0.25, color:'#10b981', count: quantities.buddies   },
+            ].map(({ id, label, target, color, count }) => {
+              const pct     = totalQty > 0 ? count / totalQty : 0
+              const ok      = pct >= (target - 0.05)
+              const targetQty = Math.round(totalQty * target)
+              return (
+                <div key={id} className={styles.mixBarItem}>
+                  <div className={styles.mixBarLabelRow}>
+                    <span className={styles.mixBarLabel} style={{color: ok ? color : '#ef4444'}}>
+                      {ok ? '✓' : '⚠'} {label}
+                    </span>
+                    <span className={styles.mixBarCount}>
+                      {count} / {targetQty} requis ({Math.round(target*100)}%)
+                    </span>
+                  </div>
+                  <div className={styles.mixBarTrack}>
+                    <div className={styles.mixBarFill}
+                      style={{
+                        width: `${Math.min(100, (count / Math.max(targetQty, 1)) * 100)}%`,
+                        background: ok ? color : '#ef4444',
+                      }}
+                    />
+                    <div className={styles.mixBarTarget} style={{left:`100%`}}/>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {errors?._mix && <div className={styles.mixError}>{errors._mix}</div>}
         </div>
       )}
       {errors?._qty && <div className={styles.error} style={{marginTop:8}}>{errors._qty}</div>}
@@ -433,6 +472,11 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
   const tierInfo  = getPricePerUnit(totalQty, tiers)
   const totalHT   = tierInfo ? totalQty * tierInfo.price : null
   const qtyReached = totalQty >= MIN_TOTAL
+  const mixValid = qtyReached &&
+    quantities.unicolore > 0 && quantities.bicolore > 0 && quantities.buddies > 0 &&
+    quantities.unicolore / totalQty >= 0.45 &&
+    quantities.bicolore  / totalQty >= 0.20 &&
+    quantities.buddies   / totalQty >= 0.20
 
   function setQty(id, val) {
     setQuantities(q => ({ ...q, [id]: Math.max(0, parseInt(val, 10) || 0) }))
@@ -447,7 +491,23 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
 
   function validate() {
     const e = {}
-    if (totalQty < MIN_TOTAL)              e._qty             = `Minimum ${MIN_TOTAL} pièces. Il manque ${MIN_TOTAL - totalQty} pièce(s).`
+    // Mix rule: 50% unicolore, 25% bicolore, 25% buddies — all 3 required
+    if (totalQty < MIN_TOTAL) {
+      e._qty = `Minimum ${MIN_TOTAL} pièces. Il manque ${MIN_TOTAL - totalQty} pièce(s).`
+    } else {
+      const pctUni = quantities.unicolore / totalQty
+      const pctBi  = quantities.bicolore  / totalQty
+      const pctBud = quantities.buddies   / totalQty
+      if (quantities.unicolore === 0 || quantities.bicolore === 0 || quantities.buddies === 0) {
+        e._mix = 'Les 3 types sont obligatoires dans chaque commande grossiste.'
+      } else if (pctUni < 0.45) {
+        e._mix = `Unicolore insuffisant — minimum 50% de la commande (actuellement ${Math.round(pctUni*100)}%). Ajoutez ${Math.ceil(totalQty * 0.50) - quantities.unicolore} Unicolore.`
+      } else if (pctBi < 0.20) {
+        e._mix = `Bicolore insuffisant — minimum 25% (actuellement ${Math.round(pctBi*100)}%). Ajoutez ${Math.ceil(totalQty * 0.25) - quantities.bicolore} Bicolore.`
+      } else if (pctBud < 0.20) {
+        e._mix = `Buddy insuffisant — minimum 25% (actuellement ${Math.round(pctBud*100)}%). Ajoutez ${Math.ceil(totalQty * 0.25) - quantities.buddies} Buddy.`
+      }
+    }
     if (!form.company_name.trim())         e.company_name     = 'Requis'
     if (!form.contact_name.trim())         e.contact_name     = 'Requis'
     if (!/^((\+216|00216|0)(2[0-9]|[3-9][0-9])[0-9]{6})$/.test(form.phone.trim()))
@@ -621,8 +681,13 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
                   ))}
                 </div>
 
+                {/* Mix rule note */}
+                <div className={styles.mixNote}>
+                  <strong>📦 Répartition obligatoire :</strong> 50% Unicolore · 25% Bicolore · 25% Buddy — les 3 types requis
+                </div>
+
                 {/* Progress — tier aware */}
-                <TierProgress totalQty={totalQty} tiers={tiers} errors={errors} />
+                <TierProgress totalQty={totalQty} quantities={quantities} tiers={tiers} errors={errors} />
 
                 {/* Form fiscal */}
                 <div className={styles.formCard}>
@@ -687,7 +752,7 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
                   </div>
                 </div>
 
-                <button type="submit" className={styles.submitBtn} disabled={loading || !qtyReached}>
+                <button type="submit" className={styles.submitBtn} disabled={loading || !qtyReached || !mixValid}>
                   {loading ? 'Envoi…' : `Envoyer ma commande (${totalQty} pièces) →`}
                 </button>
                 <p className={styles.submitNote}>Notre équipe vous contacte sous 24h pour confirmer et établir la facture.</p>
