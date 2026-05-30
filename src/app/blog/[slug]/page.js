@@ -44,8 +44,27 @@ export default async function PostPage({ params }) {
     .limit(3)
     .order('published_at', { ascending: false })
 
+  const articleLd = {
+    '@context': 'https://schema.org',
+    '@type':    'Article',
+    headline:   post.title,
+    description: post.excerpt || '',
+    image:      post.cover_image ? [post.cover_image] : [],
+    datePublished: post.published_at,
+    dateModified:  post.updated_at || post.published_at,
+    author: { '@type': 'Organization', name: 'HK Games', url: 'https://hap-p-kids.store' },
+    publisher: {
+      '@type': 'Organization',
+      name:    'HK Games',
+      logo:    { '@type': 'ImageObject', url: 'https://hap-p-kids.store/icons/hk-logo-192.png' },
+    },
+    mainEntityOfPage: `https://hap-p-kids.store/blog/${post.slug}`,
+    keywords: post.tags?.join(', '),
+  }
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}/>
       <Navbar />
       <main className={styles.main}>
         <article className={styles.article}>

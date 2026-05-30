@@ -6,8 +6,16 @@ import Footer from '@/components/layout/Footer'
 import styles from './blog.module.css'
 
 export const metadata = {
-  title: 'Blog Slime Tunisie — Conseils, Astuces & Idées Cadeaux | HK Games',
-  description: 'Découvrez nos articles sur le slime en Tunisie : conseils parents, sécurité, idées cadeaux enfants, slime DIY, tendances 2025.',
+  title: 'Blog Slime Tunisie 2026 — Conseils Parents, Astuces & Idées Cadeaux',
+  description: 'Tout sur le slime en Tunisie : guide complet pour parents, bienfaits, ASMR, livraison, couleurs tendance 2026. Articles par HK Games.',
+  keywords: ['blog slime tunisie','conseils slime','astuces slime','idées cadeaux enfant tunisie','slime 2026'],
+  alternates: { canonical: 'https://hap-p-kids.store/blog' },
+  openGraph: {
+    title:    'Blog HK Games — Slime Tunisie 2026',
+    description: 'Articles sur le slime : conseils, astuces et tendances pour parents tunisiens.',
+    url:     'https://hap-p-kids.store/blog',
+    type:    'website',
+  },
 }
 
 export const revalidate = 300
