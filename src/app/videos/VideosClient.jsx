@@ -221,9 +221,9 @@ function CommentsPanel({ videoId, onClose }) {
 }
 
 /* ─── Main ─── */
-export default function VideosClient({ initialVideos, products = [] }) {
+export default function VideosClient({ initialVideos, products = [], initialIndex = 0 }) {
   const [videos]     = useState(initialVideos)
-  const [activeIdx,  setActiveIdx]   = useState(0)
+  const [activeIdx,  setActiveIdx]   = useState(initialIndex)
   const [playing,    setPlaying]     = useState(true)
   const [muted,      setMuted]       = useState(true)
   const [showCmt,    setShowCmt]     = useState(false)

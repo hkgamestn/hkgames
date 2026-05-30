@@ -13,6 +13,8 @@ const WhySlime       = dynamic(() => import('@/components/homepage/WhySlime'),  
 const ReviewSection  = dynamic(() => import('@/components/homepage/ReviewSection'),  { ssr: false })
 const SplashScreen     = dynamic(() => import('@/components/homepage/SplashScreen'),     { ssr: false })
 const CataloguePreview = dynamic(() => import('@/components/homepage/CataloguePreview'), { ssr: false })
+const BlogCarousel    = dynamic(() => import('@/components/homepage/BlogCarousel'),    { ssr: false })
+const VideoShowcase   = dynamic(() => import('@/components/homepage/VideoShowcase'),   { ssr: false })
 
 export default function HomePage() {
   const [splashDone, setSplashDone]   = useState(false)
@@ -44,6 +46,8 @@ export default function HomePage() {
             <Suspense fallback={<div style={{ padding: '64px', textAlign: 'center' }}>Chargement...</div>}>
               <CataloguePreview />
             </Suspense>
+            <VideoShowcase />
+            <BlogCarousel />
             <ReviewSection />
           </main>
           <Footer />

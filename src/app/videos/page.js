@@ -8,7 +8,7 @@ export const metadata = {
 
 export const revalidate = 0
 
-export default async function VideosPage() {
+export default async function VideosPage({ searchParams }) {
   const supabase = await createAdminClient()
   const [{ data: videos }, { data: products }] = await Promise.all([
     supabase
@@ -27,5 +27,7 @@ export default async function VideosPage() {
       .order('position', { ascending: true }),
   ])
 
-  return <VideosClient initialVideos={videos || []} products={products || []} />
+  const sp = await searchParams
+  const initialIndex = sp?.v ? parseInt(sp.v, 10) : 0
+  return <VideosClient initialVideos={videos || []} products={products || []} initialIndex={initialIndex} />
 }
