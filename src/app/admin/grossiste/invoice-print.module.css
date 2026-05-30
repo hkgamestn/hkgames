@@ -1,15 +1,20 @@
-/* ── Overlay (écran) ── */
+/* ══════════════════════════════════════════
+   OVERLAY ADMIN (dark background preview)
+══════════════════════════════════════════ */
 .overlay {
   position: fixed; inset: 0; z-index: 1000;
-  background: #1a1030; display: flex; flex-direction: column;
+  background: #0d0820;
+  display: flex; flex-direction: column;
+  overflow: hidden;
 }
 
-/* Toolbar */
+/* ── Admin toolbar ── */
 .toolbar {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 24px;
-  background: #0f0a1e; border-bottom: 1px solid rgba(168,85,247,.2);
-  flex-shrink: 0;
+  background: rgba(10,5,20,.95); backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(168,85,247,.2);
+  flex-shrink: 0; z-index: 10;
 }
 .toolbarTitle { font-weight: 700; color: #a855f7; font-size: 1rem; }
 .toolbarActions { display: flex; gap: 12px; align-items: center; }
@@ -18,93 +23,245 @@
   background: #a855f7; color: #fff; border: none;
   border-radius: 8px; padding: 8px 20px;
   font-size: .9rem; font-weight: 700; cursor: pointer;
+  transition: background .15s;
 }
 .printBtn:hover { background: #9333ea; }
 .closeBtn {
-  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
   border-radius: 8px; padding: 8px; color: #c4b5fd; cursor: pointer;
   display: flex; align-items: center;
 }
 
-/* Zone print */
-.printArea {
+/* ── Scroll container ── */
+.printScroll {
   flex: 1; overflow-y: auto;
-  max-width: 800px; width: 100%; margin: 24px auto;
-  background: #fff; color: #111;
-  padding: 40px 48px;
-  border-radius: 8px;
-  font-family: 'Inter', Arial, sans-serif;
-  font-size: 13px;
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: 32px 16px 48px;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(168,85,247,.08) 0%, transparent 70%), #0d0820;
 }
 
-/* En-tête */
-.invoiceHeader {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  margin-bottom: 24px;
-}
-.companyName { font-size: 22px; font-weight: 900; color: #7c3aed; margin-bottom: 4px; }
-.companyDetails { color: #555; font-size: 12px; line-height: 1.7; }
-.invoiceMeta { text-align: right; }
-.invoiceTitle { font-size: 28px; font-weight: 900; color: #111; letter-spacing: .04em; margin-bottom: 8px; }
-.metaTable { margin-left: auto; border-collapse: collapse; }
-.metaTable td { padding: 2px 8px; font-size: 12px; }
-.metaTable td:first-child { color: #555; text-align: right; }
-
-.divider { border: none; border-top: 2px solid #7c3aed; margin: 20px 0; }
-
-/* Client */
-.clientSection { margin-bottom: 28px; }
-.clientLabel { font-size: 10px; font-weight: 700; letter-spacing: .1em; color: #888; text-transform: uppercase; margin-bottom: 6px; }
-.clientName { font-size: 16px; font-weight: 800; color: #111; margin-bottom: 4px; }
-.clientDetail { font-size: 12px; color: #444; line-height: 1.7; }
-.clientMF { font-size: 12px; color: #111; margin-top: 4px; }
-
-/* Tableau lignes */
-.linesTable {
-  width: 100%; border-collapse: collapse; margin-bottom: 24px;
+/* ══════════════════════════════════════════
+   INVOICE PAGE — print-ready A4 layout
+══════════════════════════════════════════ */
+.invoice {
+  width: 794px; /* A4 at 96dpi */
+  min-height: 1123px; /* A4 height */
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.5);
+  display: flex; flex-direction: column;
+  font-family: 'Georgia', 'Times New Roman', serif;
   font-size: 12px;
+  color: #1a1a2e;
+  overflow: hidden;
+  position: relative;
 }
-.linesTable th {
-  background: #7c3aed; color: #fff;
-  padding: 8px 10px; text-align: left; font-weight: 700;
-}
-.linesTable th:last-child,
-.linesTable th:nth-child(3),
-.linesTable th:nth-child(4) { text-align: right; }
-.linesTable td { padding: 8px 10px; border-bottom: 1px solid #eee; color: #222; }
-.linesTable tbody tr:nth-child(even) { background: #f8f4ff; }
 
-/* Totaux */
-.totalsSection { display: flex; justify-content: flex-end; margin-bottom: 24px; }
-.totalsRight { width: 280px; }
+/* ══════════════════════════════════════════
+   HEADER — fixed top accent bar + company info
+══════════════════════════════════════════ */
+.invHeader {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #1a0a35 0%, #2d1060 60%, #1a1a4e 100%);
+  padding: 28px 40px;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 24px;
+  position: relative;
+  overflow: hidden;
+}
+/* Geometric accent line */
+.invHeader::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #a855f7, #ec4899, #06b6d4);
+}
+/* Subtle pattern */
+.invHeader::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle at 80% 50%, rgba(168,85,247,.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.companyBlock { position: relative; z-index: 1; }
+.companyLogo {
+  font-size: 28px; font-weight: 900; letter-spacing: -.02em;
+  color: #fff; font-family: 'Georgia', serif;
+  text-shadow: 0 2px 8px rgba(0,0,0,.3);
+  margin-bottom: 4px;
+}
+.companyLogo span { color: #c084fc; }
+.companyTagline {
+  font-size: 10px; color: rgba(255,255,255,.55);
+  letter-spacing: .12em; text-transform: uppercase;
+  font-family: 'Helvetica Neue', sans-serif;
+}
+.companyContact {
+  margin-top: 10px; display: flex; flex-direction: column; gap: 2px;
+}
+.companyContact span { font-size: 10px; color: rgba(255,255,255,.7); font-family: 'Helvetica Neue', sans-serif; }
+
+.invMeta { position: relative; z-index: 1; text-align: right; }
+.invTypeLabel {
+  font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(255,255,255,.45); font-family: 'Helvetica Neue', sans-serif;
+  margin-bottom: 4px;
+}
+.invNumber {
+  font-size: 26px; font-weight: 900; color: #fff;
+  letter-spacing: -.01em; font-family: 'Georgia', serif;
+  text-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.invDateRow {
+  margin-top: 8px; display: flex; flex-direction: column; gap: 2px; align-items: flex-end;
+}
+.invDateRow span { font-size: 10px; color: rgba(255,255,255,.6); font-family: 'Helvetica Neue', sans-serif; }
+.invStatus {
+  display: inline-block; margin-top: 8px;
+  padding: 3px 12px; border-radius: 99px;
+  font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  font-family: 'Helvetica Neue', sans-serif;
+}
+.statusDraft    { background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.2); }
+.statusSent     { background: rgba(96,165,250,.2); color: #93c5fd; border: 1px solid rgba(96,165,250,.3); }
+.statusPaid     { background: rgba(16,185,129,.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,.3); }
+.statusCancelled{ background: rgba(239,68,68,.15); color: #fca5a5; border: 1px solid rgba(239,68,68,.25); }
+
+/* ══════════════════════════════════════════
+   BODY — flex grow, centered content
+══════════════════════════════════════════ */
+.invBody { flex: 1; padding: 36px 40px; display: flex; flex-direction: column; gap: 28px; }
+
+/* Client + invoice meta row */
+.billingRow { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+
+.billingBlock {}
+.billingLabel {
+  font-size: 8px; letter-spacing: .2em; text-transform: uppercase;
+  color: #9333ea; font-family: 'Helvetica Neue', sans-serif; font-weight: 700;
+  margin-bottom: 10px;
+  padding-bottom: 5px; border-bottom: 1px solid #e9d5ff;
+}
+.billingName   { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 5px; }
+.billingDetail { font-size: 11px; color: #4a4a6a; line-height: 1.7; font-family: 'Helvetica Neue', sans-serif; }
+.billingMF     { margin-top: 6px; font-size: 10px; color: #1a1a2e; font-family: 'Helvetica Neue', sans-serif; }
+.billingMF strong { color: #6d28d9; }
+
+/* ══════════════════════════════════════════
+   LINES TABLE
+══════════════════════════════════════════ */
+.table { width: 100%; border-collapse: collapse; }
+.tableHead tr { background: linear-gradient(90deg, #1a0a35, #2d1060); }
+.tableHead th {
+  padding: 10px 12px; text-align: left;
+  font-size: 9px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: rgba(255,255,255,.8);
+  font-family: 'Helvetica Neue', sans-serif;
+}
+.tableHead th:last-child,
+.tableHead th:nth-child(3),
+.tableHead th:nth-child(4) { text-align: right; }
+
+.tableBody tr { border-bottom: 1px solid #f3e8ff; transition: background .1s; }
+.tableBody tr:nth-child(even) { background: #faf5ff; }
+.tableBody td {
+  padding: 10px 12px; color: #1a1a2e;
+  font-family: 'Helvetica Neue', sans-serif; font-size: 11px; line-height: 1.5;
+}
+.tableBody td:last-child,
+.tableBody td:nth-child(3),
+.tableBody td:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; }
+.tableBody td:first-child { color: #6d28d9; font-weight: 700; font-size: 10px; }
+.tableBody .discountRow { color: #059669 !important; }
+
+/* ══════════════════════════════════════════
+   TOTALS — right aligned block
+══════════════════════════════════════════ */
+.totalsWrap { display: flex; justify-content: flex-end; }
+.totalsBlock {
+  width: 280px;
+  border: 1px solid #e9d5ff; border-radius: 8px; overflow: hidden;
+}
 .totalLine {
-  display: flex; justify-content: space-between;
-  padding: 5px 0; font-size: 13px; border-bottom: 1px solid #eee;
-  color: #333;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 16px;
+  font-family: 'Helvetica Neue', sans-serif; font-size: 11px;
+  border-bottom: 1px solid #f3e8ff;
+  color: #4a4a6a;
 }
-.grandTotal {
-  font-size: 15px; font-weight: 900; color: #7c3aed;
-  border-bottom: 2px solid #7c3aed; border-top: 2px solid #7c3aed;
-  padding: 8px 0; margin-top: 4px;
+.totalLine:last-child { border-bottom: none; }
+.totalLine .label { color: #7c3aed; }
+.grandTotalLine {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #1a0a35, #2d1060);
+  font-family: 'Helvetica Neue', sans-serif;
 }
+.grandTotalLine .label { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.7); font-weight: 700; }
+.grandTotalLine .amount { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -.01em; font-family: 'Georgia', serif; }
 
 /* Notes */
-.notesSection { margin-bottom: 24px; padding: 12px 16px; background: #f8f4ff; border-radius: 6px; border-left: 3px solid #7c3aed; }
-.notesLabel { font-size: 11px; font-weight: 700; color: #7c3aed; margin-bottom: 4px; text-transform: uppercase; }
-.notesText { font-size: 12px; color: #444; }
+.notesBlock {
+  background: #faf5ff; border-left: 3px solid #a855f7;
+  border-radius: 0 6px 6px 0; padding: 12px 16px;
+}
+.notesLabel { font-size: 9px; letter-spacing: .15em; text-transform: uppercase; color: #7c3aed; font-weight: 700; margin-bottom: 5px; font-family: 'Helvetica Neue', sans-serif; }
+.notesText  { font-size: 11px; color: #4a4a6a; line-height: 1.6; font-family: 'Helvetica Neue', sans-serif; }
 
-/* Footer */
-.footer { border-top: 1px solid #eee; padding-top: 16px; font-size: 11px; color: #666; text-align: center; line-height: 1.9; }
-.footerThanks { font-weight: 700; color: #7c3aed; }
+/* ══════════════════════════════════════════
+   FOOTER — fixed bottom stripe
+══════════════════════════════════════════ */
+.invFooter {
+  flex-shrink: 0;
+  background: #faf5ff;
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, #a855f7, #ec4899, #06b6d4) 1;
+  padding: 18px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 16px;
+  position: relative;
+}
+.footerPayment {
+  font-size: 10px; color: #4a4a6a; font-family: 'Helvetica Neue', sans-serif; line-height: 1.6;
+}
+.footerPayment strong { color: #1a1a2e; }
+.footerBrand {
+  text-align: right;
+}
+.footerThanks { font-size: 11px; font-weight: 700; color: #6d28d9; font-family: 'Georgia', serif; margin-bottom: 2px; }
+.footerLegal  { font-size: 9px; color: #9ca3af; font-family: 'Helvetica Neue', sans-serif; }
 
-/* ── Impression ── */
+/* Decorative number watermark */
+.watermark {
+  position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
+  font-size: 80px; font-weight: 900; color: rgba(168,85,247,.04);
+  font-family: 'Georgia', serif; letter-spacing: -.05em;
+  pointer-events: none; user-select: none;
+  line-height: 1;
+}
+
+/* ══════════════════════════════════════════
+   PRINT MEDIA — A4 exact
+══════════════════════════════════════════ */
 @media print {
-  .overlay { position: static; background: #fff; }
+  .overlay, .printScroll { all: unset; display: block; }
   .toolbar { display: none !important; }
-  .printArea {
-    max-width: 100%; margin: 0; padding: 20mm 15mm;
+  .invoice {
+    width: 100%; min-height: 100vh;
     border-radius: 0; box-shadow: none;
-    overflow: visible;
   }
-  @page { size: A4; margin: 10mm; }
+  @page { size: A4; margin: 0; }
+  body { margin: 0; }
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE PREVIEW
+══════════════════════════════════════════ */
+@media (max-width: 860px) {
+  .printScroll { padding: 16px 8px 32px; }
+  .invoice { width: 100%; min-height: auto; border-radius: 0; box-shadow: none; }
+  .invHeader { padding: 20px 20px; }
+  .invBody { padding: 24px 20px; }
+  .invFooter { padding: 14px 20px; flex-direction: column; text-align: center; }
+  .footerBrand { text-align: center; }
 }
