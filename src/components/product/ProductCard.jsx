@@ -110,7 +110,7 @@ export default function ProductCard({ product, index = 99 }) {
       >
         <div className={styles.imageWrap}>
           {currentImage ? (
-            <Image src={currentImage} alt={product.name} fill sizes="(max-width: 768px) 50vw, 25vw" className={styles.image} quality={80} priority={index < 4} />
+            <Image src={currentImage} alt={product.name} fill sizes="(max-width: 768px) 50vw, 25vw" className={styles.image} quality={80} priority={index < 2} />
           ) : (
             <div className={styles.imagePlaceholder} style={{ background: `radial-gradient(circle, ${selectedColor?.hex || '#a855f7'}88, transparent)` }}>
               <PotSVG color={selectedColor?.hex || '#a855f7'} />

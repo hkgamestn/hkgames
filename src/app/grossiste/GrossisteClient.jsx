@@ -690,7 +690,7 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
                       {/* Image */}
                       <div className={styles.productImageWrap}>
                         {lineImages[p.id]
-                          ? <Image src={lineImages[p.id]} alt={p.name} fill sizes="300px" style={{objectFit:'cover'}} priority/>
+                          ? <Image src={lineImages[p.id]} alt={p.name} fill sizes="300px" style={{objectFit:'cover'}}/>
                           : <span className={styles.productEmojiPlaceholder}>{p.emoji}</span>
                         }
                       </div>
