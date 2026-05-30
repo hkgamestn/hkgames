@@ -12,6 +12,30 @@ import {
 } from 'lucide-react'
 import styles from './videos.module.css'
 
+function getYouTubeId(url) {
+  if (!url) return null
+  const patterns = [
+    /youtu\.be\/([^?&]+)/,
+    /youtube\.com\/watch\?v=([^&]+)/,
+    /youtube\.com\/embed\/([^?&]+)/,
+    /youtube\.com\/shorts\/([^?&]+)/,
+    /youtube\.com\/v\/([^?&]+)/,
+  ]
+  for (const p of patterns) {
+    const m = url.match(p)
+    if (m) return m[1]
+  }
+  return null
+}
+
+function isDirectVideo(url) {
+  if (!url) return false
+  const ytId = getYouTubeId(url)
+  if (ytId) return false
+  // Supabase storage URLs or direct MP4
+  return true
+}
+
 const RX_EMOJIS   = ['❤️','🔥','😍','😂','🤩']
 const RX_ICONS    = [Heart, Flame, Star, Laugh, Sparkles]
 const CMT_RX      = ['👍','❤️','😂','🔥']
@@ -280,7 +304,7 @@ export default function VideosClient({ initialVideos, products = [], initialInde
     return () => obs.disconnect()
   }, [videos])
 
-  /* Play/pause */
+  /* Play/pause — only for direct video elements, not YouTube iframes */
   useEffect(() => {
     videoRefs.current.forEach((el, i) => {
       if (!el) return
@@ -297,12 +321,17 @@ export default function VideosClient({ initialVideos, products = [], initialInde
     if (el) el.muted = muted
   }, [muted, activeIdx])
 
+  /* For YouTube videos, clicking the video area = pause YouTube (via iframe postMessage) */
+  const activeVideo = videos[activeIdx]
+  const isActiveYT  = activeVideo ? !!getYouTubeId(activeVideo.video_url) : false
+
   const handleVideoClick = useCallback(() => {
     const now = Date.now()
     if (now - lastTap.current < 300) { handleReact('❤️'); return }
     lastTap.current = now
-    setPlaying(p => !p)
-  }, [])
+    // Only toggle play for direct videos; YouTube manages itself
+    if (!isActiveYT) setPlaying(p => !p)
+  }, [isActiveYT])
 
   async function handleReact(emoji) {
     if (!active) return
@@ -359,15 +388,27 @@ export default function VideosClient({ initialVideos, products = [], initialInde
                     <img src={video.thumbnail_url} alt="" className={`${styles.thumbOverlay} ${isActive?styles.thumbFade:''}`}/>
                   )}
 
-                  {/* VIDEO */}
-                  <video
-                    ref={el => videoRefs.current[i]=el}
-                    className={styles.videoEl}
-                    src={video.video_url}
-                    loop playsInline
-                    preload={isActive ? 'auto' : 'metadata'}
-                    onClick={handleVideoClick}
-                  />
+                  {/* VIDEO — YouTube iframe or direct MP4 */}
+                  {getYouTubeId(video.video_url) ? (
+                    <iframe
+                      key={`yt-${video.id}-${isActive}`}
+                      className={styles.videoEl}
+                      src={`https://www.youtube.com/embed/${getYouTubeId(video.video_url)}?autoplay=${isActive?1:0}&mute=${muted?1:0}&loop=1&playlist=${getYouTubeId(video.video_url)}&playsinline=1&rel=0&controls=0&modestbranding=1`}
+                      allow="autoplay; fullscreen; encrypted-media"
+                      allowFullScreen
+                      frameBorder="0"
+                      style={{pointerEvents: showCmt || showShop ? 'none' : 'auto'}}
+                    />
+                  ) : (
+                    <video
+                      ref={el => videoRefs.current[i]=el}
+                      className={styles.videoEl}
+                      src={video.video_url}
+                      loop playsInline
+                      preload={isActive ? 'auto' : 'metadata'}
+                      onClick={handleVideoClick}
+                    />
+                  )}
 
                   <div className={styles.grad}/>
 
