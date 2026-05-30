@@ -57,7 +57,7 @@ function ProductPanel({ products, onClose }) {
       </div>
       <div className={styles.ppList}>
         {products.map(p => (
-          <a key={p.id} href={`/produit/${p.slug}`} className={styles.ppItem}>
+          <a key={p.id} href={`/shop`} className={styles.ppItem}>
             <div className={styles.ppImg}>
               {p.images?.[0]
                 ? <Image src={p.images[0]} alt={p.name} fill sizes="64px" style={{objectFit:'cover'}}/>
@@ -249,8 +249,6 @@ export default function VideosClient({ initialVideos, products = [], initialInde
   const [videos]     = useState(initialVideos)
   const [activeIdx,  setActiveIdx]   = useState(initialIndex)
   const [playing,    setPlaying]     = useState(true)
-  const [muted,      setMuted]       = useState(true)  // browsers need muted to autoplay
-  const [userUnmuted, setUserUnmuted] = useState(false) // user intent
   const [showCmt,    setShowCmt]     = useState(false)
   const [showShop,   setShowShop]    = useState(false)
   const [isMobile,   setIsMobile]    = useState(false)
@@ -305,35 +303,29 @@ export default function VideosClient({ initialVideos, products = [], initialInde
     return () => obs.disconnect()
   }, [videos])
 
-  /* Play/pause — start muted for autoplay policy, unmute after play starts */
+  /* Play/pause — start muted → play → unmute immediately (browser policy) */
   useEffect(() => {
     videoRefs.current.forEach((el, i) => {
       if (!el) return
       const vid = videos[i]
       if (!vid || getYouTubeId(vid.video_url)) return
       if (i === activeIdx) {
-        el.muted = true  // always start muted so autoplay works
+        el.muted = true           // must start muted for autoplay
         if (el.readyState === 0) el.load()
         if (playing) {
           el.play().then(() => {
-            // Once playing, honour user unmute preference
-            if (userUnmuted) el.muted = false
+            el.muted = false      // unmute immediately after play starts
           }).catch(() => {})
-        } else { el.pause() }
+        } else {
+          el.pause()
+        }
       } else {
         el.muted = true
         el.pause()
         el.currentTime = 0
       }
     })
-  }, [activeIdx, playing, videos, userUnmuted])
-
-  useEffect(() => {
-    const el = videoRefs.current[activeIdx]
-    const vid = videos[activeIdx]
-    if (!el || !vid || getYouTubeId(vid.video_url)) return
-    el.muted = !userUnmuted
-  }, [userUnmuted, activeIdx, videos])
+  }, [activeIdx, playing, videos])
 
   /* For YouTube videos, clicking the video area = pause YouTube (via iframe postMessage) */
   const activeVideo = videos[activeIdx]
@@ -343,9 +335,8 @@ export default function VideosClient({ initialVideos, products = [], initialInde
     const now = Date.now()
     if (now - lastTap.current < 300) { handleReact('❤️'); return }
     lastTap.current = now
-    // Only toggle play for direct videos; YouTube manages itself
-    if (!isActiveYT) setPlaying(p => !p)
-  }, [isActiveYT])
+    setPlaying(p => !p)
+  }, [])
 
   async function handleReact(emoji) {
     if (!active) return
@@ -379,8 +370,8 @@ export default function VideosClient({ initialVideos, products = [], initialInde
   return (
     <div className={styles.root}>
       <Link href="/" className={styles.backBtnFixed}><ArrowLeft size={16}/> Accueil</Link>
-      <button className={styles.muteBtnFixed} onClick={() => { setUserUnmuted(u=>!u); setMuted(m=>!m) }}>
-        {muted ? <VolumeX size={18}/> : <Volume2 size={18}/>}
+      <button className={styles.playPauseBtn} onClick={() => setPlaying(p=>!p)}>
+        {playing ? <Pause size={18}/> : <PlayIcon size={18}/>}
       </button>
 
       <div className={styles.wrapper}>
@@ -405,9 +396,9 @@ export default function VideosClient({ initialVideos, products = [], initialInde
                   {/* VIDEO — YouTube iframe or direct MP4 */}
                   {getYouTubeId(video.video_url) ? (
                     <iframe
-                      key={`yt-${video.id}-${isActive}-${userUnmuted}`}
+                      key={`yt-${video.id}-${isActive}`}
                       className={styles.videoEl}
-                      src={`https://www.youtube.com/embed/${getYouTubeId(video.video_url)}?autoplay=${isActive?1:0}&mute=${userUnmuted?0:1}&loop=1&playlist=${getYouTubeId(video.video_url)}&playsinline=1&rel=0&controls=0&modestbranding=1`}
+                      src={`https://www.youtube.com/embed/${getYouTubeId(video.video_url)}?autoplay=${isActive?1:0}&mute=0&loop=1&playlist=${getYouTubeId(video.video_url)}&playsinline=1&rel=0&controls=0&modestbranding=1`}
                       allow="autoplay; fullscreen; encrypted-media"
                       allowFullScreen
                       frameBorder="0"
