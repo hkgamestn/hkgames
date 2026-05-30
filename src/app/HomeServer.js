@@ -1,5 +1,5 @@
 // Server component — exports metadata + JSON-LD for homepage
-import HomeClient from './HomeClient'
+import HomePage from './HomeClient'
 
 export const metadata = {
   title: 'HK Games — Slime Premium en Tunisie | Livraison Rapide',
@@ -60,7 +60,7 @@ export default function HomeServer() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HomeClient />
+      <HomePage />
     </>
   )
 }
