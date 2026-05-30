@@ -370,9 +370,6 @@ export default function VideosClient({ initialVideos, products = [], initialInde
   return (
     <div className={styles.root}>
       <Link href="/" className={styles.backBtnFixed}><ArrowLeft size={16}/> Accueil</Link>
-      <button className={styles.playPauseBtn} onClick={() => setPlaying(p=>!p)}>
-        {playing ? <Pause size={18}/> : <PlayIcon size={18}/>}
-      </button>
 
       <div className={styles.wrapper}>
         {/* LEFT: Products panel */}
