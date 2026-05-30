@@ -76,7 +76,7 @@ export const metadata = {
   },
   manifest: '/manifest.json',
   verification: {
-    google: 'REMPLACE_PAR_TON_CODE_GOOGLE',
+    google: '6dT3Ex5aE0-WHJaV5l3WK1PhYt3YWIIrKsNoqW6Kbrk',
   },
 }
 
