@@ -249,7 +249,7 @@ export default function VideosClient({ initialVideos, products = [], initialInde
   const [videos]     = useState(initialVideos)
   const [activeIdx,  setActiveIdx]   = useState(initialIndex)
   const [playing,    setPlaying]     = useState(true)
-  const [muted,      setMuted]       = useState(true)
+  const [muted,      setMuted]       = useState(false)
   const [showCmt,    setShowCmt]     = useState(false)
   const [showShop,   setShowShop]    = useState(false)
   const [isMobile,   setIsMobile]    = useState(false)
@@ -308,18 +308,26 @@ export default function VideosClient({ initialVideos, products = [], initialInde
   useEffect(() => {
     videoRefs.current.forEach((el, i) => {
       if (!el) return
+      const vid = videos[i]
+      if (!vid || getYouTubeId(vid.video_url)) return
       el.muted = muted
       if (i === activeIdx) {
+        // Force load if not loaded yet
+        if (el.readyState === 0) el.load()
         if (playing) el.play().catch(()=>{})
         else el.pause()
-      } else { el.pause(); el.currentTime = 0 }
+      } else {
+        el.pause()
+        el.currentTime = 0
+      }
     })
-  }, [activeIdx, playing])
+  }, [activeIdx, playing, videos])
 
   useEffect(() => {
     const el = videoRefs.current[activeIdx]
-    if (el) el.muted = muted
-  }, [muted, activeIdx])
+    const vid = videos[activeIdx]
+    if (el && vid && !getYouTubeId(vid.video_url)) el.muted = muted
+  }, [muted, activeIdx, videos])
 
   /* For YouTube videos, clicking the video area = pause YouTube (via iframe postMessage) */
   const activeVideo = videos[activeIdx]
@@ -401,13 +409,16 @@ export default function VideosClient({ initialVideos, products = [], initialInde
                     />
                   ) : (
                     <video
+                      key={video.id}
                       ref={el => videoRefs.current[i]=el}
                       className={styles.videoEl}
-                      src={video.video_url}
                       loop playsInline
-                      preload={isActive ? 'auto' : 'metadata'}
+                      preload={isActive ? 'auto' : 'none'}
                       onClick={handleVideoClick}
-                    />
+                    >
+                      <source src={video.video_url} type="video/mp4"/>
+                      <source src={video.video_url} type="video/webm"/>
+                    </video>
                   )}
 
                   <div className={styles.grad}/>

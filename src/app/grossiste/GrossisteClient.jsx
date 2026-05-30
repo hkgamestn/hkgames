@@ -569,23 +569,27 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
         }))
 
       const colorNote = items.map(i => `${i.product} x${i.qty} (${i.colors})`).join(' | ')
-      const supabase = createClient()
-      const { error } = await supabase.from('wholesale_requests').insert([{
-        company_name:     form.company_name.trim(),
-        contact_name:     form.contact_name.trim(),
-        phone:            form.phone.trim(),
-        email:            form.email.trim() || null,
-        city:             form.city,
-        address:          form.address.trim(),
-        matricule_fiscal: form.matricule_fiscal.trim().toUpperCase(),
-        estimated_qty:    totalQty,
-        products_wanted:  colorNote,
-        notes:            form.notes.trim() || null,
-      }])
-      if (error) throw error
+      const res = await fetch('/api/grossiste', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_name:     form.company_name.trim(),
+          contact_name:     form.contact_name.trim(),
+          phone:            form.phone.trim(),
+          email:            form.email.trim() || null,
+          city:             form.city,
+          address:          form.address.trim(),
+          matricule_fiscal: form.matricule_fiscal.trim().toUpperCase(),
+          estimated_qty:    totalQty,
+          products_wanted:  colorNote,
+          notes:            form.notes.trim() || null,
+        }),
+      })
+      const result = await res.json()
+      if (!res.ok || result.error) throw new Error(result.error || 'Erreur serveur')
       setSuccess(true)
     } catch (err) {
-      setErrors({ _global: 'Erreur réseau — veuillez réessayer.' })
+      setErrors({ _global: `Erreur : ${err.message || 'Veuillez réessayer.'}` })
     } finally {
       setLoading(false)
     }
