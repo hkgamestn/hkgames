@@ -249,7 +249,8 @@ export default function VideosClient({ initialVideos, products = [], initialInde
   const [videos]     = useState(initialVideos)
   const [activeIdx,  setActiveIdx]   = useState(initialIndex)
   const [playing,    setPlaying]     = useState(true)
-  const [muted,      setMuted]       = useState(false)
+  const [muted,      setMuted]       = useState(true)  // browsers need muted to autoplay
+  const [userUnmuted, setUserUnmuted] = useState(false) // user intent
   const [showCmt,    setShowCmt]     = useState(false)
   const [showShop,   setShowShop]    = useState(false)
   const [isMobile,   setIsMobile]    = useState(false)
@@ -304,30 +305,35 @@ export default function VideosClient({ initialVideos, products = [], initialInde
     return () => obs.disconnect()
   }, [videos])
 
-  /* Play/pause — only for direct video elements, not YouTube iframes */
+  /* Play/pause — start muted for autoplay policy, unmute after play starts */
   useEffect(() => {
     videoRefs.current.forEach((el, i) => {
       if (!el) return
       const vid = videos[i]
       if (!vid || getYouTubeId(vid.video_url)) return
-      el.muted = muted
       if (i === activeIdx) {
-        // Force load if not loaded yet
+        el.muted = true  // always start muted so autoplay works
         if (el.readyState === 0) el.load()
-        if (playing) el.play().catch(()=>{})
-        else el.pause()
+        if (playing) {
+          el.play().then(() => {
+            // Once playing, honour user unmute preference
+            if (userUnmuted) el.muted = false
+          }).catch(() => {})
+        } else { el.pause() }
       } else {
+        el.muted = true
         el.pause()
         el.currentTime = 0
       }
     })
-  }, [activeIdx, playing, videos])
+  }, [activeIdx, playing, videos, userUnmuted])
 
   useEffect(() => {
     const el = videoRefs.current[activeIdx]
     const vid = videos[activeIdx]
-    if (el && vid && !getYouTubeId(vid.video_url)) el.muted = muted
-  }, [muted, activeIdx, videos])
+    if (!el || !vid || getYouTubeId(vid.video_url)) return
+    el.muted = !userUnmuted
+  }, [userUnmuted, activeIdx, videos])
 
   /* For YouTube videos, clicking the video area = pause YouTube (via iframe postMessage) */
   const activeVideo = videos[activeIdx]
@@ -373,7 +379,7 @@ export default function VideosClient({ initialVideos, products = [], initialInde
   return (
     <div className={styles.root}>
       <Link href="/" className={styles.backBtnFixed}><ArrowLeft size={16}/> Accueil</Link>
-      <button className={styles.muteBtnFixed} onClick={() => setMuted(m=>!m)}>
+      <button className={styles.muteBtnFixed} onClick={() => { setUserUnmuted(u=>!u); setMuted(m=>!m) }}>
         {muted ? <VolumeX size={18}/> : <Volume2 size={18}/>}
       </button>
 
@@ -399,9 +405,9 @@ export default function VideosClient({ initialVideos, products = [], initialInde
                   {/* VIDEO — YouTube iframe or direct MP4 */}
                   {getYouTubeId(video.video_url) ? (
                     <iframe
-                      key={`yt-${video.id}-${isActive}`}
+                      key={`yt-${video.id}-${isActive}-${userUnmuted}`}
                       className={styles.videoEl}
-                      src={`https://www.youtube.com/embed/${getYouTubeId(video.video_url)}?autoplay=${isActive?1:0}&mute=${muted?1:0}&loop=1&playlist=${getYouTubeId(video.video_url)}&playsinline=1&rel=0&controls=0&modestbranding=1`}
+                      src={`https://www.youtube.com/embed/${getYouTubeId(video.video_url)}?autoplay=${isActive?1:0}&mute=${userUnmuted?0:1}&loop=1&playlist=${getYouTubeId(video.video_url)}&playsinline=1&rel=0&controls=0&modestbranding=1`}
                       allow="autoplay; fullscreen; encrypted-media"
                       allowFullScreen
                       frameBorder="0"
