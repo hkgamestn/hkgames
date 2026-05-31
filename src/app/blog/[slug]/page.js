@@ -52,13 +52,13 @@ export default async function PostPage({ params }) {
     image:      post.cover_image ? [post.cover_image] : [],
     datePublished: post.published_at,
     dateModified:  post.updated_at || post.published_at,
-    author: { '@type': 'Organization', name: 'HK Games', url: 'https://hap-p-kids.store' },
+    author: { '@type': 'Organization', name: 'HK Games', url: 'https://www.hap-p-kids.store' },
     publisher: {
       '@type': 'Organization',
       name:    'HK Games',
-      logo:    { '@type': 'ImageObject', url: 'https://hap-p-kids.store/icons/hk-logo-192.png' },
+      logo:    { '@type': 'ImageObject', url: 'https://www.hap-p-kids.store/icons/hk-logo-192.png' },
     },
-    mainEntityOfPage: `https://hap-p-kids.store/blog/${post.slug}`,
+    mainEntityOfPage: `https://www.hap-p-kids.store/blog/${post.slug}`,
     keywords: post.tags?.join(', '),
   }
 

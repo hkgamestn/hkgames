@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server'
 
 export default async function sitemap() {
-  const base = 'https://hap-p-kids.store'
+  const base = 'https://www.hap-p-kids.store'
   const now  = new Date()
 
   const staticPages = [

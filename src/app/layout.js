@@ -26,14 +26,14 @@ export const metadata = {
   },
   description:
     'Achetez du slime premium en Tunisie — Slime Unicolore, Bicolore et Buddy 170g. Livraison rapide Navex partout en Tunisie, paiement à la livraison. Jouet sensoriel certifié pour enfants.',
-  metadataBase: new URL('https://hap-p-kids.store'),
+  metadataBase: new URL('https://www.hap-p-kids.store'),
   keywords: [
     'slime tunisie','acheter slime tunisie','slime premium tunisie',
     'slime enfant tunisie','slime livraison tunisie','jouet slime tunisie',
     'slime unicolore','slime bicolore','slime buddy','hk games',
     'slime asmr tunisie','slime pas cher tunisie','cadeau enfant tunisie',
   ],
-  authors:  [{ name: 'HK Games', url: 'https://hap-p-kids.store' }],
+  authors:  [{ name: 'HK Games', url: 'https://www.hap-p-kids.store' }],
   creator:  'HK Games',
   publisher:'HK Games',
   robots: {
@@ -50,12 +50,12 @@ export const metadata = {
   openGraph: {
     type:        'website',
     locale:      'fr_TN',
-    url:         'https://hap-p-kids.store',
+    url:         'https://www.hap-p-kids.store',
     siteName:    'HK Games',
     title:       'HK Games — Slime Premium en Tunisie',
     description: 'Le slime N°1 de Tunisie. Unicolore, Bicolore et Buddy 170g. Livraison Navex, paiement à la livraison.',
     images: [{
-      url:    'https://hap-p-kids.store/og/og-default.jpg',
+      url:    'https://www.hap-p-kids.store/og/og-default.jpg',
       width:  1200,
       height: 630,
       alt:    'HK Games — Slime Premium Tunisie',
@@ -65,10 +65,10 @@ export const metadata = {
     card:        'summary_large_image',
     title:       'HK Games — Slime Premium en Tunisie',
     description: 'Le slime N°1 de Tunisie. Livraison partout, paiement à la livraison.',
-    images:      ['https://hap-p-kids.store/og/og-default.jpg'],
+    images:      ['https://www.hap-p-kids.store/og/og-default.jpg'],
   },
   alternates: {
-    canonical: 'https://hap-p-kids.store',
+    canonical: 'https://www.hap-p-kids.store',
   },
   icons: {
     icon:  '/icons/hk-logo-192.png',
