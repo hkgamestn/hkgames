@@ -25,12 +25,14 @@ export async function generateMetadata({ params }) {
   const image = product.colors?.[0]?.image || '/og/og-default.jpg'
   const lineLabel = product.line === 'unicolore' ? 'Unicolore' : product.line === 'bicolore' ? 'Bicolore' : 'Buddy'
   const title = `${product.name} — Slime ${lineLabel} Tunisie | HK Games`
-  const description = product.description ||
-    `Achetez ${product.name} — Slime artisanal premium ${lineLabel}. Livraison partout en Tunisie. Paiement à la livraison. ${product.price_dt} DT.`
+  const description = `Achetez ${product.name} en Tunisie. Slime ${lineLabel} artisanal 170g, certifié pour enfants dès 3 ans. Livraison rapide Navex partout en Tunisie. Paiement à la livraison.`
+  const keywords = [`${product.name.toLowerCase()}`, `slime ${lineLabel.toLowerCase()} tunisie`, 'slime tunisie', 'acheter slime tunisie', 'slime 170g tunisie']
 
   return {
     title,
     description,
+    keywords,
+    alternates: { canonical: `https://www.hap-p-kids.store/produit/${params.slug}` },
     openGraph: {
       title,
       description,

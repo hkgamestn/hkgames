@@ -5,7 +5,8 @@ export default async function sitemap() {
   const now  = new Date()
 
   const staticPages = [
-    { url: base,                changeFrequency: 'daily',   priority: 1.0, lastModified: now },
+    { url: base,                          changeFrequency: 'daily',   priority: 1.0,  lastModified: now },
+    { url: base + '/slime-tunisie',   changeFrequency: 'daily',   priority: 0.99, lastModified: now },
     { url: base + '/shop',      changeFrequency: 'daily',   priority: 0.95, lastModified: now },
     { url: base + '/blog',      changeFrequency: 'daily',   priority: 0.92, lastModified: now },
     { url: base + '/videos',    changeFrequency: 'weekly',  priority: 0.85, lastModified: now },
