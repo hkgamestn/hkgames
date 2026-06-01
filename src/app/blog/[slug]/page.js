@@ -11,12 +11,35 @@ export const revalidate = 300
 export async function generateMetadata({ params }) {
   const { slug } = await params
   const supabase = await createClient()
-  const { data } = await supabase.from('blog_posts').select('title, excerpt, cover_image').eq('slug', slug).single()
+  const { data } = await supabase.from('blog_posts').select('title, excerpt, cover_image, tags').eq('slug', slug).single()
   if (!data) return { title: 'Article introuvable' }
+
+  const image = data.cover_image || 'https://www.hap-p-kids.store/og/og-default.jpg'
+
   return {
-    title: `${data.title} | HK Games Blog`,
-    description: data.excerpt || '',
-    openGraph: data.cover_image ? { images: [data.cover_image] } : {},
+    title: `${data.title} | HK Games`,
+    description: data.excerpt || `${data.title} — Conseils slime par HK Games Tunisie`,
+    keywords: data.tags || [],
+    alternates: { canonical: `https://www.hap-p-kids.store/blog/${slug}` },
+    openGraph: {
+      title:       data.title,
+      description: data.excerpt || `${data.title} — HK Games Tunisie`,
+      url:         `https://www.hap-p-kids.store/blog/${slug}`,
+      type:        'article',
+      images: [{
+        url:    image,
+        width:  1200,
+        height: 630,
+        alt:    data.title,
+      }],
+      siteName: 'HK Games — Slime Tunisie',
+    },
+    twitter: {
+      card:        'summary_large_image',
+      title:       data.title,
+      description: data.excerpt || '',
+      images:      [image],
+    },
   }
 }
 
