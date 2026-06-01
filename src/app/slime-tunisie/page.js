@@ -2,9 +2,9 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export const metadata = {
-  title: 'Slime Tunisie — Acheter Slime Premium en Ligne | HK Games',
+  title: 'Vendre Slime Tunisie — Achetez Slime 170g Livraison | HK Games',
   description: 'Achetez du slime artisanal en Tunisie. Slime Unicolore, Bicolore et Buddy 170g certifiés pour enfants. Livraison rapide Navex partout en Tunisie. Paiement à la livraison.',
-  keywords: ['slime tunisie','slime en tunisie','acheter slime tunisie','slime premium tunisie','jouet slime tunisie 2026'],
+  keywords: ['vendre slime tunisie','vente slime tunisie','vendre slime','slime à vendre tunisie','slime tunisie','acheter slime tunisie','slime premium tunisie'],
   alternates: { canonical: 'https://www.hap-p-kids.store/slime-tunisie' },
   openGraph: {
     title:       'Slime Tunisie — HK Games',

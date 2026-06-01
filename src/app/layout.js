@@ -28,7 +28,7 @@ export const metadata = {
     'Achetez du slime premium en Tunisie — Slime Unicolore, Bicolore et Buddy 170g. Livraison rapide Navex partout en Tunisie, paiement à la livraison. Jouet sensoriel certifié pour enfants.',
   metadataBase: new URL('https://www.hap-p-kids.store'),
   keywords: [
-    'slime','slime tunisie','acheter slime','slime premium tunisie',
+    'slime','vendre slime tunisie','vente slime tunisie','slime à vendre tunisie','vendre slime','slime tunisie','acheter slime','slime premium tunisie',
     'slime enfant','slime enfant tunisie','slime livraison tunisie',
     'jouet slime tunisie','slime unicolore','slime bicolore','slime buddy',
     'hk games','slime asmr','slime asmr tunisie','slime satisfaisant',

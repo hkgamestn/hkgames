@@ -26,7 +26,7 @@ export const metadata = {
   title: 'Acheter Slime en Tunisie — Slime Unicolore, Bicolore & Buddy 170g | HK Games',
   description: 'Achetez du slime artisanal premium en Tunisie. Slime Unicolore, Bicolore et Buddy 170g certifié pour enfants. Livraison rapide Navex partout. Paiement à la livraison. Jouet sensoriel, cadeau enfant, ASMR.',
   keywords: [
-    'slime','slime tunisie','acheter slime tunisie','slime 170g',
+    'slime','vendre slime tunisie','vente slime tunisie','slime à vendre tunisie','vendre slime','slime tunisie','acheter slime tunisie','slime 170g',
     'slime unicolore tunisie','slime bicolore tunisie','slime buddy tunisie',
     'jouet slime tunisie','slime enfant tunisie','cadeau enfant tunisie',
     'slime livraison tunisie','slime paiement livraison','jouet sensoriel tunisie',
