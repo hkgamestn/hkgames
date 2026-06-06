@@ -193,7 +193,7 @@ function VideoInfo({ video, isActive }) {
           <div className={expanded ? styles.infoDescExpanded : styles.infoDescCollapsed}>
             {video.description}
           </div>
-          <button className={styles.infoMore} onPointerUp={() => setExpanded(e => !e)}>
+          <button className={styles.infoMore} onPointerUp={e => { e.stopPropagation(); setExpanded(ex => !ex) }} onClick={e => e.stopPropagation()}>
             {expanded ? 'Afficher moins ▲' : 'Afficher plus ▼'}
           </button>
         </>
