@@ -175,6 +175,38 @@ function CommentItem({ comment, allComments, onReply, sid }) {
 }
 
 /* ─── Comments Panel ─── */
+
+/* ─── Video Info collapsible ─── */
+function VideoInfo({ video, isActive }) {
+  const [expanded, setExpanded] = useState(false)
+  const hasDesc = !!video.description
+
+  useEffect(() => { setExpanded(false) }, [video.id])
+
+  if (!isActive) return null
+
+  return (
+    <div className={styles.info}>
+      <div className={styles.infoTitle}>{video.title}</div>
+      {hasDesc && (
+        <>
+          <div className={expanded ? styles.infoDescExpanded : styles.infoDescCollapsed}>
+            {video.description}
+          </div>
+          <button className={styles.infoMore} onPointerUp={() => setExpanded(e => !e)}>
+            {expanded ? 'Afficher moins ▲' : 'Afficher plus ▼'}
+          </button>
+        </>
+      )}
+      {video.tags?.length > 0 && (
+        <div className={styles.infoTags}>
+          {video.tags.map(t => <span key={t} className={styles.infoTag}>#{t}</span>)}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function CommentsPanel({ videoId, onClose }) {
   const [comments, setComments] = useState([])
   const [loading,  setLoading]  = useState(true)

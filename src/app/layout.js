@@ -76,8 +76,12 @@ export const metadata = {
     canonical: 'https://www.hap-p-kids.store',
   },
   icons: {
-    icon:  '/icons/hk-logo-192.png',
-    apple: '/icons/hk-logo-192.png',
+    icon:  [
+      { url: '/icons/hk-logo-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/hk-logo-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple:    '/icons/hk-logo-192.png',
+    shortcut: '/icons/hk-logo-192.png',
   },
   manifest: '/manifest.json',
   verification: {
