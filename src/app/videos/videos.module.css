@@ -361,3 +361,54 @@
   transition: background .15s;
 }
 .playPauseBtn:hover { background: rgba(168,85,247,.55); }
+
+/* ── Video info — collapsible ── */
+.info {
+  position: absolute;
+  bottom: 90px; left: 14px; right: 72px;
+  z-index: 10;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.infoTitle {
+  font-size: 1rem; font-weight: 800; color: #fff;
+  text-shadow: 0 1px 5px rgba(0,0,0,.7); line-height: 1.3;
+}
+
+/* Description collapsed — 1 line max */
+.infoDescCollapsed {
+  font-size: .82rem; color: rgba(255,255,255,.8);
+  text-shadow: 0 1px 4px rgba(0,0,0,.6); line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: 1.5em;
+  transition: max-height .3s ease, -webkit-line-clamp .3s;
+}
+
+/* Description expanded — full text */
+.infoDescExpanded {
+  font-size: .82rem; color: rgba(255,255,255,.82);
+  text-shadow: 0 1px 4px rgba(0,0,0,.6); line-height: 1.6;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  max-height: 200px;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(4px);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+/* Afficher plus button */
+.infoMore {
+  background: none; border: none;
+  color: rgba(255,255,255,.55); font-size: .72rem; font-weight: 700;
+  cursor: pointer; text-align: left; padding: 2px 0;
+  transition: color .15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.infoMore:hover { color: #a855f7; }
+
+.infoTags { display: flex; flex-wrap: wrap; gap: 4px; }
+.infoTag  { font-size: .72rem; color: rgba(255,255,255,.55); font-weight: 600; }

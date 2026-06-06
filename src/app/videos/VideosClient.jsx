@@ -420,16 +420,8 @@ export default function VideosClient({ initialVideos, products = [], initialInde
                   {/* Paused indicator */}
                   {isActive && !playing && <div className={styles.pausedIcon}>▶</div>}
 
-                  {/* Info */}
-                  <div className={styles.info}>
-                    <div className={styles.infoTitle}>{video.title}</div>
-                    {video.description && <div className={styles.infoDesc}>{video.description}</div>}
-                    {video.tags?.length>0 && (
-                      <div className={styles.infoTags}>
-                        {video.tags.map(t=><span key={t} className={styles.infoTag}>#{t}</span>)}
-                      </div>
-                    )}
-                  </div>
+                  {/* Info — collapsible description */}
+                  <VideoInfo video={video} isActive={isActive}/>
 
                   {/* SHOP icon — left side */}
                   {isActive && products.length > 0 && (
