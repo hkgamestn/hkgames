@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import CatalogueContent from './CatalogueContent'
+import { createAdminClient } from '@/lib/supabase/server'
 
 const faqShopLd = {
   '@context': 'https://schema.org',
@@ -45,14 +46,30 @@ export const metadata = {
 
 export const revalidate = 300
 
-export default function ShopPage({ searchParams }) {
+export const revalidate = 60
+
+export default async function ShopPage({ searchParams }) {
+  // Fetch products server-side with admin client (bypasses RLS, always works)
+  let initialProducts = []
+  try {
+    const supabase = await createAdminClient()
+    const { data } = await supabase
+      .from('products')
+      .select('id, slug, name, description, line, price_dt, images, colors, is_active, position')
+      .eq('is_active', true)
+      .order('position', { ascending: true })
+    initialProducts = data || []
+  } catch (e) {
+    initialProducts = []
+  }
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqShopLd) }}/>
       <Navbar />
       <main style={{ paddingTop: '80px' }}>
         <Suspense fallback={<div style={{ padding: '64px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>Chargement...</div>}>
-          <CatalogueContent line={null} />
+          <CatalogueContent line={null} initialProducts={initialProducts} />
         </Suspense>
       </main>
       <Footer />

@@ -18,30 +18,43 @@ const SORT_OPTIONS = [
   { value: 'price_desc', label: 'Prix décroissant' },
 ]
 
-export default function CatalogueContent({ initialProducts = [], initialLine }) {
-  const [activeTab, setActiveTab] = useState(initialLine || null)
+export default function CatalogueContent({ initialProducts = [], initialLine, line }) {
+  const [activeTab, setActiveTab] = useState(initialLine || line || null)
   const [products, setProducts]   = useState(initialProducts)
-  const [loading, setLoading]     = useState(true)
+  const [loading, setLoading]     = useState(false)
   const [sort, setSort]           = useState('position')
   const [isPending, startTransition] = useTransition()
+  const [firstLoad, setFirstLoad] = useState(true)
 
   useEffect(() => {
+    // Skip refetch on very first render if server already provided products
+    if (firstLoad && initialProducts.length > 0 && !activeTab && sort === 'position') {
+      setFirstLoad(false)
+      return
+    }
     async function fetchProducts() {
       setLoading(true)
-      const supabase = createClient()
-      let query = supabase
-        .from('products')
-        .select('id, slug, name, description, line, price_dt, images, colors, is_active, position')
-        .eq('is_active', true)
+      try {
+        const supabase = createClient()
+        let query = supabase
+          .from('products')
+          .select('id, slug, name, description, line, price_dt, images, colors, is_active, position')
+          .eq('is_active', true)
 
-      if (activeTab) query = query.eq('line', activeTab)
-      if (sort === 'price_asc')  query = query.order('price_dt', { ascending: true })
-      else if (sort === 'price_desc') query = query.order('price_dt', { ascending: false })
-      else query = query.order('position', { ascending: true })
+        if (activeTab) query = query.eq('line', activeTab)
+        if (sort === 'price_asc')  query = query.order('price_dt', { ascending: true })
+        else if (sort === 'price_desc') query = query.order('price_dt', { ascending: false })
+        else query = query.order('position', { ascending: true })
 
-      const { data } = await query
-      setProducts(data || [])
-      setLoading(false)
+        const { data, error } = await query
+        // Only replace products if fetch succeeded — never wipe on error
+        if (!error && data) setProducts(data)
+      } catch (e) {
+        // Keep existing products on failure (don't show 0)
+      } finally {
+        setLoading(false)
+        setFirstLoad(false)
+      }
     }
     fetchProducts()
   }, [activeTab, sort])
