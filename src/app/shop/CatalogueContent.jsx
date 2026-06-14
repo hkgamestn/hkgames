@@ -10,6 +10,7 @@ const TABS = [
   { id: 'unicolore', label: 'Unicolore' },
   { id: 'bicolore',  label: 'Bicolore' },
   { id: 'buddies',   label: 'Buddies' },
+  { id: 'pack_ete',  label: '☀️ Pack Été' },
 ]
 
 const SORT_OPTIONS = [
