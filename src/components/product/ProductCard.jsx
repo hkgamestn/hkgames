@@ -64,10 +64,11 @@ export default function ProductCard({ product, index = 99 }) {
   const addItem = useCartStore((s) => s.addItem)
   const { playHover, playAdd, playColor } = useCardSound()
 
+  const PACK_ETE_IMG = 'https://rsmebjtwmvwyeocvsowg.supabase.co/storage/v1/object/public/product-images/slime%20unicolore.png'
   const isPackEte  = product.line === 'pack_ete'
   const stock      = isPackEte ? 99 : (selectedColor?.stock ?? null)
   const currentImage = isPackEte
-    ? (product.images?.[0] || '/pack-ete.png')
+    ? (product.images?.[0] || PACK_ETE_IMG)
     : (selectedColor?.image || product.images?.[0] || null)
   const isBicolore = product.line === 'bicolore'
 
@@ -132,10 +133,7 @@ export default function ProductCard({ product, index = 99 }) {
       >
         <div className={styles.imageWrap}>
           {currentImage ? (
-            {currentImage?.startsWith('/')
-              ? <img src={currentImage} alt={product.name} className={styles.image} style={{ objectFit:'cover', width:'100%', height:'100%' }} />
-              : <Image src={currentImage} alt={product.name} fill sizes="(max-width: 768px) 50vw, 25vw" className={styles.image} quality={80} priority={index < 2} />
-            }
+            <Image src={currentImage} alt={product.name} fill sizes="(max-width: 768px) 50vw, 25vw" className={styles.image} quality={80} priority={index < 2} />
           ) : (
             <div className={styles.imagePlaceholder} style={{ background: `radial-gradient(circle, ${selectedColor?.hex || '#a855f7'}88, transparent)` }}>
               <PotSVG color={selectedColor?.hex || '#a855f7'} />
