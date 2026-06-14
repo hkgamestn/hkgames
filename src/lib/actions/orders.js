@@ -148,7 +148,8 @@ export async function confirmOrder(formData, pendingOrderId) {
 
   const subtotal    = items.reduce((s, i) => s + (i.price_dt || 0) * (i.qty || 1), 0)
   const discountAmt = parseFloat((subtotal * (discount / 100)).toFixed(3))
-  const shipping    = subtotal >= freeThreshold ? 0 : shippingDt
+  const hasPackEte  = items.some((i) => i.line === 'pack_ete')
+  const shipping    = hasPackEte || subtotal >= freeThreshold ? 0 : shippingDt
   const total       = parseFloat((subtotal - discountAmt + shipping).toFixed(3))
 
   // Numéro séquentiel via séquence DB (atomique — pas de race condition)

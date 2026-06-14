@@ -202,3 +202,48 @@
   color: var(--text-muted);
   cursor: not-allowed;
 }
+
+/* Pack Été badge */
+.lineBadgeEte {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  font-family: var(--font-title);
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 10px rgba(245,158,11,0.4);
+  animation: etePulse 2.5s ease infinite;
+}
+@keyframes etePulse {
+  0%,100% { box-shadow: 0 2px 10px rgba(245,158,11,0.4); }
+  50%      { box-shadow: 0 2px 18px rgba(245,158,11,0.7); }
+}
+
+/* Badge livraison gratuite */
+.freeBadge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(16,185,129,0.15);
+  border: 1px solid rgba(16,185,129,0.4);
+  border-radius: 99px;
+  padding: 2px 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #10b981;
+  backdrop-filter: blur(6px);
+}
+
+/* Prix barré */
+.priceOriginal {
+  text-decoration: line-through;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-left: 4px;
+}

@@ -10,7 +10,7 @@ import { formatDT } from '@/lib/utils/formatDT'
 import ProductModal from './ProductModal'
 import styles from './ProductCard.module.css'
 
-const LINE_LABELS = { unicolore: 'Unicolore', bicolore: 'Bicolore', buddies: 'Buddy' }
+const LINE_LABELS = { unicolore: 'Unicolore', bicolore: 'Bicolore', buddies: 'Buddy', pack_ete: '☀️ Pack Été' }
 
 function useCardSound() {
   const ctx = useRef(null)
@@ -64,8 +64,9 @@ export default function ProductCard({ product, index = 99 }) {
   const addItem = useCartStore((s) => s.addItem)
   const { playHover, playAdd, playColor } = useCardSound()
 
-  const stock = selectedColor?.stock ?? null
-  const currentImage = selectedColor?.image || product.images?.[0] || null
+  const isPackEte  = product.line === 'pack_ete'
+  const stock      = isPackEte ? (product.stock ?? 99) : (selectedColor?.stock ?? null)
+  const currentImage = product.images?.[0] || selectedColor?.image || null
   const isBicolore = product.line === 'bicolore'
 
   function handleMouseMove(e) {
@@ -81,6 +82,25 @@ export default function ProductCard({ product, index = 99 }) {
 
   async function handleAddToCart(e) {
     e.stopPropagation()
+    if (isPackEte) {
+      // Pack Été — ajouter directement, pas de choix de couleur
+      addItem({
+        product_id: product.id,
+        slug:       product.slug,
+        name:       product.name,
+        price_dt:   product.price_dt,
+        color:      '6 couleurs',
+        color_hex:  '#f59e0b',
+        line:       'pack_ete',
+        qty:        1,
+        image:      currentImage,
+        free_shipping: true,
+      })
+      playAdd()
+      const confetti = (await import('canvas-confetti')).default
+      confetti({ particleCount: 80, spread: 80, origin: { y: 0.7 }, colors: ['#f59e0b','#a855f7','#ec4899','#06b6d4','#22c55e'] })
+      return
+    }
     if (!selectedColor || selectedColor.stock === 0) return
     addItem({
       product_id: product.id,
@@ -116,7 +136,10 @@ export default function ProductCard({ product, index = 99 }) {
               <PotSVG color={selectedColor?.hex || '#a855f7'} />
             </div>
           )}
-          <div className={styles.lineBadge}>{LINE_LABELS[product.line]}</div>
+          <div className={styles.lineBadge} style={isPackEte ? { background: 'linear-gradient(135deg,#f59e0b,#ef4444)', color: '#fff', border: 'none' } : {}}>
+            {LINE_LABELS[product.line] || product.line}
+          </div>
+          {isPackEte && <div className={styles.freeBadge}>🚚 Livraison offerte</div>}
           <div className={styles.stockOverlay}><StockBadge stock={stock} /></div>
 
           {/* Overlay hover — "Voir les détails" */}
@@ -135,9 +158,21 @@ export default function ProductCard({ product, index = 99 }) {
 
         <div className={styles.body}>
           <p className={styles.name}>{product.name}</p>
-          <p className={styles.price}>{formatDT(product.price_dt)}</p>
+          <p className={styles.price}>
+            {formatDT(product.price_dt)}
+            {isPackEte && <span className={styles.priceOriginal}> 72 DT</span>}
+          </p>
 
-          {product.colors && product.colors.length > 0 && (
+          {/* Pack Été — afficher les 6 pastilles fixes */}
+          {isPackEte && (
+            <div className={styles.colorRow}>
+              {['#ef4444','#f97316','#ec4899','#22c55e','#a855f7','#eab308'].map((hex) => (
+                <span key={hex} className={styles.colorDot} style={{ background: hex, cursor: 'default' }} />
+              ))}
+            </div>
+          )}
+
+          {!isPackEte && product.colors && product.colors.length > 0 && (
             <div className={styles.colorRow}>
               {product.colors.map((c) => (
                 <button
@@ -159,7 +194,7 @@ export default function ProductCard({ product, index = 99 }) {
           <button
             className={styles.addBtn}
             onClick={handleAddToCart}
-            disabled={!selectedColor || stock === 0}
+            disabled={isPackEte ? false : (!selectedColor || stock === 0)}
             type="button"
           >
             <ShoppingCart size={16} />
