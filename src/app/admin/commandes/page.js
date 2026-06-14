@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { updateOrderStatus, softDeleteOrder, restoreOrder, hardDeleteOrders, getUnseenCount, markOrdersSeen } from '@/lib/actions/orders'
 import { formatDT } from '@/lib/utils/formatDT'
-import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX, Plus, FileDown, Receipt } from 'lucide-react'
+import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX, Plus, FileDown, Receipt, RefreshCw } from 'lucide-react'
 import OrderTooltip from '@/components/admin/OrderTooltip'
 import OrderEditPanel from '@/components/admin/OrderEditPanel'
 import CreateOrderModal from '@/components/admin/CreateOrderModal'
@@ -59,6 +59,27 @@ export default function CommandesPage() {
   const [tooltip, setTooltip]             = useState({ order: null, pos: { x: 0, y: 0 } })
   const [editOrder, setEditOrder]         = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [syncing, setSyncing]             = useState(false)
+  const [syncResult, setSyncResult]       = useState(null)
+
+  async function handleSyncNavex(singleOrderId = null) {
+    setSyncing(true)
+    setSyncResult(null)
+    try {
+      const res  = await fetch('/api/admin/sync-navex', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ orderIds: singleOrderId ? [singleOrderId] : [] }),
+      })
+      const data = await res.json()
+      setSyncResult(data)
+      if (data.updated > 0) fetchOrders() // Rafraîchir si des statuts ont changé
+    } catch (err) {
+      setSyncResult({ error: err.message })
+    }
+    setSyncing(false)
+    setTimeout(() => setSyncResult(null), 5000)
+  }
   const [retailInvoiceOrder, setRetailInvoiceOrder] = useState(null)
   const [bulkInvoiceOrders, setBulkInvoiceOrders]     = useState(null)
   const [invoiceSettings, setInvoiceSettings]         = useState({})
@@ -280,6 +301,16 @@ export default function CommandesPage() {
           )}
         </h1>
         <div className={styles.headerActions}>
+          <button
+            className={styles.syncBtn}
+            onClick={() => handleSyncNavex()}
+            disabled={syncing}
+            type="button"
+            title="Synchroniser les statuts depuis Navex"
+          >
+            <RefreshCw size={14} className={syncing ? styles.spinning : ''} />
+            {syncing ? 'Sync...' : 'Sync Navex'}
+          </button>
           <button className={styles.exportBtn} onClick={exportCSV} type="button" title="Exporter en CSV">
             <FileDown size={15} /> Export CSV
           </button>
@@ -358,6 +389,17 @@ export default function CommandesPage() {
           )}
         </div>
       </div>
+
+      {syncResult && (
+        <div className={syncResult.error ? styles.syncError : styles.syncSuccess}>
+          {syncResult.error
+            ? `❌ Erreur sync: ${syncResult.error}`
+            : syncResult.updated > 0
+              ? `✅ ${syncResult.updated} commande(s) mise(s) à jour sur ${syncResult.total}`
+              : `ℹ️ ${syncResult.total} colis vérifiés — aucun changement`
+          }
+        </div>
+      )}
 
       <div className={styles.tabs}>
         {STATUS_TABS.map((tab) => (
@@ -477,6 +519,18 @@ export default function CommandesPage() {
                     >
                       🖨️
                     </a>
+                  )}
+                  {/* Sync statut Navex — commandes expédiées */}
+                  {order.navex_tracking && order.status === 'shipped' && (
+                    <button
+                      className={`${styles.actionBtn} ${styles.syncRowBtn}`}
+                      onClick={() => handleSyncNavex(order.id)}
+                      disabled={syncing}
+                      title="Vérifier statut Navex"
+                      type="button"
+                    >
+                      <RefreshCw size={13} className={syncing ? styles.spinning : ''} />
+                    </button>
                   )}
                   {['pending', 'confirmed'].includes(order.status) && (
                     <button className={styles.actionBtn + ' ' + styles.hold} onClick={() => handleAction(order.id, 'on_hold')} title="Injoignable" type="button">
