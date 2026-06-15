@@ -146,7 +146,7 @@ function CopyBtn({ text, label = 'Copier' }) {
 const ICON = { email: <Mail size={15} />, whatsapp: <MessageCircle size={15} />, phone: <Phone size={15} />, stop: <Clock size={15} /> }
 
 function MessageCard({ m }) {
-  const [lang, setLang] = useState('fr')
+  const [lang, setLang] = useState(m.canal === 'whatsapp' ? 'dj' : 'fr')
   const v = m[lang]
   return (
     <div className={`${styles.msg} ${styles['ch_' + m.canal]}`}>
