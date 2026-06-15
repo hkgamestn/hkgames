@@ -247,3 +247,149 @@
   font-size: 0.8rem;
   margin-left: 4px;
 }
+
+/* ══════════════════════════════════════════════════════════
+   CARTE PACK ÉTÉ — Thème été immersif
+   ══════════════════════════════════════════════════════════ */
+
+.cardEte {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #1a0a00 0%, #0f0a1e 40%, #001a0a 100%);
+  border: 1.5px solid rgba(245,158,11,0.35);
+  box-shadow:
+    0 0 30px rgba(245,158,11,0.12),
+    0 8px 32px rgba(0,0,0,0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.cardEte:hover {
+  box-shadow: 0 0 50px rgba(245,158,11,0.25), 0 16px 48px rgba(0,0,0,0.5);
+}
+
+/* Rayons soleil */
+.eteRays {
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245,158,11,0.25) 0%, transparent 70%);
+  animation: raysPulse 3.5s ease-in-out infinite;
+  pointer-events: none; z-index: 0;
+}
+@keyframes raysPulse {
+  0%,100% { transform: scale(1); opacity: 0.7; }
+  50%     { transform: scale(1.2); opacity: 1; }
+}
+
+/* Badge promo */
+.eteBadgePromo {
+  position: absolute;
+  top: 10px; left: 10px; z-index: 4;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #fff; font-size: 0.68rem; font-weight: 800;
+  padding: 4px 11px; border-radius: 99px;
+  box-shadow: 0 2px 12px rgba(245,158,11,0.5);
+  animation: promoBounce 2s ease-in-out infinite;
+  font-family: var(--font-title);
+}
+@keyframes promoBounce {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.06); }
+}
+
+/* Image */
+.eteImageWrap {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  overflow: hidden;
+}
+.eteOverlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(to bottom, transparent 50%, rgba(15,5,0,0.7) 100%);
+}
+
+/* Bulles */
+.eteBubble {
+  position: absolute;
+  left: var(--bx); top: var(--by);
+  width: var(--bs); height: var(--bs);
+  border-radius: 50%;
+  background: var(--bc);
+  opacity: 0.5;
+  animation: bubbleFloat var(--bd) ease-in-out infinite alternate;
+  z-index: 2; pointer-events: none;
+}
+@keyframes bubbleFloat {
+  from { transform: translateY(0) scale(1); opacity: 0.4; }
+  to   { transform: translateY(-10px) scale(1.15); opacity: 0.7; }
+}
+
+/* Body */
+.eteBody {
+  padding: 12px 14px 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  position: relative; z-index: 1;
+}
+
+.eteTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.eteName { font-family: var(--font-title); font-weight: 800; font-size: 0.95rem; color: #fff; margin: 0; }
+.eteFree {
+  font-size: 0.62rem; font-weight: 700; white-space: nowrap;
+  color: #10b981; background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.3); border-radius: 99px; padding: 2px 7px;
+}
+
+.etePriceRow { display: flex; align-items: center; gap: 7px; }
+.etePrice    { font-family: var(--font-title); font-size: 1.35rem; font-weight: 900; color: #f59e0b; }
+.eteOld      { font-size: 0.8rem; text-decoration: line-through; color: rgba(255,255,255,0.3); }
+.eteSave     {
+  font-size: 0.68rem; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg,#22c55e,#16a34a);
+  padding: 2px 7px; border-radius: 99px;
+}
+
+/* 6 couleurs */
+.eteCols { display: flex; gap: 5px; align-items: center; }
+.eteColorDot {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(255,255,255,0.25);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+.eteColorDot:hover { transform: scale(1.2); }
+.eteColorEmoji     { font-size: 0.7rem; }
+
+.eteTagline {
+  font-size: 0.8rem; color: rgba(255,255,255,0.65); margin: 0;
+}
+.eteTagline strong { color: #f59e0b; }
+
+/* Bouton été */
+.eteBtn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  border: none; color: #fff;
+  padding: 10px 14px; border-radius: 10px;
+  font-size: 0.82rem; font-weight: 800; font-family: var(--font-title);
+  cursor: pointer; width: 100%;
+  box-shadow: 0 4px 16px rgba(245,158,11,0.35);
+  position: relative; overflow: hidden;
+  transition: opacity 0.2s;
+}
+.eteBtn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transform: translateX(-100%);
+  animation: eteShimmer 2s ease-in-out infinite;
+}
+@keyframes eteShimmer {
+  0%  { transform: translateX(-100%); }
+  55% { transform: translateX(100%); }
+  100%{ transform: translateX(100%); }
+}
+.eteBtn:hover { opacity: 0.9; }
