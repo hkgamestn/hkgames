@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Mail, MessageCircle, Search, MapPin, X, ChevronLeft, ChevronRight, Ban, Trash2, Building2, TrendingUp, Users, Target, Sparkles, Play, Pause, Copy, Flame, Upload, Download, BookOpen } from 'lucide-react'
+import { Plus, Mail, MessageCircle, Search, MapPin, X, ChevronLeft, ChevronRight, Ban, Trash2, Building2, TrendingUp, Users, Target, Sparkles, Play, Pause, Copy, Flame, Upload, Download, BookOpen, Send } from 'lucide-react'
 import styles from './prospection.module.css'
+import { EMAIL_SEQUENCE, EMAIL_BULK, WA_SEQUENCE, WA_COUNT, EMAIL_COUNT, emailAt, waAt, fillVars } from './messages'
 
 const STAGES = [
   { id: 'a_contacter', label: 'À contacter' },
@@ -36,11 +37,17 @@ function scoreOf(w) {
 }
 const tier = (s) => (s >= 60 ? { label: 'Hot', cls: 'hot' } : s >= 35 ? { label: 'Warm', cls: 'warm' } : { label: 'Cold', cls: 'cold' })
 
-const EMAIL_SUBJECT = 'Slime premium fabriqué en Tunisie — pour vos rayons'
-const emailBody = (w) => `Bonjour ${w.enseigne},\n\nJe suis [Prénom] de HK Games, fabricant tunisien de slime premium (marque SLIMO).\nProduit à forte rotation, marges revendeur intéressantes, réassort rapide (fabriqué en Tunisie).\nGamme : Unicolore, Bicolore, Slime Buddies.\n\nOffre grossistes : https://www.hap-p-kids.store/grossiste\nJe peux vous envoyer le catalogue + tarifs gros, ou un échantillon. Vous préférez quoi ?\n\n[Prénom] — HK Games\n(Pour ne plus recevoir nos e-mails pro, répondez STOP.)`
-const waMessage = (w) => `سلام ${w.enseigne} 👋 أنا [الإسم] من HK Games، مصنع سلايم تونسي بريميوم 🇹🇳\nسلايم يتجبّد ويعمل الكيف، يمشي برشة مع الصغار 🔥 + هامش ربح باهي للموزّعين.\nتحب نبعثلك الكتالوڭ والأسعار بالجملة، ولا عيّنة؟`
-const mailtoHref = (w, body) => `mailto:${w.email}?subject=${encodeURIComponent(EMAIL_SUBJECT)}&body=${encodeURIComponent(body || emailBody(w))}`
-const waHref = (w, body) => `https://wa.me/${(w.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(body || waMessage(w))}`
+// E-mail (FR) — pioche le bon message selon email_step (0 = jamais contacté)
+const mailtoHref = (w, body) => {
+  const m = emailAt(w.email_step || 0)
+  const subject = fillVars(m.subject, w)
+  return `mailto:${w.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body || fillVars(m.body, w))}`
+}
+// WhatsApp (derja) — pioche le bon message selon wa_step (0 = jamais contacté)
+const waHref = (w, body) => {
+  const m = waAt(w.wa_step || 0)
+  return `https://wa.me/${(w.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(body || fillVars(m.body, w))}`
+}
 
 // --- Import CSV ---
 function parseCSV(text) {
@@ -133,6 +140,55 @@ export default function ProspectionPage() {
   }
   const moveStage = (w, d) => patch(w.id, { stage: STAGES[Math.min(STAGES.length - 1, Math.max(0, stageIndex(w.stage) + d))].id })
   const onContact = (w) => patch(w.id, { last_contact_at: new Date().toISOString(), ...(w.stage === 'a_contacter' ? { stage: 'contacte' } : {}) })
+
+  // Journalise un message envoyé manuellement (best-effort, n'interrompt jamais l'UX)
+  async function logMessage(w, channel, step, subject, body) {
+    try {
+      const supabase = createClient()
+      await supabase.from('prospect_messages').insert({
+        prospect_id: w.id, channel, step, subject: subject || null, body: body || null, status: 'sent', sent_at: new Date().toISOString(),
+      })
+    } catch { /* table optionnelle : on ignore */ }
+  }
+
+  // Clic e-mail (par prospect) → avance email_step + journal
+  function onEmail(w) {
+    const step = w.email_step || 0
+    const m = emailAt(step)
+    patch(w.id, { email_step: step + 1, last_contact_at: new Date().toISOString(), ...(w.stage === 'a_contacter' ? { stage: 'contacte' } : {}) })
+    logMessage(w, 'email', step, fillVars(m.subject, w), fillVars(m.body, w))
+  }
+  // Clic WhatsApp (par prospect) → avance wa_step + journal
+  function onWhatsApp(w) {
+    const step = w.wa_step || 0
+    const m = waAt(step)
+    patch(w.id, { wa_step: step + 1, last_contact_at: new Date().toISOString(), ...(w.stage === 'a_contacter' ? { stage: 'contacte' } : {}) })
+    logMessage(w, 'whatsapp', step, null, fillVars(m.body, w))
+  }
+
+  // Envoi e-mail GROUPÉ : tous les non-contactés par e-mail (email_step = 0), en copie cachée, template FR #1.
+  const BULK_MAX = 40
+  function bulkEmail() {
+    const eligible = rows.filter((w) => w.email && !w.opt_out && (w.email_step || 0) === 0)
+    if (!eligible.length) { setImportMsg('Aucun contact à e-mailer (tous déjà contactés par e-mail, en opt-out, ou sans adresse).'); return }
+    const batch = eligible.slice(0, BULK_MAX)
+    const remaining = eligible.length - batch.length
+    if (!window.confirm(`Ouvrir un e-mail vers ${batch.length} prospect(s) en copie cachée (template FR #1), et les marquer comme contactés ?${remaining ? `\n\n${remaining} autre(s) suivront : reclique sur « Envoyer e-mails » après cet envoi.` : ''}`)) return
+    const bcc = batch.map((w) => w.email).join(',')
+    window.location.href = `mailto:?bcc=${encodeURIComponent(bcc)}&subject=${encodeURIComponent(EMAIL_BULK.subject)}&body=${encodeURIComponent(EMAIL_BULK.body)}`
+    // marque le lot comme contacté
+    const ids = batch.map((w) => w.id); const ts = new Date().toISOString()
+    setRows((p) => p.map((x) => ids.includes(x.id) ? { ...x, email_step: 1, last_contact_at: ts, stage: x.stage === 'a_contacter' ? 'contacte' : x.stage } : x))
+    ;(async () => {
+      const supabase = createClient()
+      await supabase.from('wholesale_prospects').update({ email_step: 1, last_contact_at: ts }).in('id', ids)
+      const toBump = batch.filter((w) => w.stage === 'a_contacter').map((w) => w.id)
+      if (toBump.length) await supabase.from('wholesale_prospects').update({ stage: 'contacte' }).in('id', toBump)
+      batch.forEach((w) => logMessage(w, 'email', 0, EMAIL_BULK.subject, EMAIL_BULK.body))
+    })()
+    setImportMsg(`E-mail groupé ouvert pour ${batch.length} prospect(s).${remaining ? ` Reclique pour les ${remaining} suivants.` : ''} Lot ajouté en copie cachée (BCC) pour la confidentialité.`)
+  }
+
   const toggleSeq = (w) => patch(w.id, w.sequence_active
     ? { sequence_active: false }
     : { sequence_active: true, sequence_step: 0, next_action_at: new Date().toISOString() })
@@ -165,6 +221,7 @@ export default function ProspectionPage() {
         <div><p className={styles.eyebrow}>HK Games · B2B</p><h1 className={styles.title}>Prospection grossistes</h1></div>
         <div className={styles.headerBtns}>
           <Link href="/admin/grossiste/prospection/strategie" className={styles.ghostBtn}><BookOpen size={16} /> Stratégie</Link>
+          <button className={styles.addBtn} onClick={bulkEmail} type="button" title="E-mail groupé aux non-contactés (template FR #1)"><Send size={16} /> Envoyer e-mails</button>
           <button className={styles.ghostBtn} onClick={downloadTemplate} type="button"><Download size={16} /> Modèle CSV</button>
           <button className={styles.ghostBtn} onClick={() => fileRef.current?.click()} type="button"><Upload size={16} /> Importer CSV</button>
           <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => importCSV(e.target.files?.[0])} />
@@ -212,7 +269,7 @@ export default function ProspectionPage() {
               <div key={st.id} className={styles.column}>
                 <div className={styles.colHead}><span className={`${styles.dot} ${styles['dot_' + st.id]}`} /> {st.label}<span className={styles.count}>{cards.length}</span></div>
                 <div className={styles.cards}>
-                  {cards.map((w) => <Card key={w.id} w={w} onMove={moveStage} onPatch={patch} onRemove={remove} onContact={onContact} onAi={() => setAi({ w })} onSeq={() => toggleSeq(w)} />)}
+                  {cards.map((w) => <Card key={w.id} w={w} onMove={moveStage} onPatch={patch} onRemove={remove} onEmail={onEmail} onWhatsApp={onWhatsApp} onAi={() => setAi({ w })} onSeq={() => toggleSeq(w)} />)}
                   {cards.length === 0 && <div className={styles.emptyCol}>Aucun contact</div>}
                 </div>
               </div>
@@ -246,10 +303,12 @@ function Kpi({ icon, label, value }) {
   return <div className={styles.kpi}><div className={styles.kpiTop}>{icon}<span>{label}</span></div><div className={styles.kpiValue}>{value}</div></div>
 }
 
-function Card({ w, onMove, onPatch, onRemove, onContact, onAi, onSeq }) {
+function Card({ w, onMove, onPatch, onRemove, onEmail, onWhatsApp, onAi, onSeq }) {
   const i = stageIndex(w.stage)
   const off = w.opt_out
   const s = scoreOf(w); const t = tier(s)
+  const eStep = Math.min((w.email_step || 0) + 1, EMAIL_COUNT)
+  const wStep = Math.min((w.wa_step || 0) + 1, WA_COUNT)
   return (
     <div className={`${styles.card} ${off ? styles.cardOut : ''}`}>
       <div className={styles.cardTop}>
@@ -265,8 +324,12 @@ function Card({ w, onMove, onPatch, onRemove, onContact, onAi, onSeq }) {
       {w.notes && <p className={styles.notes}>{w.notes}</p>}
 
       <div className={styles.actions}>
-        <a className={`${styles.act} ${styles.actMail} ${off ? styles.actOff : ''}`} href={off ? undefined : mailtoHref(w)} onClick={(e) => off ? e.preventDefault() : onContact(w)}><Mail size={13} /> E-mail</a>
-        <a className={`${styles.act} ${styles.actWa} ${off ? styles.actOff : ''}`} href={off ? undefined : waHref(w)} target="_blank" rel="noreferrer" onClick={(e) => off ? e.preventDefault() : onContact(w)}><MessageCircle size={13} /> WhatsApp</a>
+        <a className={`${styles.act} ${styles.actMail} ${(off || !w.email) ? styles.actOff : ''}`} href={(off || !w.email) ? undefined : mailtoHref(w)}
+           title={w.email ? `E-mail FR #${eStep}/${EMAIL_COUNT}` : 'Pas d\'e-mail'}
+           onClick={(e) => (off || !w.email) ? e.preventDefault() : onEmail(w)}><Mail size={13} /> E-mail <span className={styles.stepTag}>{eStep}/{EMAIL_COUNT}</span></a>
+        <a className={`${styles.act} ${styles.actWa} ${(off || !w.whatsapp) ? styles.actOff : ''}`} href={(off || !w.whatsapp) ? undefined : waHref(w)} target="_blank" rel="noreferrer"
+           title={w.whatsapp ? `WhatsApp derja #${wStep}/${WA_COUNT}` : 'Pas de WhatsApp'}
+           onClick={(e) => (off || !w.whatsapp) ? e.preventDefault() : onWhatsApp(w)}><MessageCircle size={13} /> WhatsApp <span className={styles.stepTag}>{wStep}/{WA_COUNT}</span></a>
         <button className={`${styles.optBtn} ${off ? styles.optOn : ''}`} type="button" onClick={() => onPatch(w.id, { opt_out: !w.opt_out })} title="Opt-out"><Ban size={13} /></button>
       </div>
 
