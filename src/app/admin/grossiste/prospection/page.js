@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Mail, MessageCircle, Search, MapPin, X, ChevronLeft, ChevronRight, Ban, Trash2, Building2, TrendingUp, Users, Target, Sparkles, Play, Pause, Copy, Flame } from 'lucide-react'
+import { Plus, Mail, MessageCircle, Search, MapPin, X, ChevronLeft, ChevronRight, Ban, Trash2, Building2, TrendingUp, Users, Target, Sparkles, Play, Pause, Copy, Flame, Upload, Download } from 'lucide-react'
 import styles from './prospection.module.css'
 
 const STAGES = [
@@ -41,6 +41,24 @@ const waMessage = (w) => `سلام ${w.enseigne} 👋 أنا [الإسم] من H
 const mailtoHref = (w, body) => `mailto:${w.email}?subject=${encodeURIComponent(EMAIL_SUBJECT)}&body=${encodeURIComponent(body || emailBody(w))}`
 const waHref = (w, body) => `https://wa.me/${(w.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(body || waMessage(w))}`
 
+// --- Import CSV ---
+function parseCSV(text) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter((l) => l.trim().length)
+  if (!lines.length) return []
+  const parseLine = (line) => {
+    const out = []; let cur = ''; let q = false
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i]
+      if (q) { if (c === '"') { if (line[i + 1] === '"') { cur += '"'; i++ } else q = false } else cur += c }
+      else { if (c === '"') q = true; else if (c === ',') { out.push(cur); cur = '' } else cur += c }
+    }
+    out.push(cur); return out
+  }
+  const headers = parseLine(lines[0]).map((h) => h.trim().toLowerCase())
+  return lines.slice(1).map((l) => { const cells = parseLine(l); const o = {}; headers.forEach((h, i) => (o[h] = (cells[i] ?? '').trim())); return o })
+}
+const CSV_TEMPLATE = 'enseigne,segment,gouvernorat,ville,email,whatsapp,source,notes\nBazar Exemple,grossiste,Tunis,Moncef Bey,contact@exemple.tn,+216 20 000 000,terrain,Note libre\n'
+
 export default function ProspectionPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -48,6 +66,47 @@ export default function ProspectionPage() {
   const [filterGouv, setFilterGouv] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [ai, setAi] = useState(null) // { w }
+  const fileRef = useRef(null)
+  const [importMsg, setImportMsg] = useState('')
+
+  async function importCSV(file) {
+    if (!file) return
+    setImportMsg('Import en cours…')
+    const records = parseCSV(await file.text())
+    const valid = []; let skipped = 0
+    for (const r of records) {
+      const enseigne = (r.enseigne || '').trim()
+      const email = (r.email || '').trim()
+      const whatsapp = (r.whatsapp || '').trim()
+      if (!enseigne) { skipped++; continue }
+      valid.push({
+        enseigne,
+        segment: SEGMENTS.find((s) => s.id === (r.segment || '').trim().toLowerCase())?.id || 'autre',
+        gouvernorat: (r.gouvernorat || '').trim() || null,
+        ville: (r.ville || '').trim() || null,
+        email: email || null,
+        whatsapp: whatsapp || null,
+        source: SOURCES.includes((r.source || '').trim()) ? r.source.trim() : 'terrain',
+        notes: (r.notes || '').trim() || null,
+        stage: 'a_contacter',
+      })
+    }
+    if (valid.length) {
+      const supabase = createClient()
+      const { data, error } = await supabase.from('wholesale_prospects').insert(valid).select()
+      if (error) { setImportMsg('Erreur import : ' + error.message); return }
+      if (data) setRows((prev) => [...data, ...prev])
+    }
+    setImportMsg(`Import terminé : ${valid.length} ajoutés, ${skipped} ignorés (enseigne requise). Enrichis les contacts manquants dans les cartes.`)
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  function downloadTemplate() {
+    const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'modele_prospects_hkgames.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
 
   useEffect(() => {
     const supabase = createClient()
@@ -103,8 +162,14 @@ export default function ProspectionPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div><p className={styles.eyebrow}>HK Games · B2B</p><h1 className={styles.title}>Prospection grossistes</h1></div>
-        <button className={styles.addBtn} onClick={() => setShowForm(true)} type="button"><Plus size={18} /> Ajouter un grossiste</button>
+        <div className={styles.headerBtns}>
+          <button className={styles.ghostBtn} onClick={downloadTemplate} type="button"><Download size={16} /> Modèle CSV</button>
+          <button className={styles.ghostBtn} onClick={() => fileRef.current?.click()} type="button"><Upload size={16} /> Importer CSV</button>
+          <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => importCSV(e.target.files?.[0])} />
+          <button className={styles.addBtn} onClick={() => setShowForm(true)} type="button"><Plus size={18} /> Ajouter</button>
+        </div>
       </header>
+      {importMsg && <div className={styles.importMsg}>{importMsg}</div>}
 
       <section className={styles.kpis}>
         <Kpi icon={<Building2 size={18} />} label="Contacts" value={total} />
