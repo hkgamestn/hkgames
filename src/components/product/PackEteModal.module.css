@@ -1,0 +1,218 @@
+/* ── Overlay ───────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(8,4,20,0.85);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+
+/* ── Modal ─────────────────────────────────────────────────── */
+.modal {
+  position: relative;
+  background: linear-gradient(145deg, #1a0a2e 0%, #0f1a0a 60%, #1a0f00 100%);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 24px;
+  width: min(820px, 100%);
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow:
+    0 0 60px rgba(245,158,11,0.15),
+    0 32px 80px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  animation: modalIn 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.88) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Soleil décoratif ──────────────────────────────────────── */
+.sunBg {
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 260px; height: 260px;
+  pointer-events: none; z-index: 0;
+}
+
+.sunRays {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245,158,11,0.3) 0%, rgba(239,68,68,0.1) 50%, transparent 70%);
+  animation: sunPulse 4s ease-in-out infinite;
+}
+
+@keyframes sunPulse {
+  0%,100% { transform: scale(1); opacity: 0.8; }
+  50%     { transform: scale(1.15); opacity: 1; }
+}
+
+/* ── Close ─────────────────────────────────────────────────── */
+.closeBtn {
+  position: absolute; top: 14px; right: 14px; z-index: 10;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.2s;
+}
+.closeBtn:hover { background: rgba(255,255,255,0.16); }
+
+/* ── Grid ──────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 0;
+  height: 100%;
+  position: relative; z-index: 1;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+/* ── Image Col ─────────────────────────────────────────────── */
+.imageCol {
+  background: linear-gradient(160deg, rgba(245,158,11,0.08) 0%, rgba(239,68,68,0.05) 100%);
+  border-right: 1px solid rgba(245,158,11,0.15);
+  padding: 28px 20px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+
+.imageWrap {
+  position: relative;
+  width: 100%; aspect-ratio: 1;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(245,158,11,0.2);
+}
+
+.image { object-fit: cover; }
+
+/* Bulles flottantes */
+.bubble {
+  position: absolute;
+  left: var(--x); top: var(--y);
+  width: var(--size); height: var(--size);
+  border-radius: 50%;
+  background: rgba(245,158,11,0.2);
+  border: 1px solid rgba(245,158,11,0.4);
+  animation: floatBubble var(--d, 4s) ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes floatBubble {
+  from { transform: translateY(0) scale(1); opacity: 0.6; }
+  to   { transform: translateY(-12px) scale(1.1); opacity: 1; }
+}
+
+/* Prix */
+.priceBlock {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+}
+.priceFinal   { font-family: var(--font-title); font-size: 2rem; font-weight: 900; color: #f59e0b; }
+.priceOriginal{ text-decoration: line-through; color: rgba(255,255,255,0.3); font-size: 0.95rem; }
+.saveBadge    {
+  background: linear-gradient(135deg,#22c55e,#16a34a);
+  color: #fff; font-size: 0.72rem; font-weight: 800;
+  padding: 3px 9px; border-radius: 99px;
+}
+
+.badgeRow { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.infoBadge {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
+  color: #f59e0b; font-size: 0.75rem; font-weight: 700;
+  padding: 4px 10px; border-radius: 99px;
+}
+
+/* ── Info Col ──────────────────────────────────────────────── */
+.infoCol {
+  padding: 28px 26px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+  overflow-y: auto;
+}
+
+.seasonBadge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(239,68,68,0.15));
+  border: 1px solid rgba(245,158,11,0.4);
+  color: #f59e0b; font-size: 0.78rem; font-weight: 800;
+  padding: 5px 14px; border-radius: 99px;
+  width: fit-content;
+  animation: badgeGlow 2.5s ease infinite;
+}
+@keyframes badgeGlow {
+  0%,100% { box-shadow: 0 0 8px rgba(245,158,11,0.2); }
+  50%     { box-shadow: 0 0 20px rgba(245,158,11,0.5); }
+}
+
+.title { font-family: var(--font-title); font-size: 1.7rem; font-weight: 900; color: #fff; line-height: 1.1; margin: 0; }
+.titleAccent { background: linear-gradient(135deg,#f59e0b,#ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+.tagline { font-size: 0.9rem; color: rgba(255,255,255,0.7); line-height: 1.5; margin: 0; }
+.tagline strong { color: #f59e0b; }
+
+/* Couleurs */
+.colorsSection { display: flex; flex-direction: column; gap: 8px; }
+.colorsTitle   { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
+.colorsGrid    { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; }
+.colorItem     { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.colorBall     {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border: 2px solid rgba(255,255,255,0.2);
+  transition: transform 0.2s;
+}
+.colorBall:hover { transform: scale(1.15); }
+.colorEmoji  { font-size: 1rem; }
+.colorName   { font-size: 0.6rem; color: rgba(255,255,255,0.5); font-weight: 600; text-align: center; }
+
+/* Why */
+.whyGrid { display: flex; flex-direction: column; gap: 8px; }
+.whyCard {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(245,158,11,0.1);
+  border-radius: 10px; padding: 10px 12px;
+}
+.whyIcon  { font-size: 1.3rem; flex-shrink: 0; }
+.whyTitle { font-size: 0.82rem; font-weight: 700; color: #fff; margin: 0; }
+.whySub   { font-size: 0.73rem; color: rgba(255,255,255,0.45); margin: 2px 0 0; }
+
+/* Bouton */
+.addBtn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  border: none; color: #fff;
+  padding: 14px 24px; border-radius: 14px;
+  font-size: 1rem; font-weight: 800; font-family: var(--font-title);
+  cursor: pointer; width: 100%;
+  box-shadow: 0 6px 24px rgba(245,158,11,0.4);
+  transition: opacity 0.2s, transform 0.15s;
+  position: relative; overflow: hidden;
+}
+.addBtn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+.addBtn:hover  { opacity: 0.93; transform: translateY(-1px); }
+.addBtn:active { transform: scale(0.98); }
+
+.delivNote {
+  text-align: center; font-size: 0.75rem;
+  color: rgba(255,255,255,0.4); margin: -6px 0 0;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .grid { grid-template-columns: 1fr; }
+  .imageCol { border-right: none; border-bottom: 1px solid rgba(245,158,11,0.15); }
+  .colorsGrid { grid-template-columns: repeat(3,1fr); }
+  .title { font-size: 1.4rem; }
+}

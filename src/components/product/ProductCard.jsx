@@ -8,6 +8,7 @@ import StockBadge from '@/components/ui/StockBadge'
 import { useCartStore } from '@/lib/cart/store'
 import { formatDT } from '@/lib/utils/formatDT'
 import ProductModal from './ProductModal'
+import PackEteModal from './PackEteModal'
 import styles from './ProductCard.module.css'
 
 const LINE_LABELS = { unicolore: 'Unicolore', bicolore: 'Bicolore', buddies: 'Buddy', pack_ete: '☀️ Pack Été' }
@@ -206,7 +207,13 @@ export default function ProductCard({ product, index = 99 }) {
         </div>
       </div>
 
-      {showModal && (
+      {showModal && isPackEte && (
+        <PackEteModal
+          product={product}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+      {showModal && !isPackEte && (
         <ProductModal
           product={product}
           selectedColor={selectedColor}
