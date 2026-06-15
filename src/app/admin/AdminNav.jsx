@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { LayoutDashboard, ShoppingBag, Package, BarChart2, Settings, LogOut, Star, Radio, Building2, BookOpen, Video, Layers } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Package, BarChart2, Settings, LogOut, Star, Radio, Building2, BookOpen, Video, Layers, Send } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import styles from './AdminNav.module.css'
 
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/admin/live',       icon: Radio,           label: '🔴 Live' },
   { href: '/admin/grossiste',  icon: Building2,       label: 'Grossistes' },
   { href: '/admin/grossiste/tiers', icon: Layers, label: 'Grille tarifaire' },
+  { href: '/admin/grossiste/prospection', icon: Send, label: 'Prospection' },
   { href: '/admin/blog',       icon: BookOpen,        label: 'Blog' },
   { href: '/admin/videos',     icon: Video,           label: 'Vidéos' },
   { href: '/admin/parametres', icon: Settings,        label: 'Paramètres' },
