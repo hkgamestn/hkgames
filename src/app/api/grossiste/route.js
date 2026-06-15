@@ -24,6 +24,9 @@ export async function POST(req) {
     payload.request_type = payload.request_type || 'wholesale'
     payload.status       = 'new'
 
+    // Fallback vide si échantillon (colonne nullable après migration SQL)
+    if (!payload.matricule_fiscal) payload.matricule_fiscal = ''
+
     const { data, error } = await supabase.from('wholesale_requests').insert([payload]).select().single()
     if (error) throw error
 
