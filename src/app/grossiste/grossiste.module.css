@@ -577,3 +577,16 @@
 }
 .mixBarHint { font-size: .72rem; color: rgba(255,255,255,.4); margin-top: 2px; }
 .mixBarHintRow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 3px; }
+
+/* ── Boutons hero ─────────────────────────────────────────── */
+.heroBtns       { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.heroSampleBtn  {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; padding: 12px 22px; border-radius: 12px;
+  font-size: 0.92rem; font-weight: 700; cursor: pointer;
+  transition: background 0.2s;
+  backdrop-filter: blur(6px);
+}
+.heroSampleBtn:hover { background: rgba(255,255,255,0.15); }

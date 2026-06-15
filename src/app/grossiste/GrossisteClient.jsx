@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/client'
+import SampleRequestModal from '@/components/grossiste/SampleRequestModal'
 import {
   Building2, Phone, MapPin, Package, CheckCircle,
   ChevronRight, Truck, ShieldCheck, TrendingUp,
@@ -506,8 +507,9 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
     city: '', address: '', matricule_fiscal: '', notes: '',
   })
   const [errors,  setErrors]  = useState({})
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [loading, setLoading]               = useState(false)
+  const [success, setSuccess]               = useState(false)
+  const [showSampleModal, setShowSampleModal] = useState(false)
 
   const totalQty  = quantities.unicolore + quantities.bicolore + quantities.buddies
   const tierInfo  = getPricePerUnit(totalQty, tiers)
@@ -611,9 +613,18 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
               Commandez dès <strong>19 pièces</strong>. Mélangez librement
               Unicolore, Bicolore et Buddy. Prix dégressifs, livraison nationale.
             </p>
-            <a href="#commande" className={styles.heroCta}>
-              Commander en gros <ChevronRight size={18}/>
-            </a>
+            <div className={styles.heroBtns}>
+              <a href="#commande" className={styles.heroCta}>
+                Commander en gros <ChevronRight size={18}/>
+              </a>
+              <button
+                className={styles.heroSampleBtn}
+                onClick={() => setShowSampleModal(true)}
+                type="button"
+              >
+                🧪 Demander un échantillon gratuit
+              </button>
+            </div>
           </div>
         </section>
 
@@ -808,6 +819,9 @@ export default function GrossisteClient({ tiers, lineImages = {} }) {
           lineImages={lineImages}
           onClose={() => setModalProduct(null)}
         />
+      )}
+      {showSampleModal && (
+        <SampleRequestModal onClose={() => setShowSampleModal(false)} />
       )}
     </>
   )

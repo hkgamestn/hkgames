@@ -14,6 +14,11 @@ const STATUS_TABS = [
   { id: 'cancelled', label: '❌ Annulées' },
 ]
 
+const TYPE_CONFIG = {
+  wholesale: { label: 'Commande gros', color: '#a855f7', bg: 'rgba(168,85,247,0.12)' },
+  sample:    { label: '🧪 Échantillon', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+}
+
 const STATUS_CONFIG = {
   new:       { label: 'Nouvelle',   color: '#fbbf24' },
   contacted: { label: 'Contactée',  color: '#60a5fa' },
@@ -123,9 +128,22 @@ export default function AdminGrossistePage() {
           ) : (
             <div className={styles.requestsList}>
               {requests.map(req => (
-                <div key={req.id} className={styles.requestCard}>
+                <div key={req.id} className={`${styles.requestCard} ${req.request_type === 'sample' ? styles.requestCardSample : ''}`}>
                   <div className={styles.reqHeader}>
                     <div>
+                      {/* Badge type */}
+                      {req.request_type && (
+                        <span style={{
+                          display: 'inline-block', marginBottom: 4,
+                          fontSize: '0.65rem', fontWeight: 800,
+                          background: TYPE_CONFIG[req.request_type]?.bg || 'rgba(168,85,247,0.12)',
+                          color: TYPE_CONFIG[req.request_type]?.color || '#a855f7',
+                          border: `1px solid ${TYPE_CONFIG[req.request_type]?.color || '#a855f7'}33`,
+                          borderRadius: '99px', padding: '2px 9px',
+                        }}>
+                          {TYPE_CONFIG[req.request_type]?.label || req.request_type}
+                        </span>
+                      )}
                       <div className={styles.reqCompany}>{req.company_name}</div>
                       <div className={styles.reqContact}>{req.contact_name} — {req.phone}</div>
                     </div>

@@ -133,3 +133,12 @@
   .itemsHeader, .itemRow { grid-template-columns: 1.5fr .5fr 1fr .6fr .2fr; }
   .totalsBox { width: 100%; }
 }
+
+/* Carte demande échantillon */
+.requestCardSample {
+  border-color: rgba(245,158,11,0.3) !important;
+  background: rgba(245,158,11,0.03) !important;
+}
+.requestCardSample:hover {
+  border-color: rgba(245,158,11,0.5) !important;
+}
