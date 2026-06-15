@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Mail, MessageCircle, Search, MapPin, X, ChevronLeft, ChevronRight, Ban, Trash2, Building2, TrendingUp, Users, Target } from 'lucide-react'
+import { Plus, Mail, MessageCircle, Search, MapPin, X, ChevronLeft, ChevronRight, Ban, Trash2, Building2, TrendingUp, Users, Target, Sparkles, Play, Pause, Copy, Flame, Upload, Download } from 'lucide-react'
 import styles from './prospection.module.css'
 
 const STAGES = [
@@ -17,46 +17,47 @@ const STAGES = [
 const stageIndex = (id) => STAGES.findIndex((s) => s.id === id)
 
 const SEGMENTS = [
-  { id: 'grossiste', label: 'Grossiste' },
-  { id: 'magasin',   label: 'Magasin' },
-  { id: 'papeterie', label: 'Papeterie' },
-  { id: 'e-shop',    label: 'E-shop' },
-  { id: 'fete',      label: 'Articles de fête' },
-  { id: 'autre',     label: 'Autre' },
+  { id: 'grossiste', label: 'Grossiste' }, { id: 'magasin', label: 'Magasin' },
+  { id: 'papeterie', label: 'Papeterie' }, { id: 'e-shop', label: 'E-shop' },
+  { id: 'fete', label: 'Articles de fête' }, { id: 'autre', label: 'Autre' },
 ]
 const SOURCES = ['pages_maghreb', 'kompass', 'europages', 'goafrica', 'terrain', 'facebook', 'inbound_site']
+const GOUVS = ['Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Zaghouan', 'Bizerte', 'Béja', 'Jendouba', 'Le Kef', 'Siliana', 'Sousse', 'Monastir', 'Mahdia', 'Sfax', 'Kairouan', 'Kasserine', 'Sidi Bouzid', 'Gabès', 'Médenine', 'Tataouine', 'Gafsa', 'Tozeur', 'Kébili']
 
-const GOUVS = [
-  'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Zaghouan', 'Bizerte', 'Béja',
-  'Jendouba', 'Le Kef', 'Siliana', 'Sousse', 'Monastir', 'Mahdia', 'Sfax', 'Kairouan',
-  'Kasserine', 'Sidi Bouzid', 'Gabès', 'Médenine', 'Tataouine', 'Gafsa', 'Tozeur', 'Kébili',
-]
+// --- Scoring heuristique (priorité) ---
+const SEG_W = { grossiste: 40, magasin: 25, papeterie: 20, 'e-shop': 20, fete: 12, autre: 8 }
+const SRC_W = { inbound_site: 30, terrain: 15, facebook: 10, pages_maghreb: 8, kompass: 8, europages: 8, goafrica: 6 }
+function scoreOf(w) {
+  if (w.score && w.score > 0) return w.score
+  let s = (SEG_W[w.segment] || 8) + (SRC_W[w.source] || 5)
+  if (['interesse', 'catalogue', 'devis'].includes(w.stage)) s += 25
+  return Math.min(100, s)
+}
+const tier = (s) => (s >= 60 ? { label: 'Hot', cls: 'hot' } : s >= 35 ? { label: 'Warm', cls: 'warm' } : { label: 'Cold', cls: 'cold' })
 
 const EMAIL_SUBJECT = 'Slime premium fabriqué en Tunisie — pour vos rayons'
-const emailBody = (w) =>
-`Bonjour ${w.enseigne},
+const emailBody = (w) => `Bonjour ${w.enseigne},\n\nJe suis [Prénom] de HK Games, fabricant tunisien de slime premium (marque SLIMO).\nProduit à forte rotation, marges revendeur intéressantes, réassort rapide (fabriqué en Tunisie).\nGamme : Unicolore, Bicolore, Slime Buddies.\n\nOffre grossistes : https://www.hap-p-kids.store/grossiste\nJe peux vous envoyer le catalogue + tarifs gros, ou un échantillon. Vous préférez quoi ?\n\n[Prénom] — HK Games\n(Pour ne plus recevoir nos e-mails pro, répondez STOP.)`
+const waMessage = (w) => `سلام ${w.enseigne} 👋 أنا [الإسم] من HK Games، مصنع سلايم تونسي بريميوم 🇹🇳\nسلايم يتجبّد ويعمل الكيف، يمشي برشة مع الصغار 🔥 + هامش ربح باهي للموزّعين.\nتحب نبعثلك الكتالوڭ والأسعار بالجملة، ولا عيّنة؟`
+const mailtoHref = (w, body) => `mailto:${w.email}?subject=${encodeURIComponent(EMAIL_SUBJECT)}&body=${encodeURIComponent(body || emailBody(w))}`
+const waHref = (w, body) => `https://wa.me/${(w.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(body || waMessage(w))}`
 
-Je suis [Prénom] de HK Games, fabricant tunisien de slime premium (marque SLIMO).
-Notre slime — épais, élastique, ultra satisfaisant — est un produit à forte rotation : les enfants adorent.
-
-En tant que fabricant local, on vous offre :
-- des marges revendeur intéressantes + un réassort rapide (pas d'import, pas de douane) ;
-- une gamme complète (Unicolore, Bicolore, Slime Buddies) ;
-- un support marketing : nos campagnes créent la demande, vous encaissez les ventes.
-
-Offre grossistes : https://www.hap-p-kids.store/grossiste
-Je peux vous envoyer le catalogue + tarifs gros, ou un échantillon. Vous préférez quoi ?
-
-[Prénom] — HK Games
-(Pour ne plus recevoir nos e-mails pro, répondez STOP.)`
-
-const waMessage = (w) =>
-`سلام ${w.enseigne} 👋 أنا [الإسم] من HK Games، مصنع سلايم تونسي بريميوم 🇹🇳
-عندنا سلايم يتجبّد ويعمل الكيف، يمشي برشة مع الصغار 🔥 ونعطيو هامش ربح باهي للموزّعين + ريأسور سريع.
-تحب نبعثلك الكتالوڭ والأسعار بالجملة، ولا عيّنة باش تجرّب؟`
-
-const mailtoHref = (w) => `mailto:${w.email}?subject=${encodeURIComponent(EMAIL_SUBJECT)}&body=${encodeURIComponent(emailBody(w))}`
-const waHref = (w) => `https://wa.me/${(w.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(waMessage(w))}`
+// --- Import CSV ---
+function parseCSV(text) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter((l) => l.trim().length)
+  if (!lines.length) return []
+  const parseLine = (line) => {
+    const out = []; let cur = ''; let q = false
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i]
+      if (q) { if (c === '"') { if (line[i + 1] === '"') { cur += '"'; i++ } else q = false } else cur += c }
+      else { if (c === '"') q = true; else if (c === ',') { out.push(cur); cur = '' } else cur += c }
+    }
+    out.push(cur); return out
+  }
+  const headers = parseLine(lines[0]).map((h) => h.trim().toLowerCase())
+  return lines.slice(1).map((l) => { const cells = parseLine(l); const o = {}; headers.forEach((h, i) => (o[h] = (cells[i] ?? '').trim())); return o })
+}
+const CSV_TEMPLATE = 'enseigne,segment,gouvernorat,ville,email,whatsapp,source,notes\nBazar Exemple,grossiste,Tunis,Moncef Bey,contact@exemple.tn,+216 20 000 000,terrain,Note libre\n'
 
 export default function ProspectionPage() {
   const [rows, setRows] = useState([])
@@ -64,6 +65,48 @@ export default function ProspectionPage() {
   const [query, setQuery] = useState('')
   const [filterGouv, setFilterGouv] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [ai, setAi] = useState(null) // { w }
+  const fileRef = useRef(null)
+  const [importMsg, setImportMsg] = useState('')
+
+  async function importCSV(file) {
+    if (!file) return
+    setImportMsg('Import en cours…')
+    const records = parseCSV(await file.text())
+    const valid = []; let skipped = 0
+    for (const r of records) {
+      const enseigne = (r.enseigne || '').trim()
+      const email = (r.email || '').trim()
+      const whatsapp = (r.whatsapp || '').trim()
+      if (!enseigne) { skipped++; continue }
+      valid.push({
+        enseigne,
+        segment: SEGMENTS.find((s) => s.id === (r.segment || '').trim().toLowerCase())?.id || 'autre',
+        gouvernorat: (r.gouvernorat || '').trim() || null,
+        ville: (r.ville || '').trim() || null,
+        email: email || null,
+        whatsapp: whatsapp || null,
+        source: SOURCES.includes((r.source || '').trim()) ? r.source.trim() : 'terrain',
+        notes: (r.notes || '').trim() || null,
+        stage: 'a_contacter',
+      })
+    }
+    if (valid.length) {
+      const supabase = createClient()
+      const { data, error } = await supabase.from('wholesale_prospects').insert(valid).select()
+      if (error) { setImportMsg('Erreur import : ' + error.message); return }
+      if (data) setRows((prev) => [...data, ...prev])
+    }
+    setImportMsg(`Import terminé : ${valid.length} ajoutés, ${skipped} ignorés (enseigne requise). Enrichis les contacts manquants dans les cartes.`)
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  function downloadTemplate() {
+    const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'modele_prospects_hkgames.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
 
   useEffect(() => {
     const supabase = createClient()
@@ -72,37 +115,31 @@ export default function ProspectionPage() {
         .then(({ data }) => { setRows(data || []); setLoading(false) })
     }
     fetchRows()
-    const channel = supabase.channel('admin-prospects-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'wholesale_prospects' }, fetchRows)
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    const ch = supabase.channel('admin-prospects-rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wholesale_prospects' }, fetchRows).subscribe()
+    return () => { supabase.removeChannel(ch) }
   }, [])
 
   async function patch(id, fields) {
     const supabase = createClient()
-    setRows((prev) => prev.map((x) => (x.id === id ? { ...x, ...fields } : x)))
+    setRows((p) => p.map((x) => (x.id === id ? { ...x, ...fields } : x)))
     await supabase.from('wholesale_prospects').update(fields).eq('id', id)
   }
   async function remove(id) {
     const supabase = createClient()
-    setRows((prev) => prev.filter((x) => x.id !== id))
+    setRows((p) => p.filter((x) => x.id !== id))
     await supabase.from('wholesale_prospects').delete().eq('id', id)
   }
-  function moveStage(w, dir) {
-    const i = Math.min(STAGES.length - 1, Math.max(0, stageIndex(w.stage) + dir))
-    patch(w.id, { stage: STAGES[i].id })
-  }
-  function onContact(w) {
-    const fields = { last_contact_at: new Date().toISOString() }
-    if (w.stage === 'a_contacter') fields.stage = 'contacte'
-    patch(w.id, fields)
-  }
+  const moveStage = (w, d) => patch(w.id, { stage: STAGES[Math.min(STAGES.length - 1, Math.max(0, stageIndex(w.stage) + d))].id })
+  const onContact = (w) => patch(w.id, { last_contact_at: new Date().toISOString(), ...(w.stage === 'a_contacter' ? { stage: 'contacte' } : {}) })
+  const toggleSeq = (w) => patch(w.id, w.sequence_active
+    ? { sequence_active: false }
+    : { sequence_active: true, sequence_step: 0, next_action_at: new Date().toISOString() })
 
   const filtered = useMemo(() => rows.filter((w) => {
     const q = query.trim().toLowerCase()
     const okQ = !q || (w.enseigne || '').toLowerCase().includes(q) || (w.ville || '').toLowerCase().includes(q)
-    const okG = !filterGouv || w.gouvernorat === filterGouv
-    return okQ && okG
+    return okQ && (!filterGouv || w.gouvernorat === filterGouv)
   }), [rows, query, filterGouv])
 
   const total = rows.length
@@ -110,28 +147,29 @@ export default function ProspectionPage() {
   const negociation = rows.filter((w) => ['interesse', 'catalogue', 'devis'].includes(w.stage)).length
   const gouvCouverts = new Set(rows.filter((w) => w.stage === 'client').map((w) => w.gouvernorat)).size
 
+  const today = useMemo(() => {
+    const now = Date.now()
+    return rows.filter((w) => w.sequence_active && !w.opt_out && w.next_action_at && new Date(w.next_action_at).getTime() <= now)
+  }, [rows])
+
   const coverage = useMemo(() => {
-    const m = {}
-    GOUVS.forEach((g) => (m[g] = { contacts: 0, clients: 0 }))
-    rows.forEach((w) => {
-      if (!m[w.gouvernorat]) m[w.gouvernorat] = { contacts: 0, clients: 0 }
-      m[w.gouvernorat].contacts += 1
-      if (w.stage === 'client') m[w.gouvernorat].clients += 1
-    })
+    const m = {}; GOUVS.forEach((g) => (m[g] = { contacts: 0, clients: 0 }))
+    rows.forEach((w) => { if (!m[w.gouvernorat]) m[w.gouvernorat] = { contacts: 0, clients: 0 }; m[w.gouvernorat].contacts++; if (w.stage === 'client') m[w.gouvernorat].clients++ })
     return m
   }, [rows])
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>HK Games · B2B</p>
-          <h1 className={styles.title}>Prospection grossistes</h1>
+        <div><p className={styles.eyebrow}>HK Games · B2B</p><h1 className={styles.title}>Prospection grossistes</h1></div>
+        <div className={styles.headerBtns}>
+          <button className={styles.ghostBtn} onClick={downloadTemplate} type="button"><Download size={16} /> Modèle CSV</button>
+          <button className={styles.ghostBtn} onClick={() => fileRef.current?.click()} type="button"><Upload size={16} /> Importer CSV</button>
+          <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => importCSV(e.target.files?.[0])} />
+          <button className={styles.addBtn} onClick={() => setShowForm(true)} type="button"><Plus size={18} /> Ajouter</button>
         </div>
-        <button className={styles.addBtn} onClick={() => setShowForm(true)} type="button">
-          <Plus size={18} /> Ajouter un grossiste
-        </button>
       </header>
+      {importMsg && <div className={styles.importMsg}>{importMsg}</div>}
 
       <section className={styles.kpis}>
         <Kpi icon={<Building2 size={18} />} label="Contacts" value={total} />
@@ -140,20 +178,28 @@ export default function ProspectionPage() {
         <Kpi icon={<TrendingUp size={18} />} label="Gouvernorats" value={`${gouvCouverts}/24`} />
       </section>
 
-      <div className={styles.notice}>
-        <MessageCircle size={15} />
-        <span>WhatsApp = <strong>envoi manuel (1 clic)</strong>, message pré-rempli. Pas de blast automatique → on protège les numéros du bannissement.</span>
-      </div>
+      {today.length > 0 && (
+        <section className={styles.today}>
+          <div className={styles.todayHead}><Flame size={16} /> À faire aujourd'hui <span className={styles.count}>{today.length}</span></div>
+          <div className={styles.todayList}>
+            {today.slice(0, 8).map((w) => (
+              <div key={w.id} className={styles.todayItem}>
+                <span className={styles.todayName}>{w.enseigne}</span>
+                <span className={styles.todayMeta}>{w.ville || w.gouvernorat}</span>
+                <button className={styles.miniAi} onClick={() => setAi({ w })} type="button"><Sparkles size={13} /> Message</button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className={styles.notice}><MessageCircle size={15} /><span>WhatsApp = <strong>envoi manuel (1 clic)</strong>. L'automatisation envoie les e-mails (si provider configuré) et met les WhatsApp en file manuelle → anti-ban.</span></div>
 
       <div className={styles.toolbar}>
-        <div className={styles.searchWrap}>
-          <Search size={16} className={styles.searchIcon} />
-          <input className={styles.search} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher enseigne ou ville…" />
-        </div>
+        <div className={styles.searchWrap}><Search size={16} className={styles.searchIcon} />
+          <input className={styles.search} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher enseigne ou ville…" /></div>
         <select className={styles.select} value={filterGouv} onChange={(e) => setFilterGouv(e.target.value)}>
-          <option value="">Tous les gouvernorats</option>
-          {GOUVS.map((g) => <option key={g} value={g}>{g}</option>)}
-        </select>
+          <option value="">Tous les gouvernorats</option>{GOUVS.map((g) => <option key={g} value={g}>{g}</option>)}</select>
       </div>
 
       {loading ? <p className={styles.loading}>Chargement…</p> : (
@@ -162,14 +208,9 @@ export default function ProspectionPage() {
             const cards = filtered.filter((w) => w.stage === st.id)
             return (
               <div key={st.id} className={styles.column}>
-                <div className={styles.colHead}>
-                  <span className={`${styles.dot} ${styles['dot_' + st.id]}`} /> {st.label}
-                  <span className={styles.count}>{cards.length}</span>
-                </div>
+                <div className={styles.colHead}><span className={`${styles.dot} ${styles['dot_' + st.id]}`} /> {st.label}<span className={styles.count}>{cards.length}</span></div>
                 <div className={styles.cards}>
-                  {cards.map((w) => (
-                    <Card key={w.id} w={w} onMove={moveStage} onPatch={patch} onRemove={remove} onContact={onContact} />
-                  ))}
+                  {cards.map((w) => <Card key={w.id} w={w} onMove={moveStage} onPatch={patch} onRemove={remove} onContact={onContact} onAi={() => setAi({ w })} onSeq={() => toggleSeq(w)} />)}
                   {cards.length === 0 && <div className={styles.emptyCol}>Aucun contact</div>}
                 </div>
               </div>
@@ -179,70 +220,120 @@ export default function ProspectionPage() {
       )}
 
       <section className={styles.coverage}>
-        <div className={styles.coverageHead}>
-          <MapPin size={18} /> <h2>Couverture — Tunisie</h2>
-          <span className={styles.hint}>intensité = revendeurs actifs</span>
-        </div>
+        <div className={styles.coverageHead}><MapPin size={18} /> <h2>Couverture — Tunisie</h2><span className={styles.hint}>intensité = revendeurs actifs</span></div>
         <div className={styles.gouvGrid}>
           {GOUVS.map((g) => {
             const c = coverage[g] || { contacts: 0, clients: 0 }
             const lvl = c.clients >= 3 ? 3 : c.clients >= 1 ? 2 : c.contacts >= 1 ? 1 : 0
             return (
-              <button key={g} type="button"
-                className={`${styles.gouv} ${styles['lvl' + lvl]} ${filterGouv === g ? styles.gouvActive : ''}`}
-                onClick={() => setFilterGouv(filterGouv === g ? '' : g)}>
-                <span className={styles.gouvName}>{g}</span>
-                <span className={styles.gouvMeta}>{c.contacts} contact{c.contacts > 1 ? 's' : ''} · {c.clients} client{c.clients > 1 ? 's' : ''}</span>
+              <button key={g} type="button" className={`${styles.gouv} ${styles['lvl' + lvl]} ${filterGouv === g ? styles.gouvActive : ''}`} onClick={() => setFilterGouv(filterGouv === g ? '' : g)}>
+                <span className={styles.gouvName}>{g}</span><span className={styles.gouvMeta}>{c.contacts} contact{c.contacts > 1 ? 's' : ''} · {c.clients} client{c.clients > 1 ? 's' : ''}</span>
               </button>
             )
           })}
         </div>
       </section>
 
-      {showForm && <AddForm onClose={() => setShowForm(false)} onAdded={(row) => { setRows((r) => [row, ...r]); setShowForm(false) }} />}
+      {showForm && <AddForm onClose={() => setShowForm(false)} onAdded={(r) => { setRows((p) => [r, ...p]); setShowForm(false) }} />}
+      {ai && <AiModal w={ai.w} onClose={() => setAi(null)} onContact={onContact} />}
     </div>
   )
 }
 
 function Kpi({ icon, label, value }) {
-  return (
-    <div className={styles.kpi}>
-      <div className={styles.kpiTop}>{icon}<span>{label}</span></div>
-      <div className={styles.kpiValue}>{value}</div>
-    </div>
-  )
+  return <div className={styles.kpi}><div className={styles.kpiTop}>{icon}<span>{label}</span></div><div className={styles.kpiValue}>{value}</div></div>
 }
 
-function Card({ w, onMove, onPatch, onRemove, onContact }) {
+function Card({ w, onMove, onPatch, onRemove, onContact, onAi, onSeq }) {
   const i = stageIndex(w.stage)
-  const disabled = w.opt_out
+  const off = w.opt_out
+  const s = scoreOf(w); const t = tier(s)
   return (
-    <div className={`${styles.card} ${disabled ? styles.cardOut : ''}`}>
+    <div className={`${styles.card} ${off ? styles.cardOut : ''}`}>
       <div className={styles.cardTop}>
         <div className={styles.cardInfo}>
-          <p className={styles.enseigne}>{w.enseigne}</p>
+          <div className={styles.nameRow}>
+            <p className={styles.enseigne}>{w.enseigne}</p>
+            <span className={`${styles.badge} ${styles['badge_' + t.cls]}`} title={`Score ${s}`}>{t.label}</span>
+          </div>
           <p className={styles.sub}><span className={styles.seg}>{w.segment}</span> · {w.ville}{w.ville ? ', ' : ''}{w.gouvernorat}</p>
         </div>
         <button className={styles.del} onClick={() => onRemove(w.id)} title="Supprimer" type="button"><Trash2 size={14} /></button>
       </div>
       {w.notes && <p className={styles.notes}>{w.notes}</p>}
+
       <div className={styles.actions}>
-        <a className={`${styles.act} ${styles.actMail} ${disabled ? styles.actOff : ''}`}
-          href={disabled ? undefined : mailtoHref(w)} onClick={(e) => disabled ? e.preventDefault() : onContact(w)}>
-          <Mail size={13} /> E-mail
-        </a>
-        <a className={`${styles.act} ${styles.actWa} ${disabled ? styles.actOff : ''}`}
-          href={disabled ? undefined : waHref(w)} target="_blank" rel="noreferrer"
-          onClick={(e) => disabled ? e.preventDefault() : onContact(w)}>
-          <MessageCircle size={13} /> WhatsApp
-        </a>
-        <button className={`${styles.optBtn} ${disabled ? styles.optOn : ''}`} type="button"
-          onClick={() => onPatch(w.id, { opt_out: !w.opt_out })} title="Opt-out"><Ban size={13} /></button>
+        <a className={`${styles.act} ${styles.actMail} ${off ? styles.actOff : ''}`} href={off ? undefined : mailtoHref(w)} onClick={(e) => off ? e.preventDefault() : onContact(w)}><Mail size={13} /> E-mail</a>
+        <a className={`${styles.act} ${styles.actWa} ${off ? styles.actOff : ''}`} href={off ? undefined : waHref(w)} target="_blank" rel="noreferrer" onClick={(e) => off ? e.preventDefault() : onContact(w)}><MessageCircle size={13} /> WhatsApp</a>
+        <button className={`${styles.optBtn} ${off ? styles.optOn : ''}`} type="button" onClick={() => onPatch(w.id, { opt_out: !w.opt_out })} title="Opt-out"><Ban size={13} /></button>
       </div>
+
+      <div className={styles.autoRow}>
+        <button className={styles.aiBtn} onClick={onAi} type="button" disabled={off}><Sparkles size={13} /> IA</button>
+        <button className={`${styles.seqBtn} ${w.sequence_active ? styles.seqOn : ''}`} onClick={onSeq} type="button" disabled={off}>
+          {w.sequence_active ? <><Pause size={13} /> Séquence ON</> : <><Play size={13} /> Séquence</>}
+        </button>
+      </div>
+
       <div className={styles.move}>
         <button onClick={() => onMove(w, -1)} disabled={i === 0} type="button"><ChevronLeft size={15} /></button>
         <span>déplacer</span>
         <button onClick={() => onMove(w, 1)} disabled={i === STAGES.length - 1} type="button"><ChevronRight size={15} /></button>
+      </div>
+    </div>
+  )
+}
+
+function AiModal({ w, onClose, onContact }) {
+  const [channel, setChannel] = useState('email')
+  const [lang, setLang] = useState('fr')
+  const [loading, setLoading] = useState(false)
+  const [res, setRes] = useState(null)
+  const [err, setErr] = useState('')
+
+  async function gen() {
+    setLoading(true); setErr(''); setRes(null)
+    try {
+      const r = await fetch('/api/prospects/ai-message', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enseigne: w.enseigne, segment: w.segment, ville: w.ville, gouvernorat: w.gouvernorat, channel, lang }),
+      })
+      const d = await r.json()
+      if (!r.ok) setErr(d.error || 'Erreur IA')
+      else setRes(d)
+    } catch (e) { setErr(String(e)) } finally { setLoading(false) }
+  }
+  const copy = () => res && navigator.clipboard?.writeText([res.subject, res.body].filter(Boolean).join('\n\n'))
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHead}><h3><Sparkles size={16} /> Message IA — {w.enseigne}</h3><button onClick={onClose} type="button"><X size={20} /></button></div>
+        <div className={styles.aiControls}>
+          <div className={styles.seg2}>
+            <button className={channel === 'email' ? styles.seg2On : ''} onClick={() => setChannel('email')} type="button">E-mail</button>
+            <button className={channel === 'whatsapp' ? styles.seg2On : ''} onClick={() => setChannel('whatsapp')} type="button">WhatsApp</button>
+          </div>
+          <div className={styles.seg2}>
+            <button className={lang === 'fr' ? styles.seg2On : ''} onClick={() => setLang('fr')} type="button">Français</button>
+            <button className={lang === 'derja' ? styles.seg2On : ''} onClick={() => setLang('derja')} type="button">Derja</button>
+          </div>
+          <button className={styles.genBtn} onClick={gen} disabled={loading} type="button">{loading ? 'Génération…' : 'Générer'}</button>
+        </div>
+        {err && <p className={styles.aiErr}>{err}</p>}
+        {res && (
+          <div className={styles.aiResult}>
+            {res.subject && <p className={styles.aiSubject}><strong>Objet :</strong> {res.subject}</p>}
+            <pre className={styles.aiBody}>{res.body}</pre>
+            <div className={styles.aiActions}>
+              <button className={styles.cancel} onClick={copy} type="button"><Copy size={14} /> Copier</button>
+              {channel === 'email'
+                ? <a className={styles.save} href={mailtoHref(w, res.body)} onClick={() => onContact(w)}>Ouvrir e-mail</a>
+                : <a className={styles.save} href={waHref(w, res.body)} target="_blank" rel="noreferrer" onClick={() => onContact(w)}>Ouvrir WhatsApp</a>}
+            </div>
+          </div>
+        )}
+        {!res && !err && <p className={styles.req}>Choisis le canal + la langue, puis « Générer ». (Nécessite ANTHROPIC_API_KEY.)</p>}
       </div>
     </div>
   )
@@ -253,23 +344,17 @@ function AddForm({ onClose, onAdded }) {
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }))
   const valid = f.enseigne.trim() && (f.email.trim() || f.whatsapp.trim())
-
   async function save() {
     if (!valid || saving) return
     setSaving(true)
     const supabase = createClient()
     const { data, error } = await supabase.from('wholesale_prospects').insert({ ...f, stage: 'a_contacter' }).select().single()
-    setSaving(false)
-    if (!error && data) onAdded(data)
+    setSaving(false); if (!error && data) onAdded(data)
   }
-
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHead}>
-          <h3>Nouveau grossiste</h3>
-          <button onClick={onClose} type="button"><X size={20} /></button>
-        </div>
+        <div className={styles.modalHead}><h3>Nouveau grossiste</h3><button onClick={onClose} type="button"><X size={20} /></button></div>
         <div className={styles.formGrid}>
           <label className={styles.full}>Enseigne *<input value={f.enseigne} onChange={(e) => set('enseigne', e.target.value)} placeholder="Ex. Bazar El Amal" /></label>
           <label>Segment<select value={f.segment} onChange={(e) => set('segment', e.target.value)}>{SEGMENTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
@@ -280,10 +365,8 @@ function AddForm({ onClose, onAdded }) {
           <label>WhatsApp<input value={f.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} placeholder="+216 …" /></label>
           <label className={styles.full}>Notes<textarea rows={2} value={f.notes} onChange={(e) => set('notes', e.target.value)} /></label>
         </div>
-        <div className={styles.modalActions}>
-          <button className={styles.cancel} onClick={onClose} type="button">Annuler</button>
-          <button className={styles.save} onClick={save} disabled={!valid || saving} type="button">{saving ? 'Ajout…' : 'Ajouter au pipeline'}</button>
-        </div>
+        <div className={styles.modalActions}><button className={styles.cancel} onClick={onClose} type="button">Annuler</button>
+          <button className={styles.save} onClick={save} disabled={!valid || saving} type="button">{saving ? 'Ajout…' : 'Ajouter au pipeline'}</button></div>
         {!valid && <p className={styles.req}>Enseigne + (e-mail ou WhatsApp) requis.</p>}
       </div>
     </div>
