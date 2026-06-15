@@ -111,3 +111,40 @@
   .kpis { grid-template-columns: repeat(4, 1fr); }
   .gouvGrid { grid-template-columns: repeat(6, 1fr); }
 }
+
+/* --- Automatisation v2 --- */
+.today { margin-top: var(--space-4); border: 1px solid rgba(251,191,36,.3); background: rgba(251,191,36,.06); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+.todayHead { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-cta); font-size: 14px; }
+.todayList { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.todayItem { display: flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--bg-card-border); border-radius: var(--radius-sm); padding: 6px 10px; }
+.todayName { font-size: 13px; font-weight: 600; }
+.todayMeta { font-size: 11px; color: var(--text-muted); }
+.miniAi { display: inline-flex; align-items: center; gap: 4px; border: none; cursor: pointer; background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); color: #fff; border-radius: var(--radius-sm); padding: 4px 8px; font-size: 11px; font-weight: 600; }
+
+.nameRow { display: flex; align-items: center; gap: 6px; }
+.badge { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 1px 6px; border-radius: 999px; }
+.badge_hot { background: rgba(239,68,68,.18); color: #ff9d9d; }
+.badge_warm { background: rgba(251,191,36,.18); color: #fcd770; }
+.badge_cold { background: rgba(124,111,168,.18); color: var(--text-secondary); }
+
+.autoRow { display: flex; gap: 6px; margin-top: 8px; }
+.aiBtn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; border: none; border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px; font-weight: 700; color: #fff; background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); }
+.aiBtn:disabled { opacity: .4; cursor: default; }
+.seqBtn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; border: 1px solid var(--bg-card-border); background: none; color: var(--text-secondary); border-radius: var(--radius-sm); padding: 6px 0; font-size: 12px; font-weight: 600; }
+.seqBtn:disabled { opacity: .4; cursor: default; }
+.seqOn { background: rgba(16,185,129,.15); border-color: rgba(16,185,129,.4); color: #9ff0cf; }
+
+/* Modal IA */
+.aiControls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.seg2 { display: inline-flex; border: 1px solid var(--bg-card-border); border-radius: var(--radius-sm); overflow: hidden; }
+.seg2 button { background: none; border: none; color: var(--text-secondary); padding: 7px 12px; font-size: 13px; cursor: pointer; }
+.seg2On { background: var(--color-primary) !important; color: #fff !important; }
+.genBtn { margin-left: auto; background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); color: #fff; border: none; border-radius: var(--radius-sm); padding: 8px 16px; font-weight: 700; cursor: pointer; }
+.genBtn:disabled { opacity: .5; cursor: default; }
+.aiErr { margin-top: 12px; color: #ff9d9d; font-size: 13px; }
+.aiResult { margin-top: 14px; }
+.aiSubject { font-size: 13px; color: var(--text-secondary); margin: 0 0 8px; }
+.aiBody { white-space: pre-wrap; font-family: var(--font-body); font-size: 13px; line-height: 1.5; background: var(--bg-card); border: 1px solid var(--bg-card-border); border-radius: var(--radius-sm); padding: 12px; color: var(--text-primary); margin: 0; }
+.aiActions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.aiActions a { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.modalHead h3 { display: flex; align-items: center; gap: 6px; }
