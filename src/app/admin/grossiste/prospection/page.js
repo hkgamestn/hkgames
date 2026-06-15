@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Mail, MessageCircle, Search, MapPin, X, ChevronLeft, ChevronRight, Ban, Trash2, Building2, TrendingUp, Users, Target, Sparkles, Play, Pause, Copy, Flame, Upload, Download } from 'lucide-react'
+import { Plus, Mail, MessageCircle, Search, MapPin, X, ChevronLeft, ChevronRight, Ban, Trash2, Building2, TrendingUp, Users, Target, Sparkles, Play, Pause, Copy, Flame, Upload, Download, BookOpen } from 'lucide-react'
 import styles from './prospection.module.css'
 
 const STAGES = [
@@ -163,6 +164,7 @@ export default function ProspectionPage() {
       <header className={styles.header}>
         <div><p className={styles.eyebrow}>HK Games · B2B</p><h1 className={styles.title}>Prospection grossistes</h1></div>
         <div className={styles.headerBtns}>
+          <Link href="/admin/grossiste/prospection/strategie" className={styles.ghostBtn}><BookOpen size={16} /> Stratégie</Link>
           <button className={styles.ghostBtn} onClick={downloadTemplate} type="button"><Download size={16} /> Modèle CSV</button>
           <button className={styles.ghostBtn} onClick={() => fileRef.current?.click()} type="button"><Upload size={16} /> Importer CSV</button>
           <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => importCSV(e.target.files?.[0])} />
