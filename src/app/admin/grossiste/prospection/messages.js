@@ -1,10 +1,19 @@
-// HK Games — Prospection messages — FR uniquement (email + WhatsApp)
+// HK Games — Prospection messages — FR uniquement
 
 export function fillVars(t, w = {}) {
   return (t || '')
     .split('{enseigne}').join(w.enseigne || w.contact_name || 'Bonjour')
     .split('{ville}').join(w.ville || w.gouvernorat || 'votre région')
 }
+
+// ─── Signature brand ─────────────────────────────────────────
+const SIGNATURE = `
+──────────────────────────────
+🟣 HK Games — Slime Premium Tunisie
+📍 Route Tunis km 4, Sfax
+🌐 https://www.hap-p-kids.store
+📱 WhatsApp : +216 21 660 303
+──────────────────────────────`
 
 // ─── E-mails (FR) ────────────────────────────────────────────
 
@@ -18,7 +27,7 @@ export const EMAIL_SEQUENCE = [
 Je suis [Prénom] de HK Games, fabricant tunisien de slime premium.
 Notre slime est un produit à très forte rotation chez les enfants.
 
-Toutes les gammes et informations sont disponibles sur notre site :
+Toutes nos gammes et informations sont disponibles sur notre site :
 👉 https://www.hap-p-kids.store/grossiste
 
 Je peux vous faire parvenir un échantillon gratuit pour tester la qualité par vous-même, sans aucun engagement.
@@ -26,7 +35,7 @@ Je peux vous faire parvenir un échantillon gratuit pour tester la qualité par 
 Seriez-vous intéressé ?
 
 Cordialement,
-[Prénom] — HK Games`,
+[Prénom]${SIGNATURE}`,
   },
   {
     key: 'mail2',
@@ -42,7 +51,7 @@ Toutes les informations et images sont sur : https://www.hap-p-kids.store/grossi
 N'hésitez pas à me répondre.
 
 Cordialement,
-[Prénom] — HK Games`,
+[Prénom]${SIGNATURE}`,
   },
   {
     key: 'mail3',
@@ -55,7 +64,7 @@ Je ne voudrais pas vous importuner davantage. Je reste disponible si vous souhai
 👉 https://www.hap-p-kids.store/grossiste
 
 Bonne continuation,
-[Prénom] — HK Games`,
+[Prénom]${SIGNATURE}`,
   },
 ]
 
@@ -69,10 +78,15 @@ Nos gammes et informations sont disponibles sur : https://www.hap-p-kids.store/g
 Nous proposons un échantillon gratuit pour tester la qualité sans engagement.
 
 Cordialement,
-[Prénom] — HK Games`,
+[Prénom]${SIGNATURE}`,
 }
 
 // ─── WhatsApp (FR) ───────────────────────────────────────────
+
+const WA_SIG = `
+— HK Games 🟣
+🌐 hap-p-kids.store/grossiste
+📍 Route Tunis km 4, Sfax`
 
 export const WA_SEQUENCE = [
   {
@@ -87,7 +101,7 @@ Toutes nos gammes et informations sont sur notre site :
 
 Je peux vous envoyer un échantillon gratuit pour tester la qualité sans aucun engagement 🎁
 
-Ça vous intéresse ?`,
+Ça vous intéresse ?${WA_SIG}`,
   },
   {
     key: 'wa2',
@@ -99,7 +113,7 @@ Je peux vous faire parvenir un échantillon gratuit pour juger par vous-même.
 
 Notre site : https://www.hap-p-kids.store/grossiste
 
-N'hésitez pas à me répondre 👍`,
+N'hésitez pas à me répondre 👍${WA_SIG}`,
   },
   {
     key: 'wa3',
@@ -111,7 +125,7 @@ Notre offre d'échantillon gratuit est toujours disponible.
 
 Toutes les infos : https://www.hap-p-kids.store/grossiste
 
-Bonne journée !`,
+Bonne journée !${WA_SIG}`,
   },
 ]
 
