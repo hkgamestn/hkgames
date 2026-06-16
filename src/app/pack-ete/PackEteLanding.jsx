@@ -35,6 +35,7 @@ const PRICE = 60
 
 export default function PackEteLanding({ product }) {
   const routerHook = useRouter()
+  const [formVisible, setFormVisible] = useState(false)
   const [form, setForm]       = useState({ firstName: '', phone: '', city: '', address: '' })
   const [errors, setErrors]   = useState({})
   const [submitting, setSubmitting] = useState(false)
@@ -74,6 +75,18 @@ export default function PackEteLanding({ product }) {
   function scrollToForm() {
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
+
+  // Masquer le CTA flottant quand le formulaire est visible
+  useEffect(() => {
+    const el = formRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => setFormVisible(entry.isIntersecting),
+      { threshold: 0.15 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
   async function handleSubmit(ev) {
     ev.preventDefault()
@@ -288,10 +301,12 @@ export default function PackEteLanding({ product }) {
         </div>
       </section>
 
-      {/* CTA flottant mobile */}
-      <button className={styles.floatingCta} onClick={scrollToForm} type="button">
-        <ShoppingCart size={18}/> Commander — {PRICE} DT
-      </button>
+      {/* CTA flottant mobile — masqué quand le formulaire est visible */}
+      {!formVisible && (
+        <button className={styles.floatingCta} onClick={scrollToForm} type="button">
+          <ShoppingCart size={18}/> Commander — {PRICE} DT
+        </button>
+      )}
     </div>
   )
 }
