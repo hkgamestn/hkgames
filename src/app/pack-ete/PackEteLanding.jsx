@@ -8,6 +8,17 @@ import { ShoppingCart, Truck, Shield, Gift, Star, CheckCircle, MapPin } from 'lu
 import styles from './packete.module.css'
 
 const IMG = 'https://rsmebjtwmvwyeocvsowg.supabase.co/storage/v1/object/public/product-images/slime%20unicolore.png'
+const BASE = 'https://rsmebjtwmvwyeocvsowg.supabase.co/storage/v1/object/public/product-images'
+
+// Les 6 pots du pack (images individuelles unicolore)
+const GALLERY = [
+  { src: `${BASE}/unicolore-rose.jpg`,   name: 'Rose',   hex: '#ec4899', emoji: '🩷' },
+  { src: `${BASE}/unicolore-violet.jpg`, name: 'Violet', hex: '#a855f7', emoji: '💜' },
+  { src: `${BASE}/unicolore-bleu.jpg`,   name: 'Bleu',   hex: '#3b82f6', emoji: '💙' },
+  { src: `${BASE}/unicolore-vert.jpg`,   name: 'Vert',   hex: '#22c55e', emoji: '💚' },
+  { src: `${BASE}/unicolore-jaune.jpg`,  name: 'Jaune',  hex: '#eab308', emoji: '💛' },
+  { src: `${BASE}/unicolore-orange.jpg`, name: 'Orange', hex: '#f97316', emoji: '🧡' },
+]
 
 const COLORS = [
   { hex: '#ef4444', e: '❤️', n: 'Rouge' },
@@ -184,6 +195,26 @@ export default function PackEteLanding({ product }) {
           <h3>Livraison gratuite</h3>
           <p>Partout en Tunisie, paiement en espèces à la réception.</p>
         </div>
+      </section>
+
+      {/* GALERIE DES 6 POTS */}
+      <section className={styles.gallery}>
+        <h2 className={styles.galleryTitle}>Les 6 pots de votre pack 🎨</h2>
+        <p className={styles.gallerySub}>Chaque couleur, une texture unique et satisfaisante</p>
+        <div className={styles.galleryGrid}>
+          {GALLERY.map((g) => (
+            <div key={g.name} className={styles.galleryItem}>
+              <div className={styles.galleryImgWrap}>
+                <Image src={g.src} alt={`Slime ${g.name}`} fill sizes="(max-width:768px) 45vw, 200px" className={styles.galleryImg} />
+                <span className={styles.galleryColorTag} style={{ background: g.hex }}>{g.emoji}</span>
+              </div>
+              <span className={styles.galleryName}>{g.name}</span>
+            </div>
+          ))}
+        </div>
+        <button className={styles.galleryCta} onClick={scrollToForm} type="button">
+          <ShoppingCart size={18}/> Je commande les 6 — {PRICE} DT
+        </button>
       </section>
 
       {/* AVIS */}
