@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { ShoppingCart } from 'lucide-react'
 import { useState, useRef } from 'react'
 // confetti chargé en lazy
@@ -63,6 +64,7 @@ export default function ProductCard({ product, index = 99 }) {
   const [hoverStyle, setHoverStyle] = useState({})
   const [showModal, setShowModal]   = useState(false)
   const addItem = useCartStore((s) => s.addItem)
+  const router  = useRouter()
   const { playHover, playAdd, playColor } = useCardSound()
 
   const PACK_ETE_IMG = 'https://rsmebjtwmvwyeocvsowg.supabase.co/storage/v1/object/public/product-images/slime%20unicolore.png'
@@ -130,7 +132,7 @@ export default function ProductCard({ product, index = 99 }) {
           className={styles.cardEte}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          onClick={() => setShowModal(true)}
+          onClick={() => router.push('/pack-ete')}
           style={{ transition: 'transform 0.2s', ...hoverStyle, cursor: 'pointer' }}
         >
           {/* Rayons de soleil décoratifs */}
@@ -183,16 +185,12 @@ export default function ProductCard({ product, index = 99 }) {
             {/* Tagline */}
             <p className={styles.eteTagline}>5 achetés + <strong>1 offert</strong> 🎁</p>
 
-            {/* Bouton */}
-            <button className={styles.eteBtn} onClick={handleAddToCart} type="button">
-              <ShoppingCart size={15} /> Ajouter — {formatDT(product.price_dt)}
+            {/* Bouton — vers la landing page dédiée */}
+            <button className={styles.eteBtn} onClick={(e) => { e.stopPropagation(); router.push('/pack-ete') }} type="button">
+              <ShoppingCart size={15} /> Commander — {formatDT(product.price_dt)}
             </button>
           </div>
         </div>
-
-        {showModal && (
-          <PackEteModal product={product} onClose={() => setShowModal(false)} />
-        )}
       </>
     )
   }

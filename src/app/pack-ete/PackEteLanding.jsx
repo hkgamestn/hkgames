@@ -2,10 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { confirmOrder, createPendingOrder } from '@/lib/actions/orders'
-import { ShoppingCart, Truck, Shield, Gift, Star, CheckCircle, MapPin } from 'lucide-react'
+import { ShoppingCart, Truck, Shield, Gift, Star, CheckCircle, MapPin, ArrowLeft } from 'lucide-react'
 import styles from './packete.module.css'
+
+const SocialToast = dynamic(() => import('@/components/homepage/SocialToast'), { ssr: false })
 
 const IMG = 'https://rsmebjtwmvwyeocvsowg.supabase.co/storage/v1/object/public/product-images/slime%20unicolore.png'
 const BASE = 'https://rsmebjtwmvwyeocvsowg.supabase.co/storage/v1/object/public/product-images'
@@ -143,6 +147,11 @@ export default function PackEteLanding({ product }) {
       <div className={styles.topBar}>
         🌞 OFFRE D&apos;ÉTÉ LIMITÉE · Livraison gratuite partout en Tunisie
       </div>
+
+      {/* Bouton retour boutique */}
+      <Link href="/shop" className={styles.backBtn}>
+        <ArrowLeft size={16} /> Retour à la boutique
+      </Link>
 
       {/* HERO */}
       <section className={styles.hero}>
@@ -307,6 +316,9 @@ export default function PackEteLanding({ product }) {
           <ShoppingCart size={18}/> Commander — {PRICE} DT
         </button>
       )}
+
+      {/* Toast social proof — commandes en temps réel */}
+      <SocialToast />
     </div>
   )
 }
