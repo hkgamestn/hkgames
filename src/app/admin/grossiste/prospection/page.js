@@ -37,11 +37,18 @@ function scoreOf(w) {
 }
 const tier = (s) => (s >= 60 ? { label: 'Hot', cls: 'hot' } : s >= 35 ? { label: 'Warm', cls: 'warm' } : { label: 'Cold', cls: 'cold' })
 
-// E-mail (FR) — pioche le bon message selon email_step (0 = jamais contacté)
-const mailtoHref = (w, body) => {
-  const m = emailAt(w.email_step || 0)
+// Gmail compose URL — ouvre dans un nouvel onglet, utilise le compte Gmail connecté
+const gmailHref = (w, body) => {
+  const m       = emailAt(w.email_step || 0)
   const subject = fillVars(m.subject, w)
-  return `mailto:${w.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body || fillVars(m.body, w))}`
+  const text    = body || fillVars(m.body, w)
+  const params  = new URLSearchParams({
+    view: 'cm',
+    to:   w.email || '',
+    su:   subject,
+    body: text,
+  })
+  return `https://mail.google.com/mail/?${params.toString()}`
 }
 // WhatsApp (derja) — pioche le bon message selon wa_step (0 = jamais contacté)
 const waHref = (w, body) => {
@@ -175,7 +182,8 @@ export default function ProspectionPage() {
     const remaining = eligible.length - batch.length
     if (!window.confirm(`Ouvrir un e-mail vers ${batch.length} prospect(s) en copie cachée (template FR #1), et les marquer comme contactés ?${remaining ? `\n\n${remaining} autre(s) suivront : reclique sur « Envoyer e-mails » après cet envoi.` : ''}`)) return
     const bcc = batch.map((w) => w.email).join(',')
-    window.open(`mailto:?bcc=${encodeURIComponent(bcc)}&subject=${encodeURIComponent(EMAIL_BULK.subject)}&body=${encodeURIComponent(EMAIL_BULK.body)}`, '_blank')
+    const bulkParams = new URLSearchParams({ view: 'cm', bcc, su: EMAIL_BULK.subject, body: EMAIL_BULK.body })
+    window.open(`https://mail.google.com/mail/?${bulkParams.toString()}`, '_blank')
     // marque le lot comme contacté
     const ids = batch.map((w) => w.id); const ts = new Date().toISOString()
     setRows((p) => p.map((x) => ids.includes(x.id) ? { ...x, email_step: 1, last_contact_at: ts, stage: x.stage === 'a_contacter' ? 'contacte' : x.stage } : x))
@@ -324,7 +332,7 @@ function Card({ w, onMove, onPatch, onRemove, onEmail, onWhatsApp, onAi, onSeq }
       {w.notes && <p className={styles.notes}>{w.notes}</p>}
 
       <div className={styles.actions}>
-        <a className={`${styles.act} ${styles.actMail} ${(off || !w.email) ? styles.actOff : ''}`} href={(off || !w.email) ? undefined : mailtoHref(w)}
+        <a className={`${styles.act} ${styles.actMail} ${(off || !w.email) ? styles.actOff : ''}`} href={(off || !w.email) ? undefined : gmailHref(w)}
            target="_blank" rel="noreferrer"
            title={w.email ? `E-mail FR #${eStep}/${EMAIL_COUNT}` : 'Pas d\'e-mail'}
            onClick={(e) => (off || !w.email) ? e.preventDefault() : onEmail(w)}><Mail size={13} /> E-mail <span className={styles.stepTag}>{eStep}/{EMAIL_COUNT}</span></a>
@@ -406,7 +414,7 @@ function AiModal({ w, onClose, onContact }) {
             <div className={styles.aiActions}>
               <button className={styles.cancel} onClick={copy} type="button"><Copy size={14} /> Copier</button>
               {channel === 'email'
-                ? <a className={styles.save} href={mailtoHref(w, res.body)} target="_blank" rel="noreferrer" onClick={() => onContact(w)}>Ouvrir e-mail</a>
+                ? <a className={styles.save} href={gmailHref(w, res.body)} target="_blank" rel="noreferrer" onClick={() => onContact(w)}>Ouvrir e-mail</a>
                 : <a className={styles.save} href={waHref(w, res.body)} target="_blank" rel="noreferrer" onClick={() => onContact(w)}>Ouvrir WhatsApp</a>}
             </div>
           </div>
