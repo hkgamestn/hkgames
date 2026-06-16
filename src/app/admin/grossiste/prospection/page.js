@@ -175,7 +175,7 @@ export default function ProspectionPage() {
     const remaining = eligible.length - batch.length
     if (!window.confirm(`Ouvrir un e-mail vers ${batch.length} prospect(s) en copie cachée (template FR #1), et les marquer comme contactés ?${remaining ? `\n\n${remaining} autre(s) suivront : reclique sur « Envoyer e-mails » après cet envoi.` : ''}`)) return
     const bcc = batch.map((w) => w.email).join(',')
-    window.location.href = `mailto:?bcc=${encodeURIComponent(bcc)}&subject=${encodeURIComponent(EMAIL_BULK.subject)}&body=${encodeURIComponent(EMAIL_BULK.body)}`
+    window.open(`mailto:?bcc=${encodeURIComponent(bcc)}&subject=${encodeURIComponent(EMAIL_BULK.subject)}&body=${encodeURIComponent(EMAIL_BULK.body)}`, '_blank')
     // marque le lot comme contacté
     const ids = batch.map((w) => w.id); const ts = new Date().toISOString()
     setRows((p) => p.map((x) => ids.includes(x.id) ? { ...x, email_step: 1, last_contact_at: ts, stage: x.stage === 'a_contacter' ? 'contacte' : x.stage } : x))
@@ -325,6 +325,7 @@ function Card({ w, onMove, onPatch, onRemove, onEmail, onWhatsApp, onAi, onSeq }
 
       <div className={styles.actions}>
         <a className={`${styles.act} ${styles.actMail} ${(off || !w.email) ? styles.actOff : ''}`} href={(off || !w.email) ? undefined : mailtoHref(w)}
+           target="_blank" rel="noreferrer"
            title={w.email ? `E-mail FR #${eStep}/${EMAIL_COUNT}` : 'Pas d\'e-mail'}
            onClick={(e) => (off || !w.email) ? e.preventDefault() : onEmail(w)}><Mail size={13} /> E-mail <span className={styles.stepTag}>{eStep}/{EMAIL_COUNT}</span></a>
         <a className={`${styles.act} ${styles.actWa} ${(off || !w.whatsapp) ? styles.actOff : ''}`} href={(off || !w.whatsapp) ? undefined : waHref(w)} target="_blank" rel="noreferrer"
@@ -393,7 +394,7 @@ function AiModal({ w, onClose, onContact }) {
             <div className={styles.aiActions}>
               <button className={styles.cancel} onClick={copy} type="button"><Copy size={14} /> Copier</button>
               {channel === 'email'
-                ? <a className={styles.save} href={mailtoHref(w, res.body)} onClick={() => onContact(w)}>Ouvrir e-mail</a>
+                ? <a className={styles.save} href={mailtoHref(w, res.body)} target="_blank" rel="noreferrer" onClick={() => onContact(w)}>Ouvrir e-mail</a>
                 : <a className={styles.save} href={waHref(w, res.body)} target="_blank" rel="noreferrer" onClick={() => onContact(w)}>Ouvrir WhatsApp</a>}
             </div>
           </div>

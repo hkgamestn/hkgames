@@ -1,14 +1,13 @@
 // HK Games — Prospection : source unique des messages d'outreach.
 // Politique : e-mails toujours en FR, messages WhatsApp toujours en derja.
-// La séquence pioche le message selon le nombre de fois déjà contacté (step).
 
 export function fillVars(t, w = {}) {
   return (t || '')
-    .split('{enseigne}').join(w.enseigne || 'votre enseigne')
-    .split('{ville}').join(w.ville || w.gouvernorat || 'votre ville')
+    .split('{enseigne}').join(w.enseigne || w.contact_name || 'سلام')
+    .split('{ville}').join(w.ville || w.gouvernorat || 'تونس')
 }
 
-// --- E-mails (FR) — par prospect (personnalisés {enseigne}) ---
+// --- E-mails (FR) ---
 export const EMAIL_SEQUENCE = [
   {
     key: 'mail1',
@@ -16,80 +15,79 @@ export const EMAIL_SEQUENCE = [
     subject: 'Slime premium fabriqué en Tunisie — pour vos rayons',
     body: `Bonjour {enseigne},
 
-Je suis [Prénom] de HK Games, fabricant tunisien de slime premium (marque SLIMO).
-Notre slime — épais, élastique, ultra satisfaisant — est un produit à très forte rotation : les enfants adorent.
+Je suis [Prénom] de HK Games, fabricant tunisien de slime premium.
+Notre slime est un produit à très forte rotation chez les enfants.
 
-En tant que fabricant local, on vous offre :
-• des marges revendeur intéressantes,
-• un réassort rapide (pas d'import, pas de douane),
-• une gamme complète : Unicolore, Bicolore, Slime Buddies,
-• un support marketing : nos campagnes créent la demande, vous encaissez les ventes.
+Toutes les infos, gammes et prix sont sur notre site :
+👉 https://www.hap-p-kids.store/grossiste
 
-Offre grossistes : https://www.hap-p-kids.store/grossiste
-Je peux vous envoyer le catalogue + tarifs gros, ou un échantillon. Vous préférez quoi ?
+Je peux vous envoyer un échantillon gratuit pour tester la qualité sans engagement.
+Vous seriez intéressé ?
 
-[Prénom] — HK Games
-(Pour ne plus recevoir nos e-mails pro, répondez STOP.)`,
+[Prénom] — HK Games`,
   },
   {
     key: 'mail2',
     label: 'E-mail #2 — Relance',
-    subject: 'Re: un échantillon pour {enseigne} ?',
+    subject: 'Re: échantillon gratuit pour {enseigne}',
     body: `Bonjour {enseigne},
 
-Petit rappel 🙂 Le slime SLIMO tourne très bien en rayon. Je peux vous envoyer un échantillon gratuit + la grille de prix gros, sans engagement.
+Petit rappel 🙂 Je peux vous envoyer un échantillon gratuit de nos slimes pour tester par vous-même.
+Toutes les infos et images sont disponibles ici : https://www.hap-p-kids.store/grossiste
+
 Intéressé ?
 
 [Prénom] — HK Games`,
   },
 ]
 
-// --- E-mail groupé (FR) — plusieurs destinataires en copie cachée, pas de {enseigne} ---
 export const EMAIL_BULK = {
-  subject: 'Slime premium fabriqué en Tunisie — pour vos rayons',
+  subject: 'Slime premium fabriqué en Tunisie — échantillon gratuit',
   body: `Bonjour,
 
-Je suis [Prénom] de HK Games, fabricant tunisien de slime premium (marque SLIMO).
-Notre slime — épais, élastique, ultra satisfaisant — est un produit à très forte rotation : les enfants adorent.
+Je suis [Prénom] de HK Games, fabricant tunisien de slime premium.
+Toutes nos gammes, images et prix grossiste sont sur : https://www.hap-p-kids.store/grossiste
 
-En tant que fabricant local, on vous offre :
-• des marges revendeur intéressantes,
-• un réassort rapide (pas d'import, pas de douane),
-• une gamme complète : Unicolore, Bicolore, Slime Buddies,
-• un support marketing : nos campagnes créent la demande, vous encaissez les ventes.
+Nous proposons un échantillon gratuit pour tester la qualité sans engagement.
 
-Offre grossistes : https://www.hap-p-kids.store/grossiste
-Je peux vous envoyer le catalogue + tarifs gros, ou un échantillon. Vous préférez quoi ?
-
-[Prénom] — HK Games
-(Pour ne plus recevoir nos e-mails pro, répondez STOP.)`,
+[Prénom] — HK Games`,
 }
 
-// --- WhatsApp (derja) — par prospect, 1 par 1 ---
+// --- WhatsApp (derja) — simple, centré sur l'échantillon ---
 export const WA_SEQUENCE = [
   {
     key: 'wa1',
-    label: 'WhatsApp #1 — Accroche',
-    body: `سلام {enseigne} 👋 أنا [الإسم] من HK Games، مصنع سلايم تونسي بريميوم 🇹🇳
-سلايم يتجبّد ويعمل الكيف، يمشي برشة مع الصغار 🔥 + هامش ربح باهي للموزّعين وريأسور سريع (صنع في تونس).
-نبعثلك الكتالوڭ والأسعار بالجملة، ولا عيّنة باش تجرّب؟`,
+    label: 'WhatsApp #1 — Accroche échantillon',
+    body: `سلام {enseigne} 👋
+أنا [الإسم] من HK Games، مصنع سلايم تونسي 🇹🇳
+
+الأسعار والصور كاملة موجودة في موقعنا:
+👉 https://www.hap-p-kids.store/grossiste
+
+نقدر نبعثلك عيّنة مجانية باش تجرّب الجودة بعينك — بدون أي التزام 🎁
+تحبّ نبعثهالك؟`,
   },
   {
     key: 'wa2',
     label: 'WhatsApp #2 — Relance',
-    body: `أهلا مجدّدا 🙂 نجّم نبعثلك عيّنة مجانية باش تشوف الجودة بعينك + قائمة الأسعار بالجملة.
-سلايمنا تونسي 100% والريأسور سريع. تحبّ نبعثلك؟`,
+    body: `أهلا مجدّدا {enseigne} 🙂
+ما زلت نقدر نبعثلك عيّنة مجانية من السلايم باش تشوف الجودة بعينك.
+
+الموقع: https://www.hap-p-kids.store/grossiste
+
+جاوبني كي تحبّ 👍`,
   },
   {
     key: 'wa3',
-    label: 'WhatsApp #3 — Envoi catalogue',
-    body: `يعيشك! 🙌 هاو الكتالوڭ + الأسعار بالجملة 👇
-https://www.hap-p-kids.store/grossiste
-نبداو بكمية تجربة صغيرة باش تشوف كيفاش يمشي عندك. نحضّرلك أوّل طلبية؟`,
+    label: 'WhatsApp #3 — Dernière relance',
+    body: `سلام {enseigne}، آخر مرة نوجد 😄
+العيّنة المجانية ما زالت متاحة ليك.
+كل التفاصيل: https://www.hap-p-kids.store/grossiste
+قولي كي تكون مستعد 🙏`,
   },
 ]
 
-export const emailAt = (step = 0) => EMAIL_SEQUENCE[Math.min(step, EMAIL_SEQUENCE.length - 1)]
-export const waAt = (step = 0) => WA_SEQUENCE[Math.min(step, WA_SEQUENCE.length - 1)]
-export const WA_COUNT = WA_SEQUENCE.length
+export const WA_COUNT    = WA_SEQUENCE.length
 export const EMAIL_COUNT = EMAIL_SEQUENCE.length
+export const emailAt = (step) => EMAIL_SEQUENCE[Math.min(step, EMAIL_SEQUENCE.length - 1)]
+export const waAt    = (step) => WA_SEQUENCE[Math.min(step, WA_SEQUENCE.length - 1)]
