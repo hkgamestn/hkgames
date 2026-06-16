@@ -157,3 +157,13 @@
 
 /* Indicateur d'étape de séquence sur les boutons E-mail / WhatsApp */
 .stepTag { margin-left: auto; font-size: 10px; font-weight: 800; opacity: .75; padding: 1px 5px; border-radius: 999px; background: rgba(255,255,255,.14); }
+
+/* Bouton reset cycle */
+.resetBtn {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 24px; border-radius: 6px;
+  background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.3);
+  color: #fb923c; cursor: pointer; transition: background 0.15s;
+  flex-shrink: 0;
+}
+.resetBtn:hover { background: rgba(251,146,60,0.22); }

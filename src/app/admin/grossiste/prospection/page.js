@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Mail, MessageCircle, Search, MapPin, X, ChevronLeft, ChevronRight, Ban, Trash2, Building2, TrendingUp, Users, Target, Sparkles, Play, Pause, Copy, Flame, Upload, Download, BookOpen, Send } from 'lucide-react'
+import { Plus, Mail, MessageCircle, Search, MapPin, X, ChevronLeft, ChevronRight, Ban, Trash2, Building2, TrendingUp, Users, Target, Sparkles, Play, Pause, Copy, Flame, Upload, Download, BookOpen, Send, RotateCcw } from 'lucide-react'
 import styles from './prospection.module.css'
 import { EMAIL_SEQUENCE, EMAIL_BULK, WA_SEQUENCE, WA_COUNT, EMAIL_COUNT, emailAt, waAt, fillVars } from './messages'
 
@@ -332,6 +332,18 @@ function Card({ w, onMove, onPatch, onRemove, onEmail, onWhatsApp, onAi, onSeq }
            title={w.whatsapp ? `WhatsApp derja #${wStep}/${WA_COUNT}` : 'Pas de WhatsApp'}
            onClick={(e) => (off || !w.whatsapp) ? e.preventDefault() : onWhatsApp(w)}><MessageCircle size={13} /> WhatsApp <span className={styles.stepTag}>{wStep}/{WA_COUNT}</span></a>
         <button className={`${styles.optBtn} ${off ? styles.optOn : ''}`} type="button" onClick={() => onPatch(w.id, { opt_out: !w.opt_out })} title="Opt-out"><Ban size={13} /></button>
+        <button
+          className={styles.resetBtn}
+          type="button"
+          title="Réinitialiser le cycle de prospection"
+          onClick={() => {
+            if (confirm(`Réinitialiser le cycle de ${w.enseigne} ? (étapes email/WA remises à 0, statut → À contacter)`)) {
+              onPatch(w.id, { email_step: 0, wa_step: 0, stage: 'a_contacter', last_contact_at: null, sequence_active: false })
+            }
+          }}
+        >
+          <RotateCcw size={13} />
+        </button>
       </div>
 
       <div className={styles.autoRow}>
