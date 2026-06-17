@@ -6,16 +6,27 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-webpush.setVapidDetails(
-  'mailto:admin@hap-p-kids.store',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-)
+let vapidReady = false
+function ensureVapid() {
+  if (vapidReady) return true
+  try {
+    webpush.setVapidDetails(
+      'mailto:admin@hap-p-kids.store',
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    )
+    vapidReady = true
+    return true
+  } catch (e) {
+    console.error('[push] VAPID invalide:', e.message)
+    return false
+  }
+}
 
 export async function POST(req) {
   try {
     // Vérifier les VAPID keys
-    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+    if (!ensureVapid() || !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
       return Response.json({ error: 'VAPID keys manquantes dans .env' }, { status: 500 })
     }
 

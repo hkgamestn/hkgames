@@ -6,11 +6,22 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-webpush.setVapidDetails(
-  'mailto:admin@hap-p-kids.store',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-)
+let vapidReady = false
+function ensureVapid() {
+  if (vapidReady) return true
+  try {
+    webpush.setVapidDetails(
+      'mailto:admin@hap-p-kids.store',
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    )
+    vapidReady = true
+    return true
+  } catch (e) {
+    console.error('[push] VAPID invalide:', e.message)
+    return false
+  }
+}
 
 const DOMAIN = 'https://hap-p-kids.store'
 
@@ -67,6 +78,9 @@ function buildPayload(type, orderId, orderData, unseenCount = 1) {
 
 export async function POST(req) {
   try {
+    if (!ensureVapid()) {
+      return Response.json({ error: 'Configuration VAPID invalide' }, { status: 500 })
+    }
     const { orderId, type } = await req.json()
     if (!orderId || !type) {
       return Response.json({ error: 'orderId et type requis' }, { status: 400 })
