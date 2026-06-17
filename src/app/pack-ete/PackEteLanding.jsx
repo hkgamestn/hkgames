@@ -80,6 +80,40 @@ export default function PackEteLanding({ product }) {
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
+  // ── Coordination avec le toast social proof ──
+  const inactivityRef = useRef(null)
+  const formActiveRef = useRef(false)
+
+  function resetInactivityTimer() {
+    clearTimeout(inactivityRef.current)
+    if (!formActiveRef.current) return
+    // Après 15s sans saisie → relancer un toast Pack Été pour encourager
+    inactivityRef.current = setTimeout(() => {
+      window.dispatchEvent(new Event('toast-resume'))
+      window.dispatchEvent(new Event('toast-force-ete'))
+      // Re-pause après le toast pour ne pas gêner si toujours sur le formulaire
+      setTimeout(() => {
+        if (formActiveRef.current) window.dispatchEvent(new Event('toast-pause'))
+      }, 6000)
+    }, 15000)
+  }
+
+  function handleFormFocus() {
+    formActiveRef.current = true
+    window.dispatchEvent(new Event('toast-pause')) // stopper le toast pendant la saisie
+    resetInactivityTimer()
+  }
+
+  function handleFormBlur(e) {
+    // Vérifier si le focus quitte vraiment le formulaire
+    if (e.currentTarget.contains(e.relatedTarget)) return
+    formActiveRef.current = false
+    clearTimeout(inactivityRef.current)
+    window.dispatchEvent(new Event('toast-resume'))
+  }
+
+  useEffect(() => () => clearTimeout(inactivityRef.current), [])
+
   // Masquer le CTA flottant quand le formulaire est visible
   useEffect(() => {
     const el = formRef.current
@@ -270,7 +304,14 @@ export default function PackEteLanding({ product }) {
             <span className={styles.recapPrice}>{PRICE} DT</span>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate className={styles.form}>
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className={styles.form}
+            onFocusCapture={handleFormFocus}
+            onBlurCapture={handleFormBlur}
+            onInput={resetInactivityTimer}
+          >
             <div className={styles.field}>
               <label className={styles.label}>Nom complet *</label>
               <input className={`${styles.input} ${errors.firstName ? styles.err : ''}`} value={form.firstName} onChange={e => set('firstName', e.target.value)} placeholder="Votre nom" />
@@ -321,8 +362,8 @@ export default function PackEteLanding({ product }) {
         </button>
       )}
 
-      {/* Toast social proof — commandes en temps réel */}
-      <SocialToast />
+      {/* Toast social proof — biais Pack Été pour encourager */}
+      <SocialToast packEteBias />
     </div>
   )
 }

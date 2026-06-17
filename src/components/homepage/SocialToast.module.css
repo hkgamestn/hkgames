@@ -63,3 +63,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Toast Pack Été — mis en avant doré */
+.toastEte {
+  border-color: rgba(245,158,11,0.5) !important;
+  background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(239,68,68,0.08)) !important;
+}
+.toastEte .icon {
+  background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+  font-size: 1rem;
+}
