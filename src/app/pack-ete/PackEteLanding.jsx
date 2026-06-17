@@ -174,6 +174,10 @@ export default function PackEteLanding({ product }) {
             <h1 className={styles.title}>Pack Été<br/><span className={styles.titleAccent}>6 Slimes Premium</span></h1>
             <p className={styles.subtitle}>5 slimes achetés = <strong>le 6ème offert 🎁</strong></p>
 
+            <div className={styles.urgency}>
+              🔥 Offre limitée — plus que quelques packs disponibles ce mois-ci
+            </div>
+
             <div className={styles.priceRow}>
               <span className={styles.price}>{PRICE} DT</span>
               <span className={styles.priceOld}>72 DT</span>

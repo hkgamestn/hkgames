@@ -19,7 +19,7 @@ export async function generateMetadata({ params }) {
     .from('products')
     .select('name, description, price_dt, line, colors')
     .eq('slug', params.slug)
-    .single()
+    .maybeSingle()
   if (!product) return {}
 
   const image = product.colors?.[0]?.image || '/og/og-default.jpg'
@@ -68,8 +68,14 @@ export default async function ProductPage({ params }) {
     .select('id, slug, name, description, line, price_dt, images, colors, bicolor_combos, is_active, position')
     .eq('slug', params.slug)
     .eq('is_active', true)
-    .single()
+    .maybeSingle()
   if (!product) notFound()
+
+  // Pack Été a sa propre landing page dédiée
+  if (product.line === 'pack_ete') {
+    const { redirect } = await import('next/navigation')
+    redirect('/pack-ete')
+  }
 
   const { data: related } = await supabase
     .from('products')

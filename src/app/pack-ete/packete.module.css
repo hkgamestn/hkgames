@@ -244,3 +244,15 @@
 @media (max-width: 400px) {
   .galleryGrid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Urgence — capter l'attention immédiatement */
+.urgency {
+  background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35);
+  color: #fca5a5; font-size: 0.82rem; font-weight: 700;
+  padding: 8px 14px; border-radius: 10px; width: fit-content;
+  animation: urgPulse 2s ease infinite;
+}
+@keyframes urgPulse {
+  0%,100% { border-color: rgba(239,68,68,0.35); }
+  50%     { border-color: rgba(239,68,68,0.7); }
+}
