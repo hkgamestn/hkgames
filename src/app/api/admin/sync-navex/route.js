@@ -101,11 +101,13 @@ async function runSync(orderIds) {
     // Une fois passe en delivered/returned, l'ordre n'est plus "shipped" -> jamais re-traite -> pas de doublon Meta.
     if (newStatus && newStatus !== order.status) {
       await supabase.from('orders').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', order.id)
-      await supabase.from('order_logs').insert({
-        order_id:  order.id,
-        action:    'navex_sync',
-        new_value: { etat: found.etat, motif: found.motif, new_status: newStatus },
-      }).catch(() => {})
+      try {
+        await supabase.from('order_logs').insert({
+          order_id:  order.id,
+          action:    'navex_sync',
+          new_value: { etat: found.etat, motif: found.motif, new_status: newStatus },
+        })
+      } catch {}
 
       if (newStatus === 'delivered') await feedMeta('Livraison', 'delivered', order) // vrai payeur COD
       if (newStatus === 'returned')  await feedMeta('Retour',    'returned',  order) // audience d'exclusion
