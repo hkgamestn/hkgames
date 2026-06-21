@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { confirmOrder, createPendingOrder } from '@/lib/actions/orders'
+import { getFbIds } from '@/lib/fbBrowser'
 import { ShoppingCart, Truck, Shield, Gift, Star, CheckCircle, MapPin, ArrowLeft } from 'lucide-react'
 import styles from './packete.module.css'
 
@@ -140,6 +141,7 @@ export default function PackEteLanding({ product }) {
     const fName = parts[0] || 'Client'
     const lName = parts.slice(1).join(' ') || parts[0] || 'Client'
 
+    const { fbp, fbc } = getFbIds()
     const result = await confirmOrder({
       firstName: fName,
       lastName:  lName,
@@ -149,6 +151,9 @@ export default function PackEteLanding({ product }) {
       notes:     'Commande Pack Été (landing)',
       items:     [item],
       discounts: {},
+      fbp,
+      fbc,
+      sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
     }, pendingIdRef.current)
 
     if (result.error) {

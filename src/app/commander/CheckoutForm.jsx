@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { ShieldCheck, Truck, Lock } from 'lucide-react'
 import { useCartStore } from '@/lib/cart/store'
 import { createPendingOrder, confirmOrder } from '@/lib/actions/orders'
+import { getFbIds } from '@/lib/fbBrowser'
 import { computeBundle } from '@/lib/utils/bundleRules'
 import { formatDT } from '@/lib/utils/formatDT'
 import { createClient } from '@/lib/supabase/client'
@@ -87,7 +88,8 @@ export default function CheckoutForm() {
     setSubmitting(true)
     setServerError(null)
     const fullPhone = '+216' + data.phone
-    const result = await confirmOrder({ ...data, phone: fullPhone, items, discounts, giftMessage: giftCard.enabled ? giftCard.message : null, giftRecipient: giftCard.enabled ? giftCard.recipient : null }, pendingOrderId)
+    const { fbp, fbc } = getFbIds()
+    const result = await confirmOrder({ ...data, phone: fullPhone, items, discounts, giftMessage: giftCard.enabled ? giftCard.message : null, giftRecipient: giftCard.enabled ? giftCard.recipient : null, fbp, fbc, sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined }, pendingOrderId)
     if (result.error) {
       setServerError(typeof result.error === 'string' ? result.error : 'Veuillez vérifier vos informations.')
       setSubmitting(false)

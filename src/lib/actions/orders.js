@@ -1,5 +1,6 @@
 'use server'
 import { sendCAPIEvent } from '@/lib/actions/fbcapi'
+import { headers } from 'next/headers'
 
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
@@ -200,15 +201,25 @@ export async function confirmOrder(formData, pendingOrderId) {
   // Notifier l'admin de la nouvelle commande en attente
   await sendPushNotification(orderId, 'pending')
 
-  // CAPI Purchase
+  // CAPI Purchase — avec identifiants de clic (fbc/fbp) + IP/UA pour l'attribution
   try {
+    const hdrs = await headers()
+    const clientIp =
+      (hdrs.get('x-forwarded-for') || '').split(',')[0].trim() ||
+      hdrs.get('x-real-ip') || undefined
+    const userAgent = hdrs.get('user-agent') || undefined
+
     await sendCAPIEvent({
       eventName:  'Purchase',
       eventId:    'purchase-' + orderId,
       userData: {
-        phone: phone,
-        name:  `${firstName} ${lastName}`,
-        city:  city,
+        phone:     phone,
+        name:      `${firstName} ${lastName}`,
+        city:      city,
+        fbp:       formData.fbp,
+        fbc:       formData.fbc,
+        clientIp,
+        userAgent,
       },
       customData: {
         currency:    'TND',
@@ -217,7 +228,7 @@ export async function confirmOrder(formData, pendingOrderId) {
         num_items:   items.reduce((s, i) => s + i.qty, 0),
         contents:    items.map((i) => ({ id: i.product_id, quantity: i.qty, item_price: i.price_dt })),
       },
-      sourceUrl: 'https://hap-p-kids.store/commander',
+      sourceUrl: formData.sourceUrl || 'https://hap-p-kids.store/commander',
     })
   } catch (e) { console.error('[CAPI Purchase]', e) }
 
