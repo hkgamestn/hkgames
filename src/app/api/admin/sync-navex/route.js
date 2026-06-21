@@ -1,131 +1,138 @@
 import { createClient } from '@supabase/supabase-js'
+import { sendCAPIEvent } from '@/lib/actions/fbcapi'
+
+export const runtime = 'nodejs'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-const NAVEX_KEY = 'happkidsgame-VNZLZD2394IEZKLHF23O403IZKLDJAE23583FKDLJLJ34TD'
-const NAVEX_BASE = `https://app.navex.tn/api/${NAVEX_KEY}/v1/post.php`
+// Token de Recuperation (etat) — en env, jamais hardcode
+const ETAT_TOKEN = process.env.NAVEX_TOKEN_ETAT
+const ETAT_URL   = ETAT_TOKEN ? `https://app.navex.tn/api/${ETAT_TOKEN}/v1/post.php` : null
 
-// Extraire l'ID Navex interne depuis l'URL d'impression
-// ex: https://app.navex.tn/print/imprimer.php?id=814&code=122571184711 → 814
-function extractNavexId(printUrl) {
-  if (!printUrl) return null
-  try {
-    const url    = new URL(printUrl)
-    const id     = url.searchParams.get('id')
-    return id || null
-  } catch { return null }
-}
-
-// Mapping statuts Navex → statuts HK Games
+// Mapping etat Navex -> statut HK Games
 function mapNavexStatus(raw) {
   if (!raw) return null
   const s = String(raw).toLowerCase().trim()
-  if (s.includes('livr') || s.includes('delivered') || s.includes('remis')) return 'delivered'
-  if (s.includes('retour') || s.includes('return') || s.includes('refus') || s.includes('échec')) return 'returned'
+  if (s.includes('livr') || s.includes('remis') || s.includes('deliver')) return 'delivered'
+  if (s.includes('retour') || s.includes('return') || s.includes('refus') || s.includes('echec') || s.includes('\u00e9chec')) return 'returned'
   if (s.includes('annul') || s.includes('cancel')) return 'cancelled'
-  if (s.includes('expédi') || s.includes('transit') || s.includes('en cours') || s.includes('ramassé')) return 'shipped'
-  return null
+  if (s.includes('cours') || s.includes('transit') || s.includes('ramass') || s.includes('expedi') || s.includes('exp\u00e9di')) return 'shipped'
+  return null // "En attente" et inconnus -> pas de changement
 }
 
-async function fetchNavexStatus(tracking, navexId) {
-  // On essaie plusieurs formats d'endpoint connus de Navex
-  const endpoints = [
-    // Format 1 : suivi par code colis
-    { url: `${NAVEX_BASE}?action=suivi&code=${tracking}`, method: 'GET' },
-    // Format 2 : suivi par ID interne
-    ...(navexId ? [{ url: `${NAVEX_BASE}?action=suivi&id=${navexId}`, method: 'GET' }] : []),
-    // Format 3 : track
-    { url: `${NAVEX_BASE}?action=track&colis=${tracking}`, method: 'GET' },
-    // Format 4 : POST avec paramètres
-    {
-      url:    NAVEX_BASE,
-      method: 'POST',
-      body:   new URLSearchParams({ action: 'suivi', code: tracking }).toString(),
+// Recuperation Multiple : 1 seule requete POST pour N codes (param "codes")
+async function fetchNavexStatuses(codes) {
+  if (!ETAT_URL || !codes.length) return {}
+  const body = 'codes=' + encodeURIComponent(codes.join(', '))
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 8000)
+  try {
+    const res = await fetch(ETAT_URL, {
+      method:  'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    },
-  ]
+      body,
+      signal:  controller.signal,
+    })
+    const data = await res.json().catch(() => ({}))
+    const map = {}
+    for (const r of (data.results || [])) {
+      if (r && r.code && Number(r.status) === 1) map[r.code] = { etat: r.etat, motif: r.motif }
+    }
+    return map
+  } catch (err) {
+    console.error('[sync-navex] fetch error:', err?.name, err?.message)
+    return {}
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
-  for (const ep of endpoints) {
-    try {
-      const res = await fetch(ep.url, {
-        method:  ep.method || 'GET',
-        headers: ep.headers || { Accept: 'application/json' },
-        ...(ep.body ? { body: ep.body } : {}),
-      })
-      const text = await res.text()
-      console.log(`[sync-navex] ${ep.url} → ${text.slice(0, 300)}`)
+// Envoie un event CAPI custom (Livraison / Retour) — non bloquant
+async function feedMeta(eventName, prefix, order) {
+  try {
+    await sendCAPIEvent({
+      eventName,
+      eventId:    `${prefix}-${order.id}`,
+      userData:   { phone: order.customer_phone, name: order.customer_name, city: order.customer_city },
+      customData: { currency: 'TND', value: order.total_dt, order_id: order.id },
+      sourceUrl:  'https://www.hap-p-kids.store',
+    })
+  } catch (e) {
+    console.error(`[sync-navex] CAPI ${eventName}`, e?.message)
+  }
+}
 
-      if (!text || text.trim() === '' || text.trim() === 'null') continue
+async function runSync(orderIds) {
+  const base = supabase
+    .from('orders')
+    .select('id, navex_tracking, status, total_dt, customer_name, customer_phone, customer_city')
+    .not('navex_tracking', 'is', null)
+    .neq('navex_tracking', '')
 
-      let data
-      try { data = JSON.parse(text) } catch { continue }
+  const { data: orders, error } = orderIds?.length
+    ? await base.in('id', orderIds)
+    : await base.eq('status', 'shipped')
 
-      // Chercher le statut dans tous les champs possibles
-      const raw = data.status_message || data.statut || data.etat || data.libelle || data.description || data.message || null
-      if (raw && raw !== tracking) return { raw, data, endpoint: ep.url }
-    } catch (err) {
-      console.warn(`[sync-navex] endpoint failed: ${ep.url}`, err.message)
+  if (error) throw new Error(error.message)
+  if (!orders?.length) return { updated: 0, total: 0, results: [] }
+
+  const codes     = orders.map((o) => o.navex_tracking)
+  const statusMap = await fetchNavexStatuses(codes)
+
+  const results = []
+  for (const order of orders) {
+    const found = statusMap[order.navex_tracking]
+    if (!found) { results.push({ id: order.id, code: order.navex_tracking, status: 'no_response' }); continue }
+
+    const newStatus = mapNavexStatus(found.etat)
+
+    // On agit UNIQUEMENT sur la transition (newStatus different du status actuel).
+    // Une fois passe en delivered/returned, l'ordre n'est plus "shipped" -> jamais re-traite -> pas de doublon Meta.
+    if (newStatus && newStatus !== order.status) {
+      await supabase.from('orders').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', order.id)
+      await supabase.from('order_logs').insert({
+        order_id:  order.id,
+        action:    'navex_sync',
+        new_value: { etat: found.etat, motif: found.motif, new_status: newStatus },
+      }).catch(() => {})
+
+      if (newStatus === 'delivered') await feedMeta('Livraison', 'delivered', order) // vrai payeur COD
+      if (newStatus === 'returned')  await feedMeta('Retour',    'returned',  order) // audience d'exclusion
+
+      results.push({ id: order.id, code: order.navex_tracking, old: order.status, new: newStatus, etat: found.etat })
+    } else {
+      results.push({ id: order.id, code: order.navex_tracking, status: 'unchanged', etat: found.etat })
     }
   }
-  return null
+
+  const updated = results.filter((r) => r.new).length
+  return { updated, total: orders.length, results }
 }
 
+// Manuel (bouton admin) — optionnel: { orderIds: [...] }
 export async function POST(req) {
   try {
-    const { orderIds } = await req.json()
-
-    const query = supabase
-      .from('orders')
-      .select('id, navex_tracking, navex_print_url, status')
-      .not('navex_tracking', 'is', null)
-      .neq('navex_tracking', '')
-
-    const { data: orders, error: dbErr } = orderIds?.length
-      ? await query.in('id', orderIds)
-      : await query.eq('status', 'shipped')
-
-    if (dbErr) return Response.json({ error: dbErr.message }, { status: 500 })
-    if (!orders?.length) return Response.json({ updated: 0, total: 0, message: 'Aucune commande shipped avec tracking' })
-
-    const results = []
-
-    for (const order of orders) {
-      const navexId = extractNavexId(order.navex_print_url)
-      const result  = await fetchNavexStatus(order.navex_tracking, navexId)
-
-      if (!result) {
-        results.push({ id: order.id, tracking: order.navex_tracking, status: 'no_response' })
-        continue
-      }
-
-      const newStatus = mapNavexStatus(result.raw)
-      console.log(`[sync-navex] ${order.navex_tracking} → raw="${result.raw}" → status=${newStatus}`)
-
-      if (newStatus && newStatus !== order.status) {
-        await supabase.from('orders').update({
-          status:     newStatus,
-          updated_at: new Date().toISOString(),
-        }).eq('id', order.id)
-
-        await supabase.from('order_logs').insert({
-          order_id:  order.id,
-          action:    'navex_sync',
-          new_value: { raw: result.raw, new_status: newStatus, endpoint: result.endpoint },
-        }).catch(() => {})
-
-        results.push({ id: order.id, tracking: order.navex_tracking, old: order.status, new: newStatus, raw: result.raw })
-      } else {
-        results.push({ id: order.id, tracking: order.navex_tracking, status: 'unchanged', raw: result.raw, mapped: newStatus })
-      }
-    }
-
-    const updated = results.filter((r) => r.new).length
-    return Response.json({ updated, total: orders.length, results })
+    const { orderIds } = await req.json().catch(() => ({}))
+    return Response.json(await runSync(orderIds))
   } catch (err) {
     console.error('[sync-navex] fatal:', err)
+    return Response.json({ error: err.message }, { status: 500 })
+  }
+}
+
+// Vercel Cron (GET). Securise par CRON_SECRET si defini.
+export async function GET(req) {
+  const secret = process.env.CRON_SECRET
+  if (secret && req.headers.get('authorization') !== `Bearer ${secret}`) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  try {
+    return Response.json(await runSync())
+  } catch (err) {
+    console.error('[sync-navex] cron fatal:', err)
     return Response.json({ error: err.message }, { status: 500 })
   }
 }

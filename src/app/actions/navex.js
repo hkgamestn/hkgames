@@ -10,7 +10,8 @@ function createAdminClient() {
 }
 
 export async function envoyerNavex(order) {
-  const NAVEX_URL = 'https://app.navex.tn/api/happkidsgame-VNZLZD2394IEZKLHF23O403IZKLDJAE23583FKDLJLJ34TD/v1/post.php'
+  const TOKEN_ADD = process.env.NAVEX_TOKEN_ADD || 'happkidsgame-VNZLZD2394IEZKLHF23O403IZKLDJAE23583FKDLJLJ34TD'
+  const NAVEX_URL = `https://app.navex.tn/api/${TOKEN_ADD}/v1/post.php`
 
   const designation = (order.items || [])
     .map((i) => `${i.name} x${i.qty}`)

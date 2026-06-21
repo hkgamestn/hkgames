@@ -1,4 +1,7 @@
 {
+  "crons": [
+    { "path": "/api/admin/sync-navex", "schedule": "0 18 * * *" }
+  ],
   "headers": [
     {
       "source": "/sw.js",
