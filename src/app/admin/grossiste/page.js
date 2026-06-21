@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { envoyerNavexGrossiste } from '@/app/actions/navex'
 import { CheckCircle, XCircle, Phone, Building2, FileText, Plus, Printer, Eye, Trash2, DollarSign, Edit3 } from 'lucide-react'
 import InvoiceEditor from './InvoiceEditor'
 import InvoicePrint from './InvoicePrint'
@@ -67,6 +68,27 @@ export default function AdminGrossistePage() {
     const supabase = createClient()
     await supabase.from('wholesale_requests').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
     await fetchData()
+    setActionLoading(null)
+  }
+
+  async function envoyerNavexRequest(req) {
+    setActionLoading(req.id)
+    try {
+      let codAmount = 0
+      if (req.request_type !== 'sample') {
+        // Valeur de la commande gros = total de la facture liee, sinon saisie manuelle
+        const inv = invoices.find((i) => i.request_id === req.id)
+        const def = inv?.total_ttc ? Number(inv.total_ttc).toFixed(3) : ''
+        const entered = window.prompt('Montant COD a encaisser (DT) pour cette commande gros :', def)
+        if (entered === null) { setActionLoading(null); return }
+        codAmount = parseFloat(entered) || 0
+      }
+      const r = await envoyerNavexGrossiste({ request: req, codAmount })
+      alert('Envoye a Navex. Suivi : ' + (r.tracking_number || '—'))
+      await fetchData()
+    } catch (e) {
+      alert('Erreur Navex : ' + e.message)
+    }
     setActionLoading(null)
   }
 
@@ -183,10 +205,24 @@ export default function AdminGrossistePage() {
                       </button>
                     )}
                     {(req.status === 'confirmed') && (
-                      <button className={`${styles.actionBtn} ${styles.actionPurple}`}
-                        onClick={() => openNewInvoice(req)}>
-                        <Plus size={14} /> Créer facture
-                      </button>
+                      <>
+                        <button className={`${styles.actionBtn} ${styles.actionPurple}`}
+                          onClick={() => openNewInvoice(req)}>
+                          <Plus size={14} /> Créer facture
+                        </button>
+                        {req.navex_tracking ? (
+                          <a className={`${styles.actionBtn} ${styles.actionGhost}`}
+                            href={req.navex_print_url || '#'} target="_blank" rel="noopener noreferrer">
+                            <Printer size={14} /> {req.navex_tracking}
+                          </a>
+                        ) : (
+                          <button className={`${styles.actionBtn} ${styles.actionGreen}`}
+                            disabled={actionLoading === req.id}
+                            onClick={() => envoyerNavexRequest(req)}>
+                            <Building2 size={14} /> Navex {req.request_type === 'sample' ? '(0 DT)' : ''}
+                          </button>
+                        )}
+                      </>
                     )}
                     {req.status !== 'cancelled' && (
                       <button className={`${styles.actionBtn} ${styles.actionRed}`}

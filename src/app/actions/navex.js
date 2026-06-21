@@ -77,3 +77,62 @@ export async function envoyerNavex(order) {
 
   return { ...data, tracking_number: trackingNumber, print_url: printUrl }
 }
+
+// Envoi Navex pour une demande grossiste (echantillon = 0 DT, commande gros = valeur reelle)
+export async function envoyerNavexGrossiste({ request, codAmount }) {
+  const TOKEN_ADD = process.env.NAVEX_TOKEN_ADD || 'happkidsgame-VNZLZD2394IEZKLHF23O403IZKLDJAE23583FKDLJLJ34TD'
+  const NAVEX_URL = `https://app.navex.tn/api/${TOKEN_ADD}/v1/post.php`
+
+  const isSample = request.request_type === 'sample'
+  const prix = isSample ? '0.000' : parseFloat(codAmount || 0).toFixed(3)
+  const designation = isSample
+    ? 'Echantillon HK Games'
+    : (request.products_wanted || 'Commande gros HK Games')
+
+  const params = new URLSearchParams({
+    prix,
+    nom:             request.company_name || request.contact_name || '',
+    gouvernerat:     request.city || 'Tunis',
+    ville:           request.city || '',
+    adresse:         request.address || '',
+    tel:             request.phone || '',
+    tel2:            '',
+    designation:     designation,
+    nb_article:      String(request.estimated_qty || 1),
+    msg:             request.notes || (isSample ? 'Echantillon' : ''),
+    echange:         'Non',
+    article:         '',
+    nb_echange:      '',
+    ouvrir:          'Non',
+    sender_name:     'HK Games',
+    sender_location: 'Tunis',
+  })
+
+  const res  = await fetch(NAVEX_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    params.toString(),
+  })
+  const data = await res.json().catch(() => ({}))
+
+  if (!res.ok || data.status === 'error') {
+    throw new Error(data.status_message || 'Erreur Navex')
+  }
+
+  const trackingNumber = data.status_message || null
+  const printUrl       = data.lien           || null
+
+  if (request.id) {
+    const supabase = createAdminClient()
+    await supabase
+      .from('wholesale_requests')
+      .update({
+        navex_tracking:  trackingNumber,
+        navex_print_url: printUrl,
+        navex_sent_at:   new Date().toISOString(),
+      })
+      .eq('id', request.id)
+  }
+
+  return { tracking_number: trackingNumber, print_url: printUrl }
+}

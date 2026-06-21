@@ -87,6 +87,14 @@ async function runSync(orderIds) {
     const found = statusMap[order.navex_tracking]
     if (!found) { results.push({ id: order.id, code: order.navex_tracking, status: 'no_response' }); continue }
 
+    // Reflete l'etat Navex BRUT (granularite dashboard: En cours, Au depot, Livre, Retour...).
+    // Call separe et non bloquant : si la colonne navex_etat n'existe pas encore, le statut coarse + Meta passent quand meme.
+    if (found.etat) {
+      await supabase.from('orders')
+        .update({ navex_etat: found.etat, navex_etat_at: new Date().toISOString() })
+        .eq('id', order.id)
+    }
+
     const newStatus = mapNavexStatus(found.etat)
 
     // On agit UNIQUEMENT sur la transition (newStatus different du status actuel).

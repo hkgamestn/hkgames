@@ -24,6 +24,18 @@ const STATUS_TABS = [
   { id: 'deleted',   label: '🗑 Supprimées' },
 ]
 
+// Couleur du badge d'etat Navex brut (granularite : En cours, Au depot, Livre, Retour...)
+function navexEtatStyle(etat) {
+  const s = String(etat || '').toLowerCase()
+  if (s.includes('livr') || s.includes('paye') || s.includes('remis')) return '#34d399'
+  if (s.includes('retour') || s.includes('refus') || s.includes('echec') || s.includes('\u00e9chec')) return '#ef4444'
+  if (s.includes('annul')) return '#f87171'
+  if (s.includes('depot') || s.includes('d\u00e9p')) return '#a78bfa'
+  if (s.includes('cours') || s.includes('transit') || s.includes('ramass') || s.includes('exp')) return '#60a5fa'
+  if (s.includes('attente')) return '#fbbf24'
+  return '#9ca3af'
+}
+
 const STATUS_CONFIG = {
   pending:   { label: 'En attente',  color: '#fbbf24' },
   confirmed: { label: 'Confirmée',   color: '#10b981' },
@@ -165,7 +177,19 @@ export default function CommandesPage() {
       setRepeatBuyers(repeats)
 
     const { data } = await q
-    setOrders(data || [])
+    let rows = data || []
+    // Statut Navex granulaire — requete separee, resiliente si la colonne n'existe pas encore
+    try {
+      const ids = rows.map((o) => o.id)
+      if (ids.length) {
+        const { data: etats } = await supabase.from('orders').select('id, navex_etat').in('id', ids)
+        if (etats) {
+          const m = Object.fromEntries(etats.map((e) => [e.id, e.navex_etat]))
+          rows = rows.map((o) => ({ ...o, navex_etat: m[o.id] }))
+        }
+      }
+    } catch {}
+    setOrders(rows)
     setLoading(false)
   }, [activeTab, search, dateFrom, dateTo])
 
@@ -473,6 +497,12 @@ export default function CommandesPage() {
                   <span className={styles.statusBadge} style={{ '--status-color': cfg.color }}>
                     {cfg.label || order.status}
                   </span>
+                  {order.navex_etat && (
+                    <span className={styles.statusBadge}
+                      style={{ '--status-color': navexEtatStyle(order.navex_etat), marginInlineStart: 6 }}>
+                      🚚 {order.navex_etat}
+                    </span>
+                  )}
                 </span>
                 <span className={styles.date}>
                   {new Date(order.created_at).toLocaleDateString('fr-TN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
