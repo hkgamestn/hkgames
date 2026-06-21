@@ -46,20 +46,30 @@ async function sendPushNotification(orderId, type) {
 export async function createPendingOrder({ phone, items, subtotalDt, giftMessage, giftRecipient }) {
   const supabase = createAdminClient()
 
+  // Détecter le type de panier pour ne PAS mélanger un panier Pack Été (landing)
+  // avec un panier boutique classique du même téléphone
+  const isPackEteCart = items.some((i) => i.line === 'pack_ete')
+
   // Chercher une commande pending existante pour ce téléphone (dernières 24h)
+  // ET du même type de panier (évite la corruption Pack Été ↔ boutique)
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const { data: existing } = await supabase
+  const { data: candidates } = await supabase
     .from('orders')
-    .select('id')
+    .select('id, items')
     .eq('customer_phone', phone)
     .eq('status', 'pending')
     .gte('created_at', since24h)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+    .limit(5)
 
-  // Si commande pending existante → mettre à jour au lieu de créer
+  // Ne réutiliser qu'une commande pending du MÊME type (Pack Été vs boutique)
+  const existing = (candidates || []).find((o) => {
+    const oIsPackEte = (o.items || []).some((i) => i.line === 'pack_ete')
+    return oIsPackEte === isPackEteCart
+  })
+
+  // Si commande pending du même type existante → mettre à jour
   if (existing?.id) {
     await supabase
       .from('orders')
@@ -76,7 +86,7 @@ export async function createPendingOrder({ phone, items, subtotalDt, giftMessage
     return { orderId: existing.id }
   }
 
-  // Aucune commande existante → créer une nouvelle
+  // Aucune commande du même type → créer une nouvelle
   const { data, error } = await supabase
     .from('orders')
     .insert({
