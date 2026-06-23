@@ -13,6 +13,7 @@ import styles from './packete.module.css'
 const SocialToast = dynamic(() => import('@/components/homepage/SocialToast'), { ssr: false })
 
 const IMG = 'https://rsmebjtwmvwyeocvsowg.supabase.co/storage/v1/object/public/product-images/slime%20unicolore.png'
+const BANNER = '/pack-ete-banner.jpg'
 const BASE = 'https://rsmebjtwmvwyeocvsowg.supabase.co/storage/v1/object/public/product-images'
 
 // Les 6 pots du pack (images individuelles unicolore)
@@ -115,6 +116,62 @@ export default function PackEteLanding({ product }) {
 
   useEffect(() => () => clearTimeout(inactivityRef.current), [])
 
+  // ── Son de caisse "cha-ching" au premier contact (anti-autoplay block) ──
+  useEffect(() => {
+    let played = false
+    function playCashSound() {
+      if (played) return
+      played = true
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext
+        if (!Ctx) return
+        const ctx = new Ctx()
+        // Deux "ding" rapides (effet cha-ching de caisse enregistreuse)
+        const notes = [
+          { freq: 1318, start: 0,    dur: 0.12 }, // Mi aigu
+          { freq: 1760, start: 0.09, dur: 0.18 }, // La aigu
+        ]
+        notes.forEach(({ freq, start, dur }) => {
+          const osc  = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.type = 'triangle'
+          osc.frequency.value = freq
+          gain.gain.setValueAtTime(0.0001, ctx.currentTime + start)
+          gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + start + 0.02)
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur)
+          osc.connect(gain); gain.connect(ctx.destination)
+          osc.start(ctx.currentTime + start)
+          osc.stop(ctx.currentTime + start + dur)
+        })
+        // Petit "scintillement" de pièces
+        setTimeout(() => {
+          const osc  = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.type = 'sine'
+          osc.frequency.setValueAtTime(2200, ctx.currentTime)
+          osc.frequency.exponentialRampToValueAtTime(2640, ctx.currentTime + 0.15)
+          gain.gain.setValueAtTime(0.12, ctx.currentTime)
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25)
+          osc.connect(gain); gain.connect(ctx.destination)
+          osc.start(); osc.stop(ctx.currentTime + 0.25)
+        }, 220)
+      } catch {}
+      cleanup()
+    }
+    function cleanup() {
+      window.removeEventListener('pointerdown', playCashSound)
+      window.removeEventListener('scroll', playCashSound)
+      window.removeEventListener('touchstart', playCashSound)
+      window.removeEventListener('keydown', playCashSound)
+    }
+    // Le son joue au tout premier contact (contrainte navigateur)
+    window.addEventListener('pointerdown', playCashSound, { once: false })
+    window.addEventListener('scroll', playCashSound, { once: false, passive: true })
+    window.addEventListener('touchstart', playCashSound, { once: false, passive: true })
+    window.addEventListener('keydown', playCashSound, { once: false })
+    return cleanup
+  }, [])
+
   // Masquer le CTA flottant quand le formulaire est visible
   useEffect(() => {
     const el = formRef.current
@@ -200,7 +257,7 @@ export default function PackEteLanding({ product }) {
           {/* Image */}
           <div className={styles.heroImageCol}>
             <div className={styles.heroImageWrap}>
-              <Image src={productImg} alt="Pack Été 6 Slimes HK Games" fill sizes="(max-width:768px) 90vw, 440px" className={styles.heroImage} priority />
+              <img src={BANNER} alt="Pack Été 6 Slimes HK Games — 5 + 1 gratuit, livraison offerte" className={styles.heroImage} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
               <span className={styles.bubble} style={{'--x':'10%','--y':'15%','--s':'34px','--d':'3.2s'}} />
               <span className={styles.bubble} style={{'--x':'82%','--y':'12%','--s':'24px','--d':'4.1s'}} />
               <span className={styles.bubble} style={{'--x':'70%','--y':'78%','--s':'30px','--d':'3.6s'}} />
