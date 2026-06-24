@@ -116,61 +116,7 @@ export default function PackEteLanding({ product }) {
 
   useEffect(() => () => clearTimeout(inactivityRef.current), [])
 
-  // ── Son de caisse "cha-ching" au premier contact (anti-autoplay block) ──
-  useEffect(() => {
-    let played = false
-    function playCashSound() {
-      if (played) return
-      played = true
-      try {
-        const Ctx = window.AudioContext || window.webkitAudioContext
-        if (!Ctx) return
-        const ctx = new Ctx()
-        // Deux "ding" rapides (effet cha-ching de caisse enregistreuse)
-        const notes = [
-          { freq: 1318, start: 0,    dur: 0.12 }, // Mi aigu
-          { freq: 1760, start: 0.09, dur: 0.18 }, // La aigu
-        ]
-        notes.forEach(({ freq, start, dur }) => {
-          const osc  = ctx.createOscillator()
-          const gain = ctx.createGain()
-          osc.type = 'triangle'
-          osc.frequency.value = freq
-          gain.gain.setValueAtTime(0.0001, ctx.currentTime + start)
-          gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + start + 0.02)
-          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur)
-          osc.connect(gain); gain.connect(ctx.destination)
-          osc.start(ctx.currentTime + start)
-          osc.stop(ctx.currentTime + start + dur)
-        })
-        // Petit "scintillement" de pièces
-        setTimeout(() => {
-          const osc  = ctx.createOscillator()
-          const gain = ctx.createGain()
-          osc.type = 'sine'
-          osc.frequency.setValueAtTime(2200, ctx.currentTime)
-          osc.frequency.exponentialRampToValueAtTime(2640, ctx.currentTime + 0.15)
-          gain.gain.setValueAtTime(0.12, ctx.currentTime)
-          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25)
-          osc.connect(gain); gain.connect(ctx.destination)
-          osc.start(); osc.stop(ctx.currentTime + 0.25)
-        }, 220)
-      } catch {}
-      cleanup()
-    }
-    function cleanup() {
-      window.removeEventListener('pointerdown', playCashSound)
-      window.removeEventListener('scroll', playCashSound)
-      window.removeEventListener('touchstart', playCashSound)
-      window.removeEventListener('keydown', playCashSound)
-    }
-    // Le son joue au tout premier contact (contrainte navigateur)
-    window.addEventListener('pointerdown', playCashSound, { once: false })
-    window.addEventListener('scroll', playCashSound, { once: false, passive: true })
-    window.addEventListener('touchstart', playCashSound, { once: false, passive: true })
-    window.addEventListener('keydown', playCashSound, { once: false })
-    return cleanup
-  }, [])
+  // (effet sonore retire - gain de reactivite au tap / INP, evite un son surprise en navigateur in-app)
 
   // Masquer le CTA flottant quand le formulaire est visible
   useEffect(() => {
@@ -257,7 +203,7 @@ export default function PackEteLanding({ product }) {
           {/* Image */}
           <div className={styles.heroImageCol}>
             <div className={styles.heroImageWrap}>
-              <img src={BANNER} alt="Pack Été 6 Slimes HK Games — 5 + 1 gratuit, livraison offerte" className={styles.heroImage} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+              <img src={BANNER} alt="Pack Été 6 Slimes HK Games — 5 + 1 gratuit, livraison offerte" className={styles.heroImage} width={1200} height={630} fetchPriority="high" decoding="async" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
               <span className={styles.bubble} style={{'--x':'10%','--y':'15%','--s':'34px','--d':'3.2s'}} />
               <span className={styles.bubble} style={{'--x':'82%','--y':'12%','--s':'24px','--d':'4.1s'}} />
               <span className={styles.bubble} style={{'--x':'70%','--y':'78%','--s':'30px','--d':'3.6s'}} />
@@ -297,57 +243,6 @@ export default function PackEteLanding({ product }) {
               <span><Shield size={15}/> Paiement à la livraison</span>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* RÉASSURANCE */}
-      <section className={styles.reassure}>
-        <div className={styles.reassureCard}>
-          <Gift size={22} className={styles.reassureIcon}/>
-          <h3>6 couleurs incluses</h3>
-          <p>Rouge, Orange, Rose, Vert, Violet & Jaune — la collection complète.</p>
-        </div>
-        <div className={styles.reassureCard}>
-          <Shield size={22} className={styles.reassureIcon}/>
-          <h3>Qualité premium</h3>
-          <p>Texture ultra-satisfaisante, non-toxique, sans danger pour les enfants.</p>
-        </div>
-        <div className={styles.reassureCard}>
-          <Truck size={22} className={styles.reassureIcon}/>
-          <h3>Livraison gratuite</h3>
-          <p>Partout en Tunisie, paiement en espèces à la réception.</p>
-        </div>
-      </section>
-
-      {/* GALERIE DES 6 POTS */}
-      <section className={styles.gallery}>
-        <h2 className={styles.galleryTitle}>Les 6 pots de votre pack 🎨</h2>
-        <p className={styles.gallerySub}>Chaque couleur, une texture unique et satisfaisante</p>
-        <div className={styles.galleryGrid}>
-          {GALLERY.map((g) => (
-            <div key={g.name} className={styles.galleryItem}>
-              <div className={styles.galleryImgWrap}>
-                <Image src={g.src} alt={`Slime ${g.name}`} fill sizes="(max-width:768px) 45vw, 200px" className={styles.galleryImg} />
-                <span className={styles.galleryColorTag} style={{ background: g.hex }}>{g.emoji}</span>
-              </div>
-              <span className={styles.galleryName}>{g.name}</span>
-            </div>
-          ))}
-        </div>
-        <button className={styles.galleryCta} onClick={scrollToForm} type="button">
-          <ShoppingCart size={18}/> Je commande les 6 — {PRICE} DT
-        </button>
-      </section>
-
-      {/* AVIS */}
-      <section className={styles.reviews}>
-        <div className={styles.stars}>
-          {[...Array(5)].map((_, i) => <Star key={i} size={20} fill="#fbbf24" stroke="#fbbf24" />)}
-        </div>
-        <p className={styles.reviewsText}>Plus de 1000 familles tunisiennes ont déjà commandé chez HK Games</p>
-        <div className={styles.reviewQuotes}>
-          <div className={styles.quote}>« Mes enfants adorent, la qualité est top ! » — Amira, Tunis</div>
-          <div className={styles.quote}>« Livraison rapide et produit conforme. » — Sami, Sousse</div>
         </div>
       </section>
 
@@ -414,6 +309,57 @@ export default function PackEteLanding({ product }) {
               <Shield size={13}/> Aucun paiement en ligne · Vous payez {PRICE} DT en espèces à la livraison
             </p>
           </form>
+        </div>
+      </section>
+
+      {/* RÉASSURANCE */}
+      <section className={styles.reassure}>
+        <div className={styles.reassureCard}>
+          <Gift size={22} className={styles.reassureIcon}/>
+          <h3>6 couleurs incluses</h3>
+          <p>Rouge, Orange, Rose, Vert, Violet & Jaune — la collection complète.</p>
+        </div>
+        <div className={styles.reassureCard}>
+          <Shield size={22} className={styles.reassureIcon}/>
+          <h3>Qualité premium</h3>
+          <p>Texture ultra-satisfaisante, non-toxique, sans danger pour les enfants.</p>
+        </div>
+        <div className={styles.reassureCard}>
+          <Truck size={22} className={styles.reassureIcon}/>
+          <h3>Livraison gratuite</h3>
+          <p>Partout en Tunisie, paiement en espèces à la réception.</p>
+        </div>
+      </section>
+
+      {/* GALERIE DES 6 POTS */}
+      <section className={styles.gallery}>
+        <h2 className={styles.galleryTitle}>Les 6 pots de votre pack 🎨</h2>
+        <p className={styles.gallerySub}>Chaque couleur, une texture unique et satisfaisante</p>
+        <div className={styles.galleryGrid}>
+          {GALLERY.map((g) => (
+            <div key={g.name} className={styles.galleryItem}>
+              <div className={styles.galleryImgWrap}>
+                <Image src={g.src} alt={`Slime ${g.name}`} fill sizes="(max-width:768px) 45vw, 200px" className={styles.galleryImg} />
+                <span className={styles.galleryColorTag} style={{ background: g.hex }}>{g.emoji}</span>
+              </div>
+              <span className={styles.galleryName}>{g.name}</span>
+            </div>
+          ))}
+        </div>
+        <button className={styles.galleryCta} onClick={scrollToForm} type="button">
+          <ShoppingCart size={18}/> Je commande les 6 — {PRICE} DT
+        </button>
+      </section>
+
+      {/* AVIS */}
+      <section className={styles.reviews}>
+        <div className={styles.stars}>
+          {[...Array(5)].map((_, i) => <Star key={i} size={20} fill="#fbbf24" stroke="#fbbf24" />)}
+        </div>
+        <p className={styles.reviewsText}>Plus de 1000 familles tunisiennes ont déjà commandé chez HK Games</p>
+        <div className={styles.reviewQuotes}>
+          <div className={styles.quote}>« Mes enfants adorent, la qualité est top ! » — Amira, Tunis</div>
+          <div className={styles.quote}>« Livraison rapide et produit conforme. » — Sami, Sousse</div>
         </div>
       </section>
 
