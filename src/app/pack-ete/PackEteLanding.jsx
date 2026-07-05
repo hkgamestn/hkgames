@@ -42,6 +42,18 @@ const PRICE = 60
 export default function PackEteLanding({ product }) {
   const routerHook = useRouter()
   const [formVisible, setFormVisible] = useState(false)
+  const [toastReady, setToastReady]   = useState(false)
+
+  // Différer le SocialToast (INP): monté après le premier rendu + idle
+  useEffect(() => {
+    const start = () => setToastReady(true)
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(start, { timeout: 4000 })
+      return () => cancelIdleCallback(id)
+    }
+    const t = setTimeout(start, 3000)
+    return () => clearTimeout(t)
+  }, [])
   const [form, setForm]       = useState({ firstName: '', phone: '', city: '', address: '' })
   const [errors, setErrors]   = useState({})
   const [submitting, setSubmitting] = useState(false)
@@ -202,7 +214,7 @@ export default function PackEteLanding({ product }) {
         <div className={styles.heroGrid}>
           {/* Image */}
           <div className={styles.heroImageCol}>
-            <div className={styles.heroImageWrap}>
+            <div className={styles.heroImageWrap} onClick={scrollToForm} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && scrollToForm()} style={{ cursor: 'pointer' }} title="Commander le Pack Été">
               <img src={BANNER} alt="Pack Été 6 Slimes HK Games — 5 + 1 gratuit, livraison offerte" className={styles.heroImage} width={1200} height={630} fetchPriority="high" decoding="async" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
               <span className={styles.bubble} style={{'--x':'10%','--y':'15%','--s':'34px','--d':'3.2s'}} />
               <span className={styles.bubble} style={{'--x':'82%','--y':'12%','--s':'24px','--d':'4.1s'}} />
@@ -371,7 +383,7 @@ export default function PackEteLanding({ product }) {
       )}
 
       {/* Toast social proof — biais Pack Été pour encourager */}
-      <SocialToast packEteBias />
+      {toastReady && <SocialToast packEteBias />}
     </div>
   )
 }
