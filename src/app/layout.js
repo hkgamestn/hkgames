@@ -99,8 +99,12 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://rsmebjtwmvwyeocvsowg.supabase.co" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body>
         {pixelId && (
-          <script
+          <Script
+            id="fb-pixel"
+            strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
                 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
@@ -110,8 +114,6 @@ export default function RootLayout({ children }) {
             }}
           />
         )}
-      </head>
-      <body>
         {/* Background blobs */}
         <div className="blob blob-1" aria-hidden="true" />
         <div className="blob blob-2" aria-hidden="true" />

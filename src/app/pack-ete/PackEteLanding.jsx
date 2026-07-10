@@ -215,10 +215,7 @@ export default function PackEteLanding({ product }) {
           {/* Image */}
           <div className={styles.heroImageCol}>
             <div className={styles.heroImageWrap} onClick={scrollToForm} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && scrollToForm()} style={{ cursor: 'pointer' }} title="Commander le Pack Été">
-              <img src={BANNER} alt="Pack Été 6 Slimes HK Games — 5 + 1 gratuit, livraison offerte" className={styles.heroImage} width={1200} height={630} fetchPriority="high" decoding="async" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-              <span className={styles.bubble} style={{'--x':'10%','--y':'15%','--s':'34px','--d':'3.2s'}} />
-              <span className={styles.bubble} style={{'--x':'82%','--y':'12%','--s':'24px','--d':'4.1s'}} />
-              <span className={styles.bubble} style={{'--x':'70%','--y':'78%','--s':'30px','--d':'3.6s'}} />
+              <Image src={BANNER} alt="Pack Été 6 Slimes HK Games — 5 + 1 gratuit, livraison offerte" fill sizes="(max-width:768px) 92vw, 460px" className={styles.heroImage} priority quality={78} />
             </div>
           </div>
 
@@ -351,7 +348,7 @@ export default function PackEteLanding({ product }) {
           {GALLERY.map((g) => (
             <div key={g.name} className={styles.galleryItem}>
               <div className={styles.galleryImgWrap}>
-                <Image src={g.src} alt={`Slime ${g.name}`} fill sizes="(max-width:768px) 45vw, 200px" className={styles.galleryImg} />
+                <Image src={g.src} alt={`Slime ${g.name}`} fill sizes="(max-width:400px) 46vw, (max-width:768px) 31vw, 150px" className={styles.galleryImg} />
                 <span className={styles.galleryColorTag} style={{ background: g.hex }}>{g.emoji}</span>
               </div>
               <span className={styles.galleryName}>{g.name}</span>

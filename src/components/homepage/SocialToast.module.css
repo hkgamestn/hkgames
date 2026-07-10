@@ -6,9 +6,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(26, 16, 48, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(26, 16, 48, 0.97);
+  /* backdrop-filter retiré: blur(12px) animé = jank sur Android webview, fond déjà quasi opaque */
   border: 1px solid rgba(168, 85, 247, 0.35);
   border-radius: 14px;
   padding: 10px 14px;

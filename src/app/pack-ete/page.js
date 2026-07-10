@@ -27,11 +27,5 @@ async function getPackEte() {
 
 export default async function PackEtePage() {
   const product = await getPackEte()
-  return (
-    <>
-      {/* Préchargement bannière hero — améliore LCP */}
-      <link rel="preload" as="image" href="/pack-ete-banner.jpg" fetchPriority="high" />
-      <PackEteLanding product={product} />
-    </>
-  )
+  return <PackEteLanding product={product} />
 }
