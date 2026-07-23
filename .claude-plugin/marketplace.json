@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "hkgames-marketplace",
+  "owner": {
+    "name": "CROFT TYLOR",
+    "email": "wael.belguesmi12@gmail.com"
+  },
+  "description": "Marketplace du business HK Games (slime) : skills strategie e-commerce sensoriel et acquisition payante, packages pour Claude Code et partageables entre repos et machines.",
+  "version": "1.0.0",
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "hk-commerce",
+      "source": "hk-commerce",
+      "description": "QG du business slime : slime-commerce (strategie, catalogue, pages produit, conversion, contenu, offres, logistique, retention) + meta-ads-engine (acquisition Meta/TikTok, ROAS).",
+      "version": "1.0.0",
+      "author": { "name": "CROFT TYLOR" },
+      "category": "business",
+      "keywords": ["hkgames", "slime", "ecommerce", "dtc", "tunisie", "meta-ads", "tiktok", "conversion", "cod"]
+    }
+  ]
+}

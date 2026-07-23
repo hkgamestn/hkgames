@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "extraKnownMarketplaces": {
+    "hkgames-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "hkgamestn/hkgames"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "hk-commerce@hkgames-marketplace": true
+  }
+}

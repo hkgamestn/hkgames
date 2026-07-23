@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin.json",
+  "name": "hk-commerce",
+  "description": "QG du business slime HK Games : strategie e-commerce sensoriel (slime-commerce) et acquisition payante Meta/TikTok (meta-ads-engine). Standard anti-generique applique a une marque sensorielle.",
+  "version": "1.0.0",
+  "author": { "name": "CROFT TYLOR", "email": "wael.belguesmi12@gmail.com" },
+  "homepage": "https://github.com/hkgamestn/hkgames",
+  "repository": "https://github.com/hkgamestn/hkgames",
+  "license": "UNLICENSED",
+  "keywords": ["hkgames", "slime", "ecommerce", "dtc", "meta-ads"]
+}
