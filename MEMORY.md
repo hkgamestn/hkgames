@@ -15,6 +15,9 @@
   (produit, panier, commander, grossiste, blog, avis, pack-ete…).
 - Chantier en cours : **performance** — attaque LCP ~4,4 s / INP ~1176 ms (diagnostic Microsoft
   Clarity, 1–10 juillet). Voir commit `8af0775`.
+- **Fidélité + blocage client** livré sur la branche `claude/package-status-loyalty-sync-qhv4b8`
+  (migration `002_customer_reputation.sql` **déjà appliquée** au projet Supabase hk-games). À merger
+  dans `main` pour déployer.
 
 ## Décisions durables
 
@@ -22,16 +25,24 @@
   gouvernance Walaup. Source de vérité produit/design = `PRD_HKGames_SlimeStore_v3_FINAL.md`.
 - Secrets serveur-only (jamais frontend / `NEXT_PUBLIC_*`) : `SUPABASE_SERVICE_ROLE_KEY`,
   `NAVEX_API_KEY`, `WA_API_TOKEN`, `VAPID_PRIVATE_KEY`.
+- **Réputation client** = clé téléphone normalisé 8 chiffres (`hk_normalize_phone`). Fidèle = ≥1
+  commande livrée ; **bloqué** = colis `navex_etat = 'Retour recu'` (état Navex exact, ≠ « Retour
+  Expediteur »/« Rtn depot »). Blocage enforced serveur + override manuel `customer_flags`.
+- Contact régularisation client bloqué : **+216 21 660 303** (appel + WhatsApp), fenêtre FR/AR.
 
 ## Prochaines étapes
 
+- [ ] **Merger `claude/package-status-loyalty-sync-qhv4b8` → `main`** pour déployer fidélité/blocage.
+- [ ] Révoquer le PAT GitHub partagé en session (usage ponctuel, jamais stocké).
 - [ ] Continuer l'optimisation perf (LCP/INP) : images `next/image`, lazy, réduire le JS bloquant.
-- [ ] (À définir en session) — mettre à jour cette liste au fil de l'eau.
 
 ## Pièges / gotchas
 
 - Animations > 500 ms interdites (réseau 3G tunisien). Réductions toujours en **DT économisés**, jamais en %.
 - COD = données perso client (nom, tél, adresse) → protéger par RLS, ne jamais logguer en clair.
+- **Vercel Hobby** : cron 1×/jour max (`0 18 * * *`). Un schedule `*/15` (Pro) fait échouer le déploiement.
+- `orders_status_check` inclut désormais `'returned'` (avant : UPDATE retour en échec silencieux, statut coincé en `shipped`).
+- **2 projets Supabase distincts** dans le compte MCP : hk-games (`rsmebjtwmvwyeocvsowg`) ≠ Walaup multi-tenant. Toujours viser hk-games.
 
 ## Archives détaillées (snapshots memory-compress)
 
@@ -39,4 +50,8 @@
 
 ## Journal de session (le plus récent en haut)
 
+- **2026-07-23** — Feature fidélité/blocage/sync colis : migration `002` appliquée (fonctions +
+  vue + `customer_flags` + contrainte `returned`), badges ⭐/⛔ admin, fenêtre FR/AR checkout +
+  Pack Été, sync de fond. Poussé sur `claude/package-status-loyalty-sync-qhv4b8`. Cron remis à
+  `0 18 * * *` (échec déploiement Hobby avec `*/15`).
 - **2026-07-23** — Setup Claude Code (CLAUDE.md + plugin hk-commerce + auto-load) + convention MEMORY.md.
