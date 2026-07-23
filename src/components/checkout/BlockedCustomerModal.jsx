@@ -28,9 +28,9 @@ export default function BlockedCustomerModal({ open, onClose }) {
         <div className={styles.block} lang="fr" dir="ltr">
           <h2 id="blocked-title" className={styles.title}>Commandes momentanément bloquées</h2>
           <p className={styles.text}>
-            Un ou plusieurs de vos colis nous sont revenus en <strong>« Retour reçu »</strong> —
-            non réceptionnés à la livraison. Le paiement à la livraison n'est donc plus
-            disponible pour ce numéro de téléphone.
+            Plusieurs de vos commandes n'ont pas pu être finalisées <strong>(colis non
+            réceptionné, client injoignable ou commande annulée)</strong>. Le paiement à la
+            livraison n'est donc plus disponible pour ce numéro de téléphone.
           </p>
           <p className={styles.text}>
             Pour régulariser votre situation et réactiver vos commandes, merci de nous contacter :
@@ -43,8 +43,8 @@ export default function BlockedCustomerModal({ open, onClose }) {
         <div className={styles.block} lang="ar" dir="rtl">
           <h2 className={styles.title}>تم إيقاف الطلبات مؤقتًا</h2>
           <p className={styles.text}>
-            عاد إلينا طرد أو أكثر من طرودك بحالة <strong>« مُرتجع مُستلَم »</strong> —
-            لم يتمّ استلامها عند التوصيل. لذلك لم يعد الدفع عند الاستلام متاحًا لهذا الرقم.
+            تعذّر إتمام عدد من طلباتك <strong>(طرد لم يُستلَم، تعذّر الوصول إليك، أو طلب مُلغى)</strong>.
+            لذلك لم يعد الدفع عند الاستلام متاحًا لهذا الرقم.
           </p>
           <p className={styles.text}>
             لإعادة تفعيل طلباتك وتسوية وضعيتك، يُرجى الاتصال بنا :

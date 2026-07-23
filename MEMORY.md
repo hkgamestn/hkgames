@@ -26,8 +26,9 @@
 - Secrets serveur-only (jamais frontend / `NEXT_PUBLIC_*`) : `SUPABASE_SERVICE_ROLE_KEY`,
   `NAVEX_API_KEY`, `WA_API_TOKEN`, `VAPID_PRIVATE_KEY`.
 - **Réputation client** = clé téléphone normalisé 8 chiffres (`hk_normalize_phone`). Fidèle = ≥1
-  commande livrée ; **bloqué** = colis `navex_etat = 'Retour recu'` (état Navex exact, ≠ « Retour
-  Expediteur »/« Rtn depot »). Blocage enforced serveur + override manuel `customer_flags`.
+  commande livrée ; **bloqué** = `navex_etat = 'Retour recu'` OU `status = 'on_hold'` (injoignable)
+  OU `status = 'cancelled'` (sauf raisons internes « Stock insuffisant »/« Double commande »).
+  Blocage enforced serveur + override manuel `customer_flags` (`force_allow` prioritaire). Migration `003`.
 - Contact régularisation client bloqué : **+216 21 660 303** (appel + WhatsApp), fenêtre FR/AR.
 
 ## Prochaines étapes
@@ -50,6 +51,9 @@
 
 ## Journal de session (le plus récent en haut)
 
+- **2026-07-23** — Élargi le blocage : + `on_hold` (injoignable) + `cancelled` (hors « Stock
+  insuffisant »/« Double commande »). Migration `003`, vue/RPC màj, modale FR/AR généralisée.
+  24 bloqués en live (11 retour + 6 injoignable + 8 annulé, dédup). Mergé dans `main`.
 - **2026-07-23** — Feature fidélité/blocage/sync colis : migration `002` appliquée (fonctions +
   vue + `customer_flags` + contrainte `returned`), badges ⭐/⛔ admin, fenêtre FR/AR checkout +
   Pack Été, sync de fond. Poussé sur `claude/package-status-loyalty-sync-qhv4b8`. Cron remis à

@@ -519,7 +519,7 @@ export default function CommandesPage() {
                   {blockedPhones.has(normPhone(order.customer_phone)) && (
                     <button
                       onClick={() => handleUnblock(order.customer_phone)}
-                      title="Client bloqué (Retour reçu) — cliquer pour débloquer"
+                      title="Client bloqué (retour / injoignable / annulé) — cliquer pour débloquer"
                       style={{
                         fontSize: '0.65rem', fontWeight: 700, background: 'rgba(239,68,68,0.15)',
                         color: '#f87171', border: '1px solid rgba(239,68,68,0.45)',
