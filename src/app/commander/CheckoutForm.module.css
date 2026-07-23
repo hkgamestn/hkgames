@@ -101,6 +101,29 @@
   font-weight: 600;
 }
 
+.loyalNote {
+  font-size: 0.82rem;
+  color: var(--color-cta);
+  font-weight: 700;
+}
+
+.blockedNote {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  text-align: start;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.blockedNote:hover { background: rgba(239, 68, 68, 0.16); }
+
 .serverError {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.25);

@@ -9,6 +9,8 @@ import { z } from 'zod'
 import { ShieldCheck, Truck, Lock } from 'lucide-react'
 import { useCartStore } from '@/lib/cart/store'
 import { createPendingOrder, confirmOrder } from '@/lib/actions/orders'
+import { getCustomerReputation } from '@/lib/actions/customerReputation'
+import BlockedCustomerModal from '@/components/checkout/BlockedCustomerModal'
 import { getFbIds } from '@/lib/fbBrowser'
 import { computeBundle } from '@/lib/utils/bundleRules'
 import { formatDT } from '@/lib/utils/formatDT'
@@ -46,6 +48,9 @@ export default function CheckoutForm() {
   const [discounts, setDiscounts] = useState({ decouverte: 15, alchimiste: 20, famille: 18 })
   const phonePendingRef = useRef(false)
   const [giftCard, setGiftCard] = useState({ enabled: false, recipient: '', message: '' })
+  const [reputation, setReputation]           = useState(null)
+  const [blocked, setBlocked]                 = useState(false)
+  const [showBlockedModal, setShowBlockedModal] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.fbq) {
@@ -73,13 +78,36 @@ export default function CheckoutForm() {
 
   const phoneValue = watch('phone', '')
 
+  // Le numéro change -> on réinitialise le blocage local (le blur re-vérifiera).
+  // L'enforcement serveur (confirmOrder) reste la source de vérité.
+  useEffect(() => { setBlocked(false) }, [phoneValue])
+
   async function handlePhoneBlur() {
     const valid = /^[2-9][0-9]{7}$/.test(phoneValue)
     if (!valid || phonePendingRef.current || pendingOrderId) return
     phonePendingRef.current = true
-    const subtotal = items.reduce((s, i) => s + i.price_dt * i.qty, 0)
     const fullPhone = '+216' + phoneValue
+
+    // 1) Réputation client — bloque « Retour reçu » avant toute création de commande
+    const rep = await getCustomerReputation(fullPhone)
+    setReputation(rep)
+    if (rep?.isBlocked) {
+      setBlocked(true)
+      setShowBlockedModal(true)
+      phonePendingRef.current = false
+      return
+    }
+    setBlocked(false)
+
+    // 2) Client OK -> commande pending (relance panier / CAPI)
+    const subtotal = items.reduce((s, i) => s + i.price_dt * i.qty, 0)
     const result = await createPendingOrder({ phone: fullPhone, items, subtotalDt: subtotal, giftMessage: giftCard.enabled ? giftCard.message : null, giftRecipient: giftCard.enabled ? giftCard.recipient : null })
+    if (result?.blocked) {
+      setBlocked(true)
+      setShowBlockedModal(true)
+      phonePendingRef.current = false
+      return
+    }
     if (result.orderId) setPendingId(result.orderId)
     phonePendingRef.current = false
   }
@@ -88,8 +116,23 @@ export default function CheckoutForm() {
     setSubmitting(true)
     setServerError(null)
     const fullPhone = '+216' + data.phone
+
+    // Garde client : si déjà détecté bloqué, on rouvre la fenêtre et on stoppe
+    if (blocked) {
+      setShowBlockedModal(true)
+      setSubmitting(false)
+      return
+    }
+
     const { fbp, fbc } = getFbIds()
     const result = await confirmOrder({ ...data, phone: fullPhone, items, discounts, giftMessage: giftCard.enabled ? giftCard.message : null, giftRecipient: giftCard.enabled ? giftCard.recipient : null, fbp, fbc, sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined }, pendingOrderId)
+    // Enforcement serveur : commande refusée pour client bloqué
+    if (result?.blocked) {
+      setBlocked(true)
+      setShowBlockedModal(true)
+      setSubmitting(false)
+      return
+    }
     if (result.error) {
       setServerError(typeof result.error === 'string' ? result.error : 'Veuillez vérifier vos informations.')
       setSubmitting(false)
@@ -120,6 +163,7 @@ export default function CheckoutForm() {
 
   return (
     <div className={styles.page}>
+      <BlockedCustomerModal open={showBlockedModal} onClose={() => setShowBlockedModal(false)} />
       <div className={styles.container}>
         <div className={styles.grid}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate className={styles.form}>
@@ -157,7 +201,15 @@ export default function CheckoutForm() {
                   />
                 </div>
                 {errors.phone && <p className={styles.error}>{errors.phone.message}</p>}
-                {pendingOrderId && !errors.phone && (
+                {blocked && !errors.phone && (
+                  <button type="button" className={styles.blockedNote} onClick={() => setShowBlockedModal(true)}>
+                    ⛔ Commandes bloquées pour ce numéro — appuyez pour les détails
+                  </button>
+                )}
+                {!blocked && reputation?.isLoyal && !errors.phone && (
+                  <p className={styles.loyalNote}>⭐ Client fidèle — merci pour votre confiance !</p>
+                )}
+                {pendingOrderId && !blocked && !errors.phone && (
                   <p className={styles.pendingNote}>✅ Commande enregistrée — continuez pour confirmer</p>
                 )}
               </div>
@@ -188,9 +240,9 @@ export default function CheckoutForm() {
             {/* ─── Carte cadeau ─── */}
             <GiftCardSection value={giftCard} onChange={setGiftCard} />
 
-            <button type="submit" className={styles.submitBtn} disabled={submitting}>
+            <button type="submit" className={styles.submitBtn} disabled={submitting || blocked}>
               <Lock size={18} />
-              {submitting ? 'Confirmation en cours...' : 'Confirmer ma commande'}
+              {submitting ? 'Confirmation en cours...' : blocked ? 'Commande indisponible' : 'Confirmer ma commande'}
             </button>
 
             <p className={styles.codNote}>

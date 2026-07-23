@@ -1,6 +1,6 @@
 {
   "crons": [
-    { "path": "/api/admin/sync-navex", "schedule": "0 18 * * *" }
+    { "path": "/api/admin/sync-navex", "schedule": "*/15 * * * *" }
   ],
   "headers": [
     {

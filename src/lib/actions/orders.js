@@ -13,6 +13,7 @@ function createAdminClient() {
   )
 }
 import { computeBundle } from '@/lib/utils/bundleRules'
+import { getCustomerReputation } from '@/lib/actions/customerReputation'
 
 const OrderSchema = z.object({
   firstName:   z.string().min(2, 'Prénom trop court'),
@@ -45,6 +46,11 @@ async function sendPushNotification(orderId, type) {
 
 export async function createPendingOrder({ phone, items, subtotalDt, giftMessage, giftRecipient }) {
   const supabase = createAdminClient()
+
+  // Blocage client « Retour recu » : on ne crée même pas de commande pending
+  // (ni CAPI, ni relance panier abandonné) tant que le client n'a pas régularisé.
+  const reputation = await getCustomerReputation(phone)
+  if (reputation.isBlocked) return { blocked: true, reputation }
 
   // Détecter le type de panier pour ne PAS mélanger un panier Pack Été (landing)
   // avec un panier boutique classique du même téléphone
@@ -83,7 +89,7 @@ export async function createPendingOrder({ phone, items, subtotalDt, giftMessage
       })
       .eq('id', existing.id)
 
-    return { orderId: existing.id }
+    return { orderId: existing.id, reputation }
   }
 
   // Aucune commande du même type → créer une nouvelle
@@ -103,7 +109,7 @@ export async function createPendingOrder({ phone, items, subtotalDt, giftMessage
 
   if (error) { console.error('[createPendingOrder] error:', JSON.stringify(error)); return { error: 'Erreur: ' + error.message } }
 
-  return { orderId: data.id }
+  return { orderId: data.id, reputation }
 }
 
 export async function confirmOrder(formData, pendingOrderId) {
@@ -115,6 +121,12 @@ export async function confirmOrder(formData, pendingOrderId) {
   }
 
   const { firstName, lastName, phone, address, city, notes } = validated.data
+
+  // Enforcement serveur du blocage « Retour recu » — défense en profondeur :
+  // même si le client contourne le contrôle côté navigateur, la commande est refusée.
+  const reputation = await getCustomerReputation(phone)
+  if (reputation.isBlocked) return { blocked: true }
+
   const items = formData.items || []
   const giftMessage   = formData.giftMessage   ? String(formData.giftMessage).slice(0, 200).trim()   : null
   const giftRecipient = formData.giftRecipient ? String(formData.giftRecipient).slice(0, 40).trim()  : null

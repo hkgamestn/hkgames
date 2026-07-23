@@ -12,6 +12,18 @@ const supabase = createClient(
 const ETAT_TOKEN = process.env.NAVEX_TOKEN_ETAT
 const ETAT_URL   = ETAT_TOKEN ? `https://app.navex.tn/api/${ETAT_TOKEN}/v1/post.php` : null
 
+// Neutralise casse + accents pour comparer les etats Navex ("Retour recu", "Livrer Paye"...)
+function normalizeEtat(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+}
+
+// « Retour recu » = retour definitif encaisse par l'expediteur (COD non honore).
+// Matche UNIQUEMENT cet etat, pas "Retour Expediteur" (transit) ni "Rtn depot".
+function isRetourRecu(etat) {
+  const s = normalizeEtat(etat)
+  return s.includes('retour') && s.includes('recu')
+}
+
 // Mapping etat Navex -> statut HK Games
 function mapNavexStatus(raw) {
   if (!raw) return null
@@ -68,7 +80,7 @@ async function feedMeta(eventName, prefix, order) {
 async function runSync(orderIds) {
   const base = supabase
     .from('orders')
-    .select('id, navex_tracking, status, total_dt, customer_name, customer_phone, customer_city')
+    .select('id, navex_tracking, status, total_dt, customer_name, customer_phone, customer_city, returned_received_at')
     .not('navex_tracking', 'is', null)
     .neq('navex_tracking', '')
 
@@ -90,9 +102,13 @@ async function runSync(orderIds) {
     // Reflete l'etat Navex BRUT (granularite dashboard: En cours, Au depot, Livre, Retour...).
     // Call separe et non bloquant : si la colonne navex_etat n'existe pas encore, le statut coarse + Meta passent quand meme.
     if (found.etat) {
-      await supabase.from('orders')
-        .update({ navex_etat: found.etat, navex_etat_at: new Date().toISOString() })
-        .eq('id', order.id)
+      const nowIso = new Date().toISOString()
+      const patch = { navex_etat: found.etat, navex_etat_at: nowIso }
+      // « Retour recu » : retour definitif encaisse -> horodatage (une seule fois).
+      // Declenche de facto le blocage client (repute via navex_etat = "Retour recu").
+      if (isRetourRecu(found.etat) && !order.returned_received_at) patch.returned_received_at = nowIso
+      const { error: etatErr } = await supabase.from('orders').update(patch).eq('id', order.id)
+      if (etatErr) console.error('[sync-navex] etat update failed:', order.id, etatErr.message)
     }
 
     const newStatus = mapNavexStatus(found.etat)
@@ -100,7 +116,8 @@ async function runSync(orderIds) {
     // On agit UNIQUEMENT sur la transition (newStatus different du status actuel).
     // Une fois passe en delivered/returned, l'ordre n'est plus "shipped" -> jamais re-traite -> pas de doublon Meta.
     if (newStatus && newStatus !== order.status) {
-      await supabase.from('orders').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', order.id)
+      const { error: stErr } = await supabase.from('orders').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', order.id)
+      if (stErr) console.error('[sync-navex] status update failed:', order.id, newStatus, stErr.message)
       try {
         await supabase.from('order_logs').insert({
           order_id:  order.id,

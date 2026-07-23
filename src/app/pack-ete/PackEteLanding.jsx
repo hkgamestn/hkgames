@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { confirmOrder, createPendingOrder } from '@/lib/actions/orders'
+import BlockedCustomerModal from '@/components/checkout/BlockedCustomerModal'
 import { getFbIds } from '@/lib/fbBrowser'
 import { ShoppingCart, Truck, Shield, Gift, Star, CheckCircle, MapPin, ArrowLeft } from 'lucide-react'
 import styles from './packete.module.css'
@@ -58,6 +59,7 @@ export default function PackEteLanding({ product }) {
   const [errors, setErrors]   = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState(null)
+  const [showBlockedModal, setShowBlockedModal] = useState(false)
   const pendingRef = useRef(false)
   const pendingIdRef = useRef(null)
   const formRef = useRef(null)
@@ -77,7 +79,10 @@ export default function PackEteLanding({ product }) {
     pendingRef.current = true
     const item = { product_id: productId, slug: 'pack-ete-6-slimes', name: 'Pack Été — 6 Slimes', price_dt: PRICE, color: '6 couleurs', line: 'pack_ete', qty: 1, image: productImg, free_shipping: true }
     createPendingOrder({ phone: '+216' + form.phone, items: [item], subtotalDt: PRICE })
-      .then(r => { if (r.orderId) pendingIdRef.current = r.orderId })
+      .then(r => {
+        if (r?.blocked) setShowBlockedModal(true)
+        else if (r.orderId) pendingIdRef.current = r.orderId
+      })
       .finally(() => { pendingRef.current = false })
   }, [form.phone, productId, productImg])
 
@@ -171,6 +176,12 @@ export default function PackEteLanding({ product }) {
       sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
     }, pendingIdRef.current)
 
+    if (result?.blocked) {
+      setShowBlockedModal(true)
+      setSubmitting(false)
+      return
+    }
+
     if (result.error) {
       setServerError(typeof result.error === 'string' ? result.error : 'Veuillez vérifier vos informations.')
       setSubmitting(false)
@@ -197,6 +208,7 @@ export default function PackEteLanding({ product }) {
 
   return (
     <div className={styles.page}>
+      <BlockedCustomerModal open={showBlockedModal} onClose={() => setShowBlockedModal(false)} />
       {/* Bannière promo */}
       <div className={styles.topBar}>
         🌞 OFFRE D&apos;ÉTÉ LIMITÉE · Livraison gratuite partout en Tunisie

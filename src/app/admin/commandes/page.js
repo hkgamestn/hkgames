@@ -5,6 +5,7 @@ import { envoyerNavex } from '@/app/actions/navex'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { updateOrderStatus, softDeleteOrder, restoreOrder, hardDeleteOrders, getUnseenCount, markOrdersSeen } from '@/lib/actions/orders'
+import { unblockCustomer } from '@/lib/actions/customerReputation'
 import { formatDT } from '@/lib/utils/formatDT'
 import { CheckCircle, Phone, XCircle, Trash2, Pencil, RotateCcw, Send, ArchiveX, Plus, FileDown, Receipt, RefreshCw } from 'lucide-react'
 import OrderTooltip from '@/components/admin/OrderTooltip'
@@ -20,9 +21,13 @@ const STATUS_TABS = [
   { id: 'confirmed', label: 'Confirmées' },
   { id: 'shipped',   label: 'Expédiées' },
   { id: 'delivered', label: 'Livrées' },
+  { id: 'returned',  label: 'Retours' },
   { id: 'cancelled', label: 'Annulées' },
   { id: 'deleted',   label: '🗑 Supprimées' },
 ]
+
+// Téléphone tunisien -> 8 chiffres locaux (identique à hk_normalize_phone en SQL)
+const normPhone = (p) => String(p || '').replace(/\D/g, '').slice(-8)
 
 // Couleur du badge d'etat Navex brut (granularite : En cours, Au depot, Livre, Retour...)
 function navexEtatStyle(etat) {
@@ -42,6 +47,7 @@ const STATUS_CONFIG = {
   on_hold:   { label: 'En suspens',  color: '#fb923c' },
   shipped:   { label: 'Expédiée',    color: '#60a5fa' },
   delivered: { label: 'Livrée',      color: '#34d399' },
+  returned:  { label: 'Retour',      color: '#ef4444' },
   cancelled: { label: 'Annulée',     color: '#ef4444' },
 }
 
@@ -56,7 +62,8 @@ const CANCEL_REASONS = [
 export default function CommandesPage() {
   const [orders, setOrders]               = useState([])
   const [unseenCount, setUnseenCount]     = useState(0)
-  const [repeatBuyers, setRepeatBuyers] = useState(new Set())
+  const [loyalPhones, setLoyalPhones]     = useState(new Set())
+  const [blockedPhones, setBlockedPhones] = useState(new Set())
   const [loading, setLoading]         = useState(true)
   const [activeTab, setActiveTab]     = useState(null)
   const [search, setSearch]           = useState('')
@@ -163,18 +170,19 @@ export default function CommandesPage() {
     if (dateFrom) q = q.gte('created_at', new Date(dateFrom).toISOString())
     if (dateTo)   q = q.lte('created_at', new Date(dateTo + 'T23:59:59').toISOString())
 
-      // Charger tous les téléphones pour détecter les repeat buyers
-      const { data: allPhones } = await supabase
-        .from('orders')
-        .select('customer_phone')
-        .not('deleted_at', 'is', null)
-
-      const phoneCount = {}
-      ;(allPhones || []).forEach(({ customer_phone }) => {
-        if (customer_phone) phoneCount[customer_phone] = (phoneCount[customer_phone] || 0) + 1
+      // Réputation client (fidèle = déjà livré / bloqué = « Retour reçu »)
+      // Vue agrégée par téléphone normalisé — source unique partagée avec le checkout.
+      const { data: repRows } = await supabase
+        .from('hk_customer_reputation_view')
+        .select('phone, is_loyal, is_blocked')
+      const loyal = new Set()
+      const blocked = new Set()
+      ;(repRows || []).forEach((r) => {
+        if (r.is_loyal)   loyal.add(r.phone)
+        if (r.is_blocked) blocked.add(r.phone)
       })
-      const repeats = new Set(Object.keys(phoneCount).filter((p) => phoneCount[p] >= 2))
-      setRepeatBuyers(repeats)
+      setLoyalPhones(loyal)
+      setBlockedPhones(blocked)
 
     const { data } = await q
     let rows = data || []
@@ -220,6 +228,27 @@ export default function CommandesPage() {
 
     return () => { supabase.removeChannel(channel) }
   }, []) // ← [] — se monte une seule fois, stable
+
+  // Sync Navex de fond — garde les statuts colis quasi temps réel tant que la page est ouverte.
+  // Non bloquant, silencieux (pas de bandeau) ; ne rafraîchit que si un statut a changé.
+  useEffect(() => {
+    let stopped = false
+    const tick = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+      try {
+        const res  = await fetch('/api/admin/sync-navex', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ orderIds: [] }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!stopped && data.updated > 0) fetchOrdersRef.current()
+      } catch {}
+    }
+    const first = setTimeout(tick, 4000)     // fraîcheur quasi immédiate à l'ouverture
+    const iv    = setInterval(tick, 180000)  // puis toutes les 3 minutes
+    return () => { stopped = true; clearTimeout(first); clearInterval(iv) }
+  }, [])
 
   async function handleMultiNavex() {
     if (selectedOrders.length === 0) return
@@ -297,6 +326,17 @@ export default function CommandesPage() {
     await restoreOrder(orderId)
     setActionLoading(null)
     fetchOrders()
+  }
+
+  async function handleUnblock(phone) {
+    if (!confirm('Débloquer ce client ? Il pourra de nouveau passer commande (paiement à la livraison).')) return
+    const r = await unblockCustomer(phone, 'Débloqué depuis la liste des commandes')
+    if (r?.error) { alert(r.error); return }
+    setBlockedPhones((prev) => {
+      const next = new Set(prev)
+      next.delete(normPhone(phone))
+      return next
+    })
   }
 
   async function handleAction(orderId, action, extra = {}) {
@@ -469,12 +509,23 @@ export default function CommandesPage() {
                 <span className={styles.orderNum}>{order.order_number || order.id.slice(0,8)}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                   {order.customer_name || '—'}
-                  {repeatBuyers.has(order.customer_phone) && (
+                  {loyalPhones.has(normPhone(order.customer_phone)) && (
                     <span style={{
                       fontSize: '0.65rem', fontWeight: 700, background: 'rgba(251,191,36,0.15)',
                       color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)',
                       borderRadius: '99px', padding: '1px 7px', whiteSpace: 'nowrap', flexShrink: 0
                     }}>⭐ Fidèle</span>
+                  )}
+                  {blockedPhones.has(normPhone(order.customer_phone)) && (
+                    <button
+                      onClick={() => handleUnblock(order.customer_phone)}
+                      title="Client bloqué (Retour reçu) — cliquer pour débloquer"
+                      style={{
+                        fontSize: '0.65rem', fontWeight: 700, background: 'rgba(239,68,68,0.15)',
+                        color: '#f87171', border: '1px solid rgba(239,68,68,0.45)',
+                        borderRadius: '99px', padding: '1px 7px', whiteSpace: 'nowrap',
+                        flexShrink: 0, cursor: 'pointer'
+                      }}>⛔ Bloqué</button>
                   )}
                   {order.gift_message && (
                     <button onClick={() => setGiftCardOrder(order)} style={{
