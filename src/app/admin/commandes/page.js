@@ -62,8 +62,16 @@ const CANCEL_REASONS = [
 export default function CommandesPage() {
   const [orders, setOrders]               = useState([])
   const [unseenCount, setUnseenCount]     = useState(0)
-  const [loyalPhones, setLoyalPhones]     = useState(new Set())
+  const [firstDelivered, setFirstDelivered] = useState(new Map()) // phone -> date 1ère livraison
   const [blockedPhones, setBlockedPhones] = useState(new Set())
+
+  // Badge ⭐ par COMMANDE : ce téléphone avait déjà une commande LIVRÉE avant celle-ci.
+  // La 1ère commande livrée ne porte donc pas de badge — seules les suivantes,
+  // pour signaler d'un coup d'œil « ce client repasse commande ».
+  const isRepeatOrder = (o) => {
+    const fd = firstDelivered.get(normPhone(o.customer_phone))
+    return Boolean(fd && o.created_at && new Date(o.created_at) > new Date(fd))
+  }
   const [loading, setLoading]         = useState(true)
   const [activeTab, setActiveTab]     = useState(null)
   const [search, setSearch]           = useState('')
@@ -174,14 +182,14 @@ export default function CommandesPage() {
       // Vue agrégée par téléphone normalisé — source unique partagée avec le checkout.
       const { data: repRows } = await supabase
         .from('hk_customer_reputation_view')
-        .select('phone, is_loyal, is_blocked')
-      const loyal = new Set()
+        .select('phone, is_blocked, first_delivered_at')
+      const fd = new Map()
       const blocked = new Set()
       ;(repRows || []).forEach((r) => {
-        if (r.is_loyal)   loyal.add(r.phone)
+        if (r.first_delivered_at) fd.set(r.phone, r.first_delivered_at)
         if (r.is_blocked) blocked.add(r.phone)
       })
-      setLoyalPhones(loyal)
+      setFirstDelivered(fd)
       setBlockedPhones(blocked)
 
     const { data } = await q
@@ -509,8 +517,8 @@ export default function CommandesPage() {
                 <span className={styles.orderNum}>{order.order_number || order.id.slice(0,8)}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                   {order.customer_name || '—'}
-                  {loyalPhones.has(normPhone(order.customer_phone)) && (
-                    <span style={{
+                  {isRepeatOrder(order) && (
+                    <span title="Ce client a déjà une commande livrée avant celle-ci — il repasse commande" style={{
                       fontSize: '0.65rem', fontWeight: 700, background: 'rgba(251,191,36,0.15)',
                       color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)',
                       borderRadius: '99px', padding: '1px 7px', whiteSpace: 'nowrap', flexShrink: 0

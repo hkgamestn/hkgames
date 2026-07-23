@@ -51,6 +51,9 @@
 
 ## Journal de session (le plus récent en haut)
 
+- **2026-07-23** — Badge ⭐ par COMMANDE (pas par client) : seules les commandes créées APRÈS la
+  1ère livraison du même téléphone le portent (5 commandes en live vs 148 avant). Migration `004`
+  (`first_delivered_at` dans la vue). Note checkout inchangée (déjà correcte).
 - **2026-07-23** — Élargi le blocage : + `on_hold` (injoignable) + `cancelled` (hors « Stock
   insuffisant »/« Double commande »). Migration `003`, vue/RPC màj, modale FR/AR généralisée.
   24 bloqués en live (11 retour + 6 injoignable + 8 annulé, dédup). Mergé dans `main`.
