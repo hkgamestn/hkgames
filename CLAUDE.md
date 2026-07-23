@@ -4,6 +4,22 @@
 > **aucune** dépendance au monorepo Walaup, et la loi/gouvernance Walaup ne s'applique PAS ici.
 > La source de vérité produit/design est le PRD du repo ; ce fichier ne fait que l'orienter.
 
+## Mémoire de session (fiable même sur le web)
+
+La mémoire de continuité vit dans **`MEMORY.md`** (committé, importé ci-dessous → chargé à CHAQUE
+session). Sur Claude Code web, l'auto-memory machine-locale ne survit PAS d'une session cloud à
+l'autre : **seul ce qui est committé revient**. `MEMORY.md` est donc la vraie mémoire du projet.
+
+@MEMORY.md
+
+**Protocole de fin de session (obligatoire).** Dès qu'une session change quelque chose de durable
+(décision, avancement, piège rencontré, prochaine étape), avant de terminer Claude doit :
+
+1. Mettre à jour `MEMORY.md` — état courant, décisions, prochaines étapes, gotchas, + une ligne au
+   journal. Rester concis (une ligne par entrée) ; si ça gonfle, créer un snapshot daté
+   `memory_hkgames_AAAAMMJJ.md` via le skill `hk-commerce:memory-compress` et le référencer.
+2. Committer et pousser : `git add MEMORY.md && git commit -m "chore(memory): maj session" && git push`.
+
 ## Le projet
 
 **HK Games Slime Store v3** — e-commerce DTC de slime artisanal, Tunisie. Objectif : leader du
